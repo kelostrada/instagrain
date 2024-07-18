@@ -17,7 +17,15 @@ defmodule Instagrain.Feed.Post do
   @doc false
   def changeset(post, attrs) do
     post
-    |> cast(attrs, [:image, :likes, :caption, :location_id, :hide_likes, :disable_comments])
-    |> validate_required([:image, :likes, :caption, :location_id, :hide_likes, :disable_comments])
+    |> cast(attrs, [
+      :image,
+      :likes,
+      :caption,
+      :location_id,
+      :hide_likes,
+      :disable_comments,
+      :user_id
+    ])
+    |> validate_required([:image, :likes, :hide_likes, :disable_comments, :user_id])
   end
 end
