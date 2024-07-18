@@ -22,4 +22,20 @@ defmodule Instagrain.FeedFixtures do
 
     post
   end
+
+  @doc """
+  Generate a resource.
+  """
+  def resource_fixture(attrs \\ %{}) do
+    {:ok, resource} =
+      attrs
+      |> Enum.into(%{
+        alt: "some alt",
+        file: "some file",
+        type: :photo
+      })
+      |> Instagrain.Feed.create_resource()
+
+    resource
+  end
 end
