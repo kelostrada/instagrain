@@ -3,3 +3,9 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+.square-modal {
+    width: calc(100vw - 16vw);
+    height: calc(100vw - 16vw);
+    max-width: calc(100vh - 16vh);
+    max-height: calc(100vh - 16vh);
+}

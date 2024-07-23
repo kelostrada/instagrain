@@ -22,7 +22,7 @@ defmodule InstagrainWeb.PostLive.Index do
 
   defp apply_action(socket, :new, _params) do
     socket
-    |> assign(:page_title, "New Post")
+    |> assign(:page_title, "Create new post")
     |> assign(:post, %Post{})
   end
 
