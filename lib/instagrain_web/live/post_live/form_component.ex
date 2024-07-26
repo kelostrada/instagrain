@@ -5,26 +5,47 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   @impl true
   def render(assigns) do
-    ~H"""
-    <div class="flex flex-col h-full divide-y divide-solid">
-      <div class="flex flex-col items-center justify-center">
-        <div class="font-bold text-base leading-10 py-px">
-          <%= @title %>
-        </div>
-      </div>
+    assigns = assign(assigns, step: current_step(assigns))
 
-      <div class="flex-auto flex flex-col items-center justify-center">
-        <form
-          id="post-form"
-          phx-target={@myself}
-          phx-change="validate"
-          phx-submit="save"
-          phx-drop-target={@uploads.file.ref}
-          class="h-full w-full"
-        >
+    ~H"""
+    <form
+      id="post-form"
+      phx-target={@myself}
+      phx-change="validate"
+      phx-submit="save"
+      phx-drop-target={@uploads.file.ref}
+      class="h-full w-full"
+    >
+      <div class="flex flex-col h-full divide-y divide-solid">
+        <div class="flex justify-between items-center">
+          <%= if @step != :create do %>
+            <div class="flex-1 cursor-pointer text-left pl-4" phx-click="back" phx-target={@myself}>
+              <.icon name="hero-arrow-left" class="h-6 w-6" />
+            </div>
+          <% end %>
+          <div class="flex-1 text-center font-bold text-base leading-10 py-px">
+            <%= step_to_title(@step) %>
+          </div>
+          <%= if @step == :preview do %>
+            <div
+              class="flex-1 cursor-pointer text-right font-bold text-sm text-sky-500 leading-10 pr-4"
+              phx-click="next_step"
+              phx-target={@myself}
+            >
+              Next
+            </div>
+          <% end %>
+          <%= if @step == :final do %>
+            <button class="flex-1 cursor-pointer text-right font-bold text-sm text-sky-500 leading-10 pr-4">
+              Share
+            </button>
+          <% end %>
+        </div>
+
+        <div class="flex-auto flex flex-col items-center justify-center">
           <.live_file_input id="post-form-upload" upload={@uploads.file} class="hidden" />
 
-          <%= if @uploads.file.entries == [] do %>
+          <%= if @step == :create do %>
             <div class="flex flex-col items-center justify-center h-full">
               <.upload_icon />
               <p class="mb-2 text-xl font-normal py-3">Drag photos and videos here</p>
@@ -39,43 +60,52 @@ defmodule InstagrainWeb.PostLive.FormComponent do
             </div>
           <% end %>
 
-          <%= for entry <- @uploads.file.entries do %>
-            <article class="upload-entry">
-              <figure>
-                <.live_img_preview entry={entry} />
-                <figcaption><%= entry.client_name %></figcaption>
-              </figure>
+          <%= if @step == :preview do %>
+            <%= for entry <- @uploads.file.entries do %>
+              <article class="upload-entry">
+                <figure>
+                  <.live_img_preview entry={entry} />
+                  <figcaption><%= entry.client_name %></figcaption>
+                </figure>
 
-              <%!-- entry.progress will update automatically for in-flight entries --%>
-              <progress value={entry.progress} max="100"><%= entry.progress %>%</progress>
+                <%!-- entry.progress will update automatically for in-flight entries --%>
+                <progress value={entry.progress} max="100"><%= entry.progress %>%</progress>
 
-              <%!-- a regular click event whose handler will invoke Phoenix.LiveView.cancel_upload/3 --%>
-              <button
-                type="button"
-                phx-click="cancel-upload"
-                phx-value-ref={entry.ref}
-                phx-target={@myself}
-                aria-label="cancel"
-              >
-                &times;
-              </button>
+                <%!-- a regular click event whose handler will invoke Phoenix.LiveView.cancel_upload/3 --%>
+                <button
+                  type="button"
+                  phx-click="cancel-upload"
+                  phx-value-ref={entry.ref}
+                  phx-target={@myself}
+                  aria-label="cancel"
+                >
+                  &times;
+                </button>
 
-              <%!-- Phoenix.Component.upload_errors/2 returns a list of error atoms --%>
-              <%= for err <- upload_errors(@uploads.file, entry) do %>
-                <p class="alert alert-danger"><%= error_to_string(err) %></p>
-              <% end %>
-            </article>
+                <%!-- Phoenix.Component.upload_errors/2 returns a list of error atoms --%>
+                <%= for err <- upload_errors(@uploads.file, entry) do %>
+                  <p class="alert alert-danger"><%= error_to_string(err) %></p>
+                <% end %>
+              </article>
+            <% end %>
           <% end %>
 
-          <%!-- <.input field={@form[:caption]} type="text" label="Caption" />
-          <.input field={@form[:location_id]} type="number" label="Location" />
-          <.input field={@form[:hide_likes]} type="checkbox" label="Hide likes" />
-          <.input field={@form[:disable_comments]} type="checkbox" label="Disable comments" /> --%>
-          <%!-- <.button phx-disable-with="Saving...">Save Post</.button> --%>
-        </form>
+          <%= if @step == :final do %>
+            <.input field={@form[:caption]} type="text" label="Caption" />
+            <.input field={@form[:location_id]} type="number" label="Location" />
+            <.input field={@form[:hide_likes]} type="checkbox" label="Hide likes" />
+            <.input field={@form[:disable_comments]} type="checkbox" label="Disable comments" />
+            <.button phx-disable-with="Saving...">Save Post</.button>
+          <% end %>
+        </div>
       </div>
-    </div>
+    </form>
     """
+  end
+
+  @impl true
+  def mount(socket) do
+    {:ok, assign(socket, previewed?: false)}
   end
 
   @impl true
@@ -99,6 +129,25 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     {:noreply, socket}
   end
 
+  def handle_event("next_step", _, socket) do
+    {:noreply, assign(socket, previewed?: true)}
+  end
+
+  def handle_event("back", _, socket) do
+    case current_step(socket.assigns) do
+      :preview ->
+        socket =
+          Enum.reduce(socket.assigns.uploads.file.entries, socket, fn entry, socket ->
+            cancel_upload(socket, :file, entry.ref)
+          end)
+
+        {:noreply, socket}
+
+      :final ->
+        {:noreply, assign(socket, previewed?: false)}
+    end
+  end
+
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
     {:noreply, cancel_upload(socket, :file, ref)}
   end
@@ -106,8 +155,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   def handle_event("save", %{"post" => post_params}, socket) do
     uploaded_files =
       consume_uploaded_entries(socket, :file, fn %{path: path}, _entry ->
-        dest = Path.join([:code.priv_dir(:my_app), "static", "uploads", Path.basename(path)])
-        # You will need to create `priv/static/uploads` for `File.cp!/2` to work.
+        dest = Path.join([:code.priv_dir(:instagrain), "static", "uploads", Path.basename(path)])
         File.cp!(path, dest)
         {:ok, ~p"/uploads/#{Path.basename(dest)}"}
       end)
@@ -133,6 +181,8 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   end
 
   defp save_post(socket, :new, post_params) do
+    post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
+
     case Feed.create_post(post_params) do
       {:ok, post} ->
         notify_parent({:saved, post})
@@ -147,11 +197,23 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     end
   end
 
+  defp current_step(assigns) do
+    case assigns do
+      %{uploads: %{file: %{entries: []}}} -> :create
+      %{previewed?: false} -> :preview
+      _ -> :final
+    end
+  end
+
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
   defp error_to_string(:too_large), do: "Too large"
   defp error_to_string(:too_many_files), do: "You have selected too many files"
   defp error_to_string(:not_accepted), do: "You have selected an unacceptable file type"
+
+  defp step_to_title(:create), do: "Create new post"
+  defp step_to_title(:preview), do: "Preview"
+  defp step_to_title(:final), do: "Create new post"
 
   defp upload_icon(assigns) do
     ~H"""
