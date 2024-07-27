@@ -154,18 +154,27 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   def handle_event("save", %{"post" => post_params}, socket) do
     uploaded_files =
-      consume_uploaded_entries(socket, :file, fn %{path: path}, _entry ->
-        dest = Path.join([:code.priv_dir(:instagrain), "static", "uploads", Path.basename(path)])
+      consume_uploaded_entries(socket, :file, fn %{path: path}, entry ->
+        filename = Path.basename(path) <> Path.extname(entry.client_name)
+        dest = Path.join([:code.priv_dir(:instagrain), "static", "uploads", filename])
+
         File.cp!(path, dest)
-        {:ok, ~p"/uploads/#{Path.basename(dest)}"}
+
+        {:ok,
+         %{
+           filename: filename,
+           entry: entry
+         }}
       end)
 
-    IO.inspect(uploaded_files)
-
-    save_post(socket, socket.assigns.action, post_params)
+    save_post(socket, socket.assigns.action, post_params, uploaded_files)
   end
 
-  defp save_post(socket, :edit, post_params) do
+  # ~p"/uploads/#{filename}"
+
+  defp save_post(socket, :edit, post_params, _uploaded_files) do
+    post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
+
     case Feed.update_post(socket.assigns.post, post_params) do
       {:ok, post} ->
         notify_parent({:saved, post})
@@ -180,7 +189,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     end
   end
 
-  defp save_post(socket, :new, post_params) do
+  defp save_post(socket, :new, post_params, _uploaded_files) do
     post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
 
     case Feed.create_post(post_params) do
