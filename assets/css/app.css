@@ -3,9 +3,33 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
 .square-modal {
-    width: calc(100vw - 16vw);
-    height: calc(100vw - 16vw);
-    max-width: calc(100vh - 16vh);
-    max-height: calc(100vh - 16vh);
+    width: calc(100vh - 24vh);
+    height: calc(100vh - 24vh + 2.625rem + 1px);
+    max-width: min(calc(100vw - 24vw - 21.25rem), calc(100vh - 24vh + 2.625rem + 1px));
+    max-height: min(calc(100vw - 24vw - 21.25rem), calc(100vh - 24vh + 2.625rem + 1px));
+}
+
+.wide-modal {
+    width: calc(100vh - 24vh + 21.25rem);
+    height: calc(100vh - 24vh + 2.625rem + 1px);
+    max-width: max(calc(100vw - 2vw), calc(100vh - 24vh + 2.625rem + 1px));
+    max-height: max(calc(100vw - 2vw), calc(100vh - 24vh + 2.625rem + 1px));
+}
+
+@media (max-width: calc(100vh - 10vh + 21.25rem)) {
+    .square-modal {
+        width: calc(100vw - 10vw - 21.25rem);
+        height: calc(100vw - 10vw - 21.25rem + 2.625rem + 1px);
+        max-width: calc(100vw - 10vw - 21.25rem);
+        max-height: calc(100vh - 10vh + 2.625rem + 1px);
+    }
+    
+    .wide-modal {
+        width: calc(100vw - 10vw);
+        height: calc(100vw - 10vw - 21.25rem + 2.625rem + 1px);
+        max-width: calc(100vw - 10vw);
+        max-height: 100%;
+    }
 }

@@ -14,7 +14,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       phx-change="validate"
       phx-submit="save"
       phx-drop-target={@uploads.file.ref}
-      class="h-full w-full"
+      class={"h-full w-full #{if @step == :final, do: "wide-modal", else: "square-modal"}"}
     >
       <div class="flex flex-col h-full divide-y divide-solid">
         <div class="flex justify-between items-center">
@@ -60,42 +60,37 @@ defmodule InstagrainWeb.PostLive.FormComponent do
             </div>
           <% end %>
 
-          <%= if @step == :preview do %>
-            <%= for entry <- @uploads.file.entries do %>
-              <article class="upload-entry">
-                <figure>
-                  <.live_img_preview entry={entry} />
-                  <figcaption><%= entry.client_name %></figcaption>
-                </figure>
+          <%= if @step != :create do %>
+            <div class="flex">
+              <div class="">
+                <%= for entry <- @uploads.file.entries do %>
+                  <div class="relative">
+                    <.live_img_preview entry={entry} width="100%" />
 
-                <%!-- entry.progress will update automatically for in-flight entries --%>
-                <progress value={entry.progress} max="100"><%= entry.progress %>%</progress>
-
-                <%!-- a regular click event whose handler will invoke Phoenix.LiveView.cancel_upload/3 --%>
-                <button
-                  type="button"
-                  phx-click="cancel-upload"
-                  phx-value-ref={entry.ref}
-                  phx-target={@myself}
-                  aria-label="cancel"
-                >
-                  &times;
-                </button>
-
-                <%!-- Phoenix.Component.upload_errors/2 returns a list of error atoms --%>
-                <%= for err <- upload_errors(@uploads.file, entry) do %>
-                  <p class="alert alert-danger"><%= error_to_string(err) %></p>
+                    <%!-- a regular click event whose handler will invoke Phoenix.LiveView.cancel_upload/3 --%>
+                    <button
+                      type="button"
+                      phx-click="cancel-upload"
+                      phx-value-ref={entry.ref}
+                      phx-target={@myself}
+                      aria-label="cancel"
+                      class="absolute top-6 right-6"
+                    >
+                      &times;
+                    </button>
+                  </div>
                 <% end %>
-              </article>
-            <% end %>
-          <% end %>
-
-          <%= if @step == :final do %>
-            <.input field={@form[:caption]} type="text" label="Caption" />
-            <.input field={@form[:location_id]} type="number" label="Location" />
-            <.input field={@form[:hide_likes]} type="checkbox" label="Hide likes" />
-            <.input field={@form[:disable_comments]} type="checkbox" label="Disable comments" />
-            <.button phx-disable-with="Saving...">Save Post</.button>
+              </div>
+              <%= if @step == :final do %>
+                <div class="flex-none w-85 overflow-auto">
+                  <.input field={@form[:caption]} type="text" label="Caption" />
+                  <.input field={@form[:location_id]} type="number" label="Location" />
+                  <.input field={@form[:hide_likes]} type="checkbox" label="Hide likes" />
+                  <.input field={@form[:disable_comments]} type="checkbox" label="Disable comments" />
+                  <.button phx-disable-with="Saving...">Save Post</.button>
+                </div>
+              <% end %>
+            </div>
           <% end %>
         </div>
       </div>

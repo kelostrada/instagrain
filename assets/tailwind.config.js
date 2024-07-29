@@ -18,6 +18,9 @@ module.exports = {
         "brand-dark": "#1877F2",
         black: "#000000",
       },
+      spacing: {
+        '85': '21.25rem',
+      }
     },
   },
   plugins: [
