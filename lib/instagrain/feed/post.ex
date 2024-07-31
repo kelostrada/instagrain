@@ -27,5 +27,6 @@ defmodule Instagrain.Feed.Post do
       :user_id
     ])
     |> validate_required([:image, :likes, :hide_likes, :disable_comments, :user_id])
+    |> validate_length(:caption, max: 2200)
   end
 end

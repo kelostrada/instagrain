@@ -17,9 +17,13 @@ module.exports = {
         brand: "#0095F6",
         "brand-dark": "#1877F2",
         black: "#000000",
+        "neutral-350": "#C7C7C7"
       },
       spacing: {
         '85': '21.25rem',
+      },
+      padding: {
+        '4.5': '0.875rem'
       }
     },
   },

@@ -14,9 +14,11 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       phx-change="validate"
       phx-submit="save"
       phx-drop-target={@uploads.file.ref}
-      class={"h-full w-full #{if @step == :final, do: "wide-modal", else: "square-modal"}"}
+      class={"#{if @step == :final, do: "wide-modal", else: "square-modal"}"}
     >
-      <div class="flex flex-col h-full divide-y divide-solid">
+      <.live_file_input id="post-form-upload" upload={@uploads.file} class="hidden" />
+
+      <div class="flex flex-col h-full divide-y divide-solid divide-neutral-300">
         <div class="flex justify-between items-center">
           <%= if @step != :create do %>
             <div class="flex-1 cursor-pointer text-left pl-4" phx-click="back" phx-target={@myself}>
@@ -29,7 +31,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <%= if @step == :preview do %>
             <div
               class="flex-1 cursor-pointer text-right font-bold text-sm text-sky-500 leading-10 pr-4"
-              phx-click="next_step"
+              phx-click="next-step"
               phx-target={@myself}
             >
               Next
@@ -42,11 +44,9 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <% end %>
         </div>
 
-        <div class="flex-auto flex flex-col items-center justify-center">
-          <.live_file_input id="post-form-upload" upload={@uploads.file} class="hidden" />
-
+        <div class="flex-auto flex h-[calc(100%-2.625rem)] divide-x divide-solid divide-neutral-300">
           <%= if @step == :create do %>
-            <div class="flex flex-col items-center justify-center h-full">
+            <div class="h-full w-full flex flex-col items-center justify-center">
               <.upload_icon />
               <p class="mb-2 text-xl font-normal py-3">Drag photos and videos here</p>
               <button
@@ -61,36 +61,82 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <% end %>
 
           <%= if @step != :create do %>
-            <div class="flex">
-              <div class="">
-                <%= for entry <- @uploads.file.entries do %>
-                  <div class="relative">
-                    <.live_img_preview entry={entry} width="100%" />
+            <div class="grow h-full bg-neutral-50">
+              <div class="relative w-full h-full">
+                <.live_img_preview
+                  entry={Enum.at(@uploads.file.entries, @selected_item)}
+                  class="w-full h-full object-contain absolute top-0 left-0"
+                />
 
-                    <%!-- a regular click event whose handler will invoke Phoenix.LiveView.cancel_upload/3 --%>
-                    <button
-                      type="button"
-                      phx-click="cancel-upload"
-                      phx-value-ref={entry.ref}
-                      phx-target={@myself}
-                      aria-label="cancel"
-                      class="absolute top-6 right-6"
-                    >
-                      &times;
-                    </button>
+                <% entries_len = length(@uploads.file.entries) %>
+                <%= if entries_len > 1 && @selected_item > 0 do %>
+                  <div
+                    phx-click="previous-item"
+                    phx-target={@myself}
+                    class={[
+                      "rounded-full cursor-pointer w-8 h-8 m-2",
+                      "flex items-center justify-center",
+                      "absolute left-0 top-1/2 translate-y-[-50%]",
+                      "bg-neutral-900/80 hover:bg-neutral-900/50",
+                      "transition ease-in-out duration-300"
+                    ]}
+                  >
+                    <.left_chevron_icon class="text-white" />
+                  </div>
+                <% end %>
+
+                <%= if entries_len > 1 && @selected_item < entries_len - 1 do %>
+                  <div
+                    phx-click="next-item"
+                    phx-target={@myself}
+                    class={[
+                      "rounded-full cursor-pointer w-8 h-8 m-2",
+                      "flex items-center justify-center",
+                      "absolute right-0 top-1/2 translate-y-[-50%]",
+                      "bg-neutral-900/80 hover:bg-neutral-900/50",
+                      "transition ease-in-out duration-300"
+                    ]}
+                  >
+                    <.right_chevron_icon class="text-white" />
                   </div>
                 <% end %>
               </div>
-              <%= if @step == :final do %>
-                <div class="flex-none w-85 overflow-auto">
-                  <.input field={@form[:caption]} type="text" label="Caption" />
-                  <.input field={@form[:location_id]} type="number" label="Location" />
-                  <.input field={@form[:hide_likes]} type="checkbox" label="Hide likes" />
-                  <.input field={@form[:disable_comments]} type="checkbox" label="Disable comments" />
-                  <.button phx-disable-with="Saving...">Save Post</.button>
-                </div>
-              <% end %>
             </div>
+            <%= if @step == :final do %>
+              <div class="flex-none w-85 overflow-auto">
+                <div class="flex px-4 pt-4.5 pb-3.5 items-center">
+                  <div class="pr-3">
+                    <div class="rounded-full border">
+                      <.icon name="hero-user" class="h-7 w-7" />
+                    </div>
+                  </div>
+                  <div>
+                    <span class="text-black font-bold text-sm">
+                      <%= @user.email |> String.split("@") |> List.first() %>
+                    </span>
+                  </div>
+                </div>
+                <div class="px-4">
+                  <.input type="textarea" field={@form[:caption]} placeholder="Write a caption..." />
+                </div>
+                <div class="flex items-center justify-between border-b border-neutral-300">
+                  <div class="p-2.5">
+                    <.icon name="hero-face-smile" class="h-6 w-6 text-neutral-500" />
+                  </div>
+                  <div class="p-2.5">
+                    <span class={"text-xs #{if @form[:caption].errors != [], do: "text-rose-600", else: "text-neutral-350"}"}>
+                      <%= String.length(@form[:caption].value || "") %> / 2,200
+                    </span>
+                  </div>
+                </div>
+
+                <.input field={@form[:location_id]} type="number" label="Location" />
+                <.input field={@form[:likes]} type="text" label="Likes" />
+                <.input field={@form[:hide_likes]} type="checkbox" label="Hide likes" />
+                <.input field={@form[:disable_comments]} type="checkbox" label="Disable comments" />
+                <.button phx-disable-with="Saving...">Save Post</.button>
+              </div>
+            <% end %>
           <% end %>
         </div>
       </div>
@@ -100,7 +146,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, previewed?: false)}
+    {:ok, assign(socket, previewed?: false, selected_item: 0)}
   end
 
   @impl true
@@ -124,7 +170,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     {:noreply, socket}
   end
 
-  def handle_event("next_step", _, socket) do
+  def handle_event("next-step", _, socket) do
     {:noreply, assign(socket, previewed?: true)}
   end
 
@@ -141,6 +187,14 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       :final ->
         {:noreply, assign(socket, previewed?: false)}
     end
+  end
+
+  def handle_event("next-item", _, socket) do
+    {:noreply, assign(socket, selected_item: socket.assigns.selected_item + 1)}
+  end
+
+  def handle_event("previous-item", _, socket) do
+    {:noreply, assign(socket, selected_item: socket.assigns.selected_item - 1)}
   end
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
@@ -246,6 +300,56 @@ defmodule InstagrainWeb.PostLive.FormComponent do
         fill="currentColor"
       >
       </path>
+    </svg>
+    """
+  end
+
+  defp right_chevron_icon(assigns) do
+    ~H"""
+    <svg
+      aria-label="Right chevron"
+      class={@class}
+      fill="currentColor"
+      height="16"
+      role="img"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <title>Right chevron</title>
+      <polyline
+        fill="none"
+        points="8 3 17.004 12 8 21"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+      >
+      </polyline>
+    </svg>
+    """
+  end
+
+  defp left_chevron_icon(assigns) do
+    ~H"""
+    <svg
+      aria-label="Left chevron"
+      class={@class}
+      fill="currentColor"
+      height="16"
+      role="img"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <title>Left chevron</title>
+      <polyline
+        fill="none"
+        points="16.502 3 7.498 12 16.502 21"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+      >
+      </polyline>
     </svg>
     """
   end
