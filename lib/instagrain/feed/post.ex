@@ -6,6 +6,7 @@ defmodule Instagrain.Feed.Post do
     field :image, :string
     field :likes, :integer
     field :caption, :string
+    field :location, :string, virtual: true
     field :location_id, :integer
     field :hide_likes, :boolean, default: false
     field :disable_comments, :boolean, default: false
@@ -22,6 +23,7 @@ defmodule Instagrain.Feed.Post do
       :likes,
       :caption,
       :location_id,
+      :location,
       :hide_likes,
       :disable_comments,
       :user_id

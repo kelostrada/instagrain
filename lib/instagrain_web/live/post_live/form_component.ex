@@ -130,11 +130,89 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                   </div>
                 </div>
 
-                <.input field={@form[:location_id]} type="number" label="Location" />
-                <.input field={@form[:likes]} type="text" label="Likes" />
-                <.input field={@form[:hide_likes]} type="checkbox" label="Hide likes" />
-                <.input field={@form[:disable_comments]} type="checkbox" label="Disable comments" />
-                <.button phx-disable-with="Saving...">Save Post</.button>
+                <div class="border-b border-neutral-300">
+                  <div class="flex justify-between items-center py-[7px] px-4">
+                    <div class="">
+                      <.input field={@form[:location]} type="text" placeholder="Add Location" />
+                    </div>
+                    <div>
+                      <.icon name="hero-map-pin" class="h-5 w-5 text-black" />
+                    </div>
+                  </div>
+
+                  <details open={@tabs.accessibility} class="group font-medium px-4">
+                    <summary
+                      phx-click="tabs-click"
+                      phx-target={@myself}
+                      phx-value-tab={:accessibility}
+                      class="py-2.5 flex cursor-pointer flex-row items-center justify-between group-open:font-bold text-black marker:[font-size:0px]"
+                    >
+                      Accessibility
+                      <.icon
+                        name="hero-chevron-down"
+                        class="h-5 w-5 rotate-0 transform group-open:rotate-180"
+                      />
+                    </summary>
+                    <div class="py-1">
+                      <p class="text-neutral-500 text-xs font-normal">
+                        Alt text describes your photos for people with visual impairments. Alt text will be automatically created for your photos or you can choose to write your own.
+                      </p>
+                      <%= for entry <- @uploads.file.entries do %>
+                        <div class="my-3 flex">
+                          <div class="w-11 h-11">
+                            <.live_img_preview entry={entry} class="w-full h-full object-cover" />
+                          </div>
+                          <div class="ml-2 grow w-full">
+                            <.input
+                              field={@form[:location]}
+                              type="text"
+                              placeholder="Write alt text..."
+                              class={[
+                                "w-full py-[9px] placeholder:font-normal placeholder:text-sm placeholder:text-neutral-350 border-neutral-350 rounded-md",
+                                "focus:border-zinc-400 focus:ring-0"
+                              ]}
+                            />
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  </details>
+
+                  <details open={@tabs.advanced} class="group font-medium px-4">
+                    <summary
+                      phx-click="tabs-click"
+                      phx-target={@myself}
+                      phx-value-tab={:advanced}
+                      class="py-2.5 flex cursor-pointer flex-row items-center justify-between group-open:font-bold text-black marker:[font-size:0px]"
+                    >
+                      Advanced Settings
+                      <.icon
+                        name="hero-chevron-down"
+                        class="h-5 w-5 rotate-0 transform group-open:rotate-180"
+                      />
+                    </summary>
+                    <div class="py-1">
+                      <div class="flex items-center justify-between">
+                        <span>Hide like and view counts on this post</span>
+                        <.input field={@form[:hide_likes]} type="checkbox" />
+                      </div>
+                      <p class="py-2 text-neutral-500 text-xs font-normal">
+                        Only you will see the total number of likes and views on this post. You can change this later by going to the ··· menu at the top of the post. To hide like counts on other people's posts, go to your account settings.
+                      </p>
+                    </div>
+                    <div class="py-1">
+                      <div class="flex items-center justify-between">
+                        <span>Turn off commenting</span>
+                        <.input field={@form[:disable_comments]} type="checkbox" />
+                      </div>
+                      <p class="py-2 text-neutral-500 text-xs font-normal">
+                        You can change this later by going to the ··· menu at the top of your post.
+                      </p>
+                    </div>
+                  </details>
+                </div>
+
+                <%!-- <.button phx-disable-with="Saving...">Save Post</.button> --%>
               </div>
             <% end %>
           <% end %>
@@ -146,7 +224,12 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, previewed?: false, selected_item: 0)}
+    {:ok,
+     assign(socket,
+       previewed?: false,
+       selected_item: 0,
+       tabs: %{accessibility: false, advanced: false}
+     )}
   end
 
   @impl true
@@ -195,6 +278,11 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   def handle_event("previous-item", _, socket) do
     {:noreply, assign(socket, selected_item: socket.assigns.selected_item - 1)}
+  end
+
+  def handle_event("tabs-click", %{"tab" => tab}, socket) do
+    tab = String.to_existing_atom(tab)
+    {:noreply, assign(socket, tabs: Map.update!(socket.assigns.tabs, tab, &(!&1)))}
   end
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do

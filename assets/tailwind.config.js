@@ -24,6 +24,9 @@ module.exports = {
       },
       padding: {
         '4.5': '0.875rem'
+      },
+      height: {
+        '7.5': '1.875rem'
       }
     },
   },

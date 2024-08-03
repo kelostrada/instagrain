@@ -272,6 +272,7 @@ defmodule InstagrainWeb.CoreComponents do
   attr :name, :any
   attr :label, :string, default: nil
   attr :value, :any
+  attr :class, :any, default: nil
 
   attr :type, :string,
     default: "text",
@@ -309,21 +310,20 @@ defmodule InstagrainWeb.CoreComponents do
       end)
 
     ~H"""
-    <div phx-feedback-for={@name}>
-      <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
-        <input type="hidden" name={@name} value="false" />
+    <div phx-feedback-for={@name} class="mb-[-6px]">
+      <label class="inline-flex items-center cursor-pointer">
         <input
           type="checkbox"
           id={@id}
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          class="sr-only peer"
           {@rest}
         />
-        <%= @label %>
+        <div class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-4 rtl:peer-checked:after:-translate-x-4 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black">
+        </div>
       </label>
-      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end
@@ -374,15 +374,16 @@ defmodule InstagrainWeb.CoreComponents do
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
-        ]}
+        class={
+          if @class,
+            do: @class,
+            else: [
+              "block w-full h-7.5 p-0 border-0 outline-none outline-clear",
+              "placeholder:font-medium placeholder:text-neutral-500 text-black font-medium"
+            ]
+        }
         {@rest}
       />
-      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end
