@@ -4,13 +4,15 @@ defmodule Instagrain.Feed.Post do
 
   schema "posts" do
     field :image, :string
-    field :likes, :integer
+    field :likes, :integer, default: 0
     field :caption, :string
-    field :location, :string, virtual: true
     field :location_id, :integer
     field :hide_likes, :boolean, default: false
     field :disable_comments, :boolean, default: false
     field :user_id, :id
+
+    field :location, :string, virtual: true
+    field :alts, :map, virtual: true
 
     timestamps(type: :utc_datetime)
   end
@@ -26,9 +28,10 @@ defmodule Instagrain.Feed.Post do
       :location,
       :hide_likes,
       :disable_comments,
-      :user_id
+      :user_id,
+      :alts
     ])
-    |> validate_required([:image, :likes, :hide_likes, :disable_comments, :user_id])
+    |> validate_required([:likes, :hide_likes, :disable_comments, :user_id])
     |> validate_length(:caption, max: 2200)
   end
 end

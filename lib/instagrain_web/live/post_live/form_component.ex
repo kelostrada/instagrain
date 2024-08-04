@@ -63,10 +63,24 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <%= if @step != :create do %>
             <div class="grow h-full bg-neutral-50">
               <div class="relative w-full h-full">
+                <% entry = Enum.at(@uploads.file.entries, @selected_item) %>
+
                 <.live_img_preview
-                  entry={Enum.at(@uploads.file.entries, @selected_item)}
+                  entry={entry}
+                  id={"preview-#{entry.ref}"}
                   class="w-full h-full object-contain absolute top-0 left-0"
                 />
+
+                <button
+                  type="button"
+                  phx-click="cancel-upload"
+                  phx-value-ref={entry.ref}
+                  phx-target={@myself}
+                  aria-label="cancel"
+                  class="absolute top-6 right-6"
+                >
+                  &times;
+                </button>
 
                 <% entries_len = length(@uploads.file.entries) %>
                 <%= if entries_len > 1 && @selected_item > 0 do %>
@@ -157,14 +171,21 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                       <p class="text-neutral-500 text-xs font-normal">
                         Alt text describes your photos for people with visual impairments. Alt text will be automatically created for your photos or you can choose to write your own.
                       </p>
+
                       <%= for entry <- @uploads.file.entries do %>
                         <div class="my-3 flex">
                           <div class="w-11 h-11">
-                            <.live_img_preview entry={entry} class="w-full h-full object-cover" />
+                            <.live_img_preview
+                              id={"alts-#{entry.ref}"}
+                              entry={entry}
+                              class="w-full h-full object-cover"
+                            />
                           </div>
-                          <div class="ml-2 grow w-full">
+                          <div class="ml-2 grow">
                             <.input
-                              field={@form[:location]}
+                              field={@form[:alts]}
+                              multiple={true}
+                              index={entry.ref}
                               type="text"
                               placeholder="Write alt text..."
                               class={[
@@ -249,7 +270,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
-  def handle_event("validate", _, socket) do
+  def handle_event("validate", %{"_target" => ["file"]}, socket) do
     {:noreply, socket}
   end
 
@@ -265,7 +286,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
             cancel_upload(socket, :file, entry.ref)
           end)
 
-        {:noreply, socket}
+        {:noreply, assign(socket, selected_item: 0)}
 
       :final ->
         {:noreply, assign(socket, previewed?: false)}
@@ -326,21 +347,57 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     end
   end
 
-  defp save_post(socket, :new, post_params, _uploaded_files) do
-    post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
+  defp save_post(socket, :new, post_params, uploaded_files) do
+    location_id = find_location(post_params["location"])
 
-    case Feed.create_post(post_params) do
-      {:ok, post} ->
-        notify_parent({:saved, post})
+    post_params =
+      post_params
+      |> Map.put("user_id", socket.assigns.user.id)
+      |> Map.put("location_id", location_id)
 
+    with {:ok, post} <- Feed.create_post(post_params) |> IO.inspect(),
+         {:ok, image} <- save_resources(post, post_params, uploaded_files) |> IO.inspect(),
+         {:ok, post} <- Feed.update_post(post, %{image: image}) |> IO.inspect() do
+      notify_parent({:saved, post})
+
+      {:noreply,
+       socket
+       |> put_flash(:info, "Post created successfully")
+       |> push_patch(to: socket.assigns.patch)}
+    else
+      _ ->
         {:noreply,
          socket
-         |> put_flash(:info, "Post created successfully")
+         |> put_flash(:error, "Post creation failed")
          |> push_patch(to: socket.assigns.patch)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  defp find_location(_location) do
+    1
+  end
+
+  defp save_resources(post, post_params, uploaded_files) do
+    alts = post_params["alts"]
+
+    Enum.reduce(uploaded_files, {:ok, ""}, fn
+      file, {:ok, image} ->
+        case Feed.create_resource(%{
+               post_id: post.id,
+               file: file.filename,
+               type: :photo,
+               alt: alts[file.entry.ref]
+             }) do
+          {:ok, _resource} ->
+            {:ok, if(image == "", do: file.filename, else: image)}
+
+          {:error, error} ->
+            {:error, error}
+        end
+
+      _file, {:error, error} ->
+        {:error, error}
+    end)
   end
 
   defp current_step(assigns) do

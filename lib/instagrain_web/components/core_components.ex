@@ -287,6 +287,7 @@ defmodule InstagrainWeb.CoreComponents do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :index, :string, default: nil
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
@@ -298,7 +299,9 @@ defmodule InstagrainWeb.CoreComponents do
     assigns
     |> assign(field: nil, id: assigns.id || field.id)
     |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
-    |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
+    |> assign_new(:name, fn ->
+      if assigns.multiple, do: field.name <> "[#{assigns.index}]", else: field.name
+    end)
     |> assign_new(:value, fn -> field.value end)
     |> input()
   end
@@ -373,7 +376,11 @@ defmodule InstagrainWeb.CoreComponents do
         type={@type}
         name={@name}
         id={@id}
-        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        value={
+          if @multiple,
+            do: Phoenix.HTML.Form.normalize_value(@type, @value[to_string(@index)]),
+            else: Phoenix.HTML.Form.normalize_value(@type, @value)
+        }
         class={
           if @class,
             do: @class,
