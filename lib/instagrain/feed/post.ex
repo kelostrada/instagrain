@@ -9,7 +9,8 @@ defmodule Instagrain.Feed.Post do
     field :location_id, :integer
     field :hide_likes, :boolean, default: false
     field :disable_comments, :boolean, default: false
-    field :user_id, :id
+    belongs_to :user, Instagrain.Accounts.User
+    has_many :resources, Instagrain.Feed.Post.Resource
 
     field :location, :string, virtual: true
     field :alts, :map, virtual: true

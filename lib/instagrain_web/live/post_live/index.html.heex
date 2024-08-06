@@ -1,3 +1,9 @@
+<div class="max-w-[470px]">
+  <div :for={{id, post} <- @streams.posts} id={id}>
+    <.live_component module={InstagrainWeb.PostLive.PostComponent} id={post.id} post={post} />
+  </div>
+</div>
+
 <.header>
   Listing Posts
   <:actions>

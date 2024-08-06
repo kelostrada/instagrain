@@ -18,7 +18,9 @@ defmodule Instagrain.Feed do
 
   """
   def list_posts do
-    Repo.all(Post)
+    from(p in Post, order_by: {:desc, p.inserted_at})
+    |> Repo.all()
+    |> Repo.preload([:user, :resources])
   end
 
   @doc """

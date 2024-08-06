@@ -36,6 +36,19 @@ let liveSocket = new LiveSocket("/live", Socket, {
           document.getElementById(clickTargetId).click()
         })
       }
+    },
+    Resizable: {
+      mounted() {
+        this.el.addEventListener('input', function () {
+          this.style.height = 'auto';
+          this.style.height = this.scrollHeight + 'px';
+        });
+      },
+
+      updated() {
+        this.el.style.height = 'auto';
+        this.el.style.height = this.el.scrollHeight + 'px';
+      }
     }
   }
 })
