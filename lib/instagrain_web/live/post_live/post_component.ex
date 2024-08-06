@@ -41,7 +41,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           />
           <.icon
             name="hero-paper-airplane"
-            class="w-7 h-7 rotate-[-26deg] -translate-y-1 cursor-pointer hover:text-neutral-400 "
+            class="w-7 h-7 rotate-[-29deg] -translate-y-1 cursor-pointer hover:text-neutral-400 "
           />
         </div>
         <div class="flex py-3 flex-row-reverse">
