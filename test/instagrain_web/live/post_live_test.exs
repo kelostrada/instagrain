@@ -4,9 +4,30 @@ defmodule InstagrainWeb.PostLiveTest do
   import Phoenix.LiveViewTest
   import Instagrain.FeedFixtures
 
-  @create_attrs %{image: "some image", likes: 42, caption: "some caption", location_id: 42, hide_likes: true, disable_comments: true}
-  @update_attrs %{image: "some updated image", likes: 43, caption: "some updated caption", location_id: 43, hide_likes: false, disable_comments: false}
-  @invalid_attrs %{image: nil, likes: nil, caption: nil, location_id: nil, hide_likes: false, disable_comments: false}
+  @create_attrs %{
+    image: "some image",
+    likes: 42,
+    caption: "some caption",
+    location_id: 42,
+    hide_likes: true,
+    disable_comments: true
+  }
+  @update_attrs %{
+    image: "some updated image",
+    likes: 43,
+    caption: "some updated caption",
+    location_id: 43,
+    hide_likes: false,
+    disable_comments: false
+  }
+  @invalid_attrs %{
+    image: nil,
+    likes: nil,
+    caption: nil,
+    location_id: nil,
+    hide_likes: false,
+    disable_comments: false
+  }
 
   defp create_post(_) do
     post = post_fixture()

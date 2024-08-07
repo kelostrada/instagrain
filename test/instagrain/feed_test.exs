@@ -8,7 +8,14 @@ defmodule Instagrain.FeedTest do
 
     import Instagrain.FeedFixtures
 
-    @invalid_attrs %{image: nil, likes: nil, caption: nil, location_id: nil, hide_likes: nil, disable_comments: nil}
+    @invalid_attrs %{
+      image: nil,
+      likes: nil,
+      caption: nil,
+      location_id: nil,
+      hide_likes: nil,
+      disable_comments: nil
+    }
 
     test "list_posts/0 returns all posts" do
       post = post_fixture()
@@ -21,7 +28,14 @@ defmodule Instagrain.FeedTest do
     end
 
     test "create_post/1 with valid data creates a post" do
-      valid_attrs = %{image: "some image", likes: 42, caption: "some caption", location_id: 42, hide_likes: true, disable_comments: true}
+      valid_attrs = %{
+        image: "some image",
+        likes: 42,
+        caption: "some caption",
+        location_id: 42,
+        hide_likes: true,
+        disable_comments: true
+      }
 
       assert {:ok, %Post{} = post} = Feed.create_post(valid_attrs)
       assert post.image == "some image"
@@ -38,7 +52,15 @@ defmodule Instagrain.FeedTest do
 
     test "update_post/2 with valid data updates the post" do
       post = post_fixture()
-      update_attrs = %{image: "some updated image", likes: 43, caption: "some updated caption", location_id: 43, hide_likes: false, disable_comments: false}
+
+      update_attrs = %{
+        image: "some updated image",
+        likes: 43,
+        caption: "some updated caption",
+        location_id: 43,
+        hide_likes: false,
+        disable_comments: false
+      }
 
       assert {:ok, %Post{} = post} = Feed.update_post(post, update_attrs)
       assert post.image == "some updated image"

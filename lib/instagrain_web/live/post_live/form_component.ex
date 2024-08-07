@@ -328,8 +328,6 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     save_post(socket, socket.assigns.action, post_params, uploaded_files)
   end
 
-  # ~p"/uploads/#{filename}"
-
   defp save_post(socket, :edit, post_params, _uploaded_files) do
     post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
 

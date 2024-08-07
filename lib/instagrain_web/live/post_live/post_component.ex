@@ -69,7 +69,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           <%= @post.user.email |> String.split("@") |> List.first() %>
         </span>
 
-        <%= if @show_more || String.length(@post.caption) <= 125 do %>
+        <%= if @show_more || !@post.caption || String.length(@post.caption) <= 125 do %>
           <span><%= @post.caption %></span>
         <% else %>
           <span><%= String.slice(@post.caption, 0, 125) %>...</span>

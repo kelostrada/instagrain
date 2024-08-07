@@ -15,6 +15,6 @@ defmodule Instagrain.Feed.Post.Resource do
   def changeset(resource, attrs) do
     resource
     |> cast(attrs, [:file, :alt, :type])
-    |> validate_required([:file, :alt, :type])
+    |> validate_required([:file, :type])
   end
 end

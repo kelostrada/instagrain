@@ -45,9 +45,7 @@ defmodule Instagrain.FeedFixtures do
   def like_fixture(attrs \\ %{}) do
     {:ok, like} =
       attrs
-      |> Enum.into(%{
-
-      })
+      |> Enum.into(%{})
       |> Instagrain.Feed.create_like()
 
     like

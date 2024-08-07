@@ -2,7 +2,11 @@
   <.button>New Post</.button>
 </.link>
 
-<div class="max-w-[470px] divide-y divide-zinc-200 mx-auto">
+<div
+  id="posts"
+  class="max-w-[470px] divide-y divide-zinc-200 mx-auto"
+  phx-update={match?(%Phoenix.LiveView.LiveStream{}, @streams.posts) && "stream"}
+>
   <div :for={{id, post} <- @streams.posts} id={id} class="py-4">
     <.live_component
       module={InstagrainWeb.PostLive.PostComponent}

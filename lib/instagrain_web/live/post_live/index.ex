@@ -34,7 +34,7 @@ defmodule InstagrainWeb.PostLive.Index do
 
   @impl true
   def handle_info({InstagrainWeb.PostLive.FormComponent, {:saved, post}}, socket) do
-    {:noreply, stream_insert(socket, :posts, post)}
+    {:noreply, stream_insert(socket, :posts, post, at: 0)}
   end
 
   def handle_info({InstagrainWeb.PostLive.PostComponent, {:error, message}}, socket) do
