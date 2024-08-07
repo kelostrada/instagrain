@@ -23,10 +23,10 @@ defmodule InstagrainWeb.Router do
     live_session :instagrain,
       on_mount: [{InstagrainWeb.UserAuth, :mount_current_user}] do
       live "/", PostLive.Index, :index
-      live "/posts/new", PostLive.Index, :new
-      live "/posts/:id", PostLive.Show, :show
-      live "/posts/:id/edit", PostLive.Index, :edit
-      live "/posts/:id/show/edit", PostLive.Show, :edit
+      live "/p/new", PostLive.Index, :new
+      live "/p/:id", PostLive.Show, :show
+      live "/p/:id/edit", PostLive.Index, :edit
+      live "/p/:id/show/edit", PostLive.Show, :edit
     end
   end
 

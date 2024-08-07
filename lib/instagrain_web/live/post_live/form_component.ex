@@ -19,13 +19,13 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       <.live_file_input id="post-form-upload" upload={@uploads.file} class="hidden" />
 
       <div class="flex flex-col h-full divide-y divide-solid divide-neutral-300">
-        <div class="flex justify-between items-center">
+        <div class="flex items-center">
           <%= if @step != :create do %>
             <div class="flex-1 cursor-pointer text-left pl-4" phx-click="back" phx-target={@myself}>
               <.icon name="hero-arrow-left" class="h-6 w-6" />
             </div>
           <% end %>
-          <div class="flex-1 text-center font-bold text-base leading-10 py-px">
+          <div class="grow text-center font-bold text-base leading-10 py-px">
             <%= step_to_title(@step) %>
           </div>
           <%= if @step == :preview do %>
@@ -61,7 +61,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <% end %>
 
           <%= if @step != :create do %>
-            <div class="grow h-full bg-neutral-50">
+            <div class={"grow h-full bg-neutral-50 #{if @step == :final, do: "max-sm:hidden"}"}>
               <div class="relative w-full h-full">
                 <% entry = Enum.at(@uploads.file.entries, @selected_item) %>
 
@@ -117,7 +117,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
               </div>
             </div>
             <%= if @step == :final do %>
-              <div class="flex-none w-85 overflow-auto">
+              <div class="flex-none max-sm:w-full md:w-85 overflow-auto">
                 <div class="flex px-4 pt-4.5 pb-3.5 items-center">
                   <div class="pr-3">
                     <div class="rounded-full border">
@@ -411,10 +411,6 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
-
-  defp error_to_string(:too_large), do: "Too large"
-  defp error_to_string(:too_many_files), do: "You have selected too many files"
-  defp error_to_string(:not_accepted), do: "You have selected an unacceptable file type"
 
   defp step_to_title(:create), do: "Create new post"
   defp step_to_title(:preview), do: "Preview"

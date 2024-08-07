@@ -9,6 +9,8 @@
     height: calc(100vh - 24vh + 2.625rem + 1px);
     max-width: min(calc(100vw - 24vw - 21.25rem), calc(100vh - 24vh + 2.625rem + 1px));
     max-height: min(calc(100vw - 24vw - 21.25rem), calc(100vh - 24vh + 2.625rem + 1px));
+    min-height: 414px;
+    min-width: calc(min(95vw, 371px));
 }
 
 .wide-modal {
@@ -16,6 +18,8 @@
     height: calc(100vh - 24vh + 2.625rem + 1px);
     max-width: max(calc(100vw - 2vw), calc(100vh - 24vh + 2.625rem + 1px));
     max-height: max(calc(100vw - 2vw), calc(100vh - 24vh + 2.625rem + 1px));
+    min-height: 414px;
+    min-width: calc(min(95vw, 371px))
 }
 
 @media (max-width: calc(100vh - 10vh + 21.25rem)) {
