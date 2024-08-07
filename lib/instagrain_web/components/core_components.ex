@@ -385,12 +385,15 @@ defmodule InstagrainWeb.CoreComponents do
           if @class,
             do: @class,
             else: [
-              "block w-full h-7.5 p-0 border-0 outline-none outline-clear",
-              "placeholder:font-medium placeholder:text-neutral-500 text-black font-medium"
+              "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
+              "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
+              @errors == [] && "border-zinc-300 focus:border-zinc-400",
+              @errors != [] && "border-rose-400 focus:border-rose-400"
             ]
         }
         {@rest}
       />
+      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end

@@ -38,7 +38,11 @@ defmodule InstagrainWeb.PostLive.FormComponent do
             </div>
           <% end %>
           <%= if @step == :final do %>
-            <button class="flex-1 cursor-pointer text-right font-bold text-sm text-sky-500 leading-10 pr-4">
+            <button
+              class="flex-1 cursor-pointer text-right font-bold text-sm text-sky-500 leading-10 pr-4 disabled:text-neutral-400"
+              phx-disable-with="Saving..."
+              disabled={@form.errors != []}
+            >
               Share
             </button>
           <% end %>
@@ -139,7 +143,9 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                   </div>
                   <div class="p-2.5">
                     <span class={"text-xs #{if @form[:caption].errors != [], do: "text-rose-600", else: "text-neutral-350"}"}>
-                      <%= String.length(@form[:caption].value || "") %> / 2,200
+                      <%= (@form[:caption].value || "")
+                      |> String.length()
+                      |> InstagrainWeb.PostLive.PostComponent.format_number() %> / 2,200
                     </span>
                   </div>
                 </div>
@@ -147,7 +153,15 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                 <div class="border-b border-neutral-300">
                   <div class="flex justify-between items-center py-[7px] px-4">
                     <div class="">
-                      <.input field={@form[:location]} type="text" placeholder="Add Location" />
+                      <.input
+                        field={@form[:location]}
+                        type="text"
+                        placeholder="Add Location"
+                        class={[
+                          "block w-full h-7.5 p-0 border-0 outline-none outline-clear",
+                          "placeholder:font-medium placeholder:text-neutral-500 text-black font-medium"
+                        ]}
+                      />
                     </div>
                     <div>
                       <.icon name="hero-map-pin" class="h-5 w-5 text-black" />
@@ -254,18 +268,19 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   end
 
   @impl true
-  def update(%{post: post} = assigns, socket) do
+  def update(%{post: post, user: user} = assigns, socket) do
     {:ok,
      socket
      |> assign(assigns)
      |> assign_new(:form, fn ->
-       to_form(Feed.change_post(post))
+       to_form(Feed.change_post(post, %{user_id: user.id}))
      end)
      |> allow_upload(:file, accept: ~w(.jpg .jpeg .png .avi .mov .mpg .mp4), max_entries: 9)}
   end
 
   @impl true
   def handle_event("validate", %{"post" => post_params}, socket) do
+    post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
     changeset = Feed.change_post(socket.assigns.post, post_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
