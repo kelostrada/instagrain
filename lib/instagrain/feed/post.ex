@@ -14,6 +14,7 @@ defmodule Instagrain.Feed.Post do
 
     field :location, :string, virtual: true
     field :alts, :map, virtual: true
+    field :liked_by_current_user?, :boolean, virtual: true
 
     timestamps(type: :utc_datetime)
   end

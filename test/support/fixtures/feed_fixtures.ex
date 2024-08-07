@@ -38,4 +38,18 @@ defmodule Instagrain.FeedFixtures do
 
     resource
   end
+
+  @doc """
+  Generate a like.
+  """
+  def like_fixture(attrs \\ %{}) do
+    {:ok, like} =
+      attrs
+      |> Enum.into(%{
+
+      })
+      |> Instagrain.Feed.create_like()
+
+    like
+  end
 end

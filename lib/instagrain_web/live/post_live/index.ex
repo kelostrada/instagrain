@@ -6,7 +6,7 @@ defmodule InstagrainWeb.PostLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :posts, Feed.list_posts())}
+    {:ok, stream(socket, :posts, Feed.list_posts(socket.assigns.current_user.id))}
   end
 
   @impl true
@@ -35,6 +35,10 @@ defmodule InstagrainWeb.PostLive.Index do
   @impl true
   def handle_info({InstagrainWeb.PostLive.FormComponent, {:saved, post}}, socket) do
     {:noreply, stream_insert(socket, :posts, post)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.PostComponent, {:error, message}}, socket) do
+    {:noreply, put_flash(socket, :error, message)}
   end
 
   @impl true

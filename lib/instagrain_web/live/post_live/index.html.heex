@@ -1,6 +1,11 @@
 <div class="max-w-[470px] divide-y divide-zinc-200">
   <div :for={{id, post} <- @streams.posts} id={id} class="py-4">
-    <.live_component module={InstagrainWeb.PostLive.PostComponent} id={post.id} post={post} />
+    <.live_component
+      module={InstagrainWeb.PostLive.PostComponent}
+      id={post.id}
+      post={post}
+      user={@current_user}
+    />
   </div>
 </div>
 

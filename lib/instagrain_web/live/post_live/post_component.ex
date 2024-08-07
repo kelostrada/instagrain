@@ -34,14 +34,25 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       <div class="grid grid-cols-2">
         <div class="flex gap-4 py-3">
-          <.icon name="hero-heart" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
+          <%= if @post.liked_by_current_user? do %>
+            <span phx-click="unlike" phx-target={@myself}>
+              <.icon
+                name="hero-heart-solid"
+                class="w-7 h-7 cursor-pointer hover:text-neutral-400 bg-red-500"
+              />
+            </span>
+          <% else %>
+            <span phx-click="like" phx-target={@myself}>
+              <.icon name="hero-heart" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
+            </span>
+          <% end %>
           <.icon
             name="hero-chat-bubble-oval-left"
             class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
           />
           <.icon
             name="hero-paper-airplane"
-            class="w-7 h-7 rotate-[-29deg] -translate-y-1 cursor-pointer hover:text-neutral-400 "
+            class="w-7 h-7 ml-1 rotate-[-27deg] translate-y-[-0.1875rem] cursor-pointer hover:text-neutral-400 "
           />
         </div>
         <div class="flex py-3 flex-row-reverse">
@@ -107,6 +118,28 @@ defmodule InstagrainWeb.PostLive.PostComponent do
     {:noreply, assign(socket, show_more: true)}
   end
 
+  def handle_event("like", _, socket) do
+    case Instagrain.Feed.like(socket.assigns.post, socket.assigns.user.id) do
+      {:ok, post} ->
+        {:noreply, assign(socket, post: post)}
+
+      _ ->
+        notify_parent({:error, "Like failed"})
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("unlike", _, socket) do
+    case Instagrain.Feed.unlike(socket.assigns.post, socket.assigns.user.id) do
+      {:ok, post} ->
+        {:noreply, assign(socket, post: post)}
+
+      _ ->
+        notify_parent({:error, "Unlike failed"})
+        {:noreply, socket}
+    end
+  end
+
   def handle_event("comment-edit", params, socket) do
     {:noreply, assign(socket, comment: params["comment"])}
   end
@@ -151,4 +184,6 @@ defmodule InstagrainWeb.PostLive.PostComponent do
     |> Enum.join(",")
     |> String.reverse()
   end
+
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

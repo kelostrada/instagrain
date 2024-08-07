@@ -18,24 +18,17 @@ defmodule InstagrainWeb.Router do
   end
 
   scope "/", InstagrainWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
+    pipe_through [:browser, :require_authenticated_user]
 
     live_session :instagrain,
       on_mount: [{InstagrainWeb.UserAuth, :mount_current_user}] do
-      live "/posts", PostLive.Index, :index
+      live "/", PostLive.Index, :index
       live "/posts/new", PostLive.Index, :new
       live "/posts/:id", PostLive.Show, :show
       live "/posts/:id/edit", PostLive.Index, :edit
       live "/posts/:id/show/edit", PostLive.Show, :edit
     end
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", InstagrainWeb do
-  #   pipe_through :api
-  # end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:instagrain, :dev_routes) do

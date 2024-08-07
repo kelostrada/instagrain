@@ -124,4 +124,56 @@ defmodule Instagrain.FeedTest do
       assert %Ecto.Changeset{} = Feed.change_resource(resource)
     end
   end
+
+  describe "post_likes" do
+    alias Instagrain.Feed.Post.Like
+
+    import Instagrain.FeedFixtures
+
+    @invalid_attrs %{}
+
+    test "list_post_likes/0 returns all post_likes" do
+      like = like_fixture()
+      assert Feed.list_post_likes() == [like]
+    end
+
+    test "get_like!/1 returns the like with given id" do
+      like = like_fixture()
+      assert Feed.get_like!(like.id) == like
+    end
+
+    test "create_like/1 with valid data creates a like" do
+      valid_attrs = %{}
+
+      assert {:ok, %Like{} = like} = Feed.create_like(valid_attrs)
+    end
+
+    test "create_like/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Feed.create_like(@invalid_attrs)
+    end
+
+    test "update_like/2 with valid data updates the like" do
+      like = like_fixture()
+      update_attrs = %{}
+
+      assert {:ok, %Like{} = like} = Feed.update_like(like, update_attrs)
+    end
+
+    test "update_like/2 with invalid data returns error changeset" do
+      like = like_fixture()
+      assert {:error, %Ecto.Changeset{}} = Feed.update_like(like, @invalid_attrs)
+      assert like == Feed.get_like!(like.id)
+    end
+
+    test "delete_like/1 deletes the like" do
+      like = like_fixture()
+      assert {:ok, %Like{}} = Feed.delete_like(like)
+      assert_raise Ecto.NoResultsError, fn -> Feed.get_like!(like.id) end
+    end
+
+    test "change_like/1 returns a like changeset" do
+      like = like_fixture()
+      assert %Ecto.Changeset{} = Feed.change_like(like)
+    end
+  end
 end
