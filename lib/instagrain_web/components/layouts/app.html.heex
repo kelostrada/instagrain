@@ -1,4 +1,33 @@
-<main class="px-4 py-20 sm:px-6 lg:px-8">
+<%= if @current_user do %>
+  <nav class={[
+    "flex items-center",
+    "bg-white  z-10 fixed",
+    "sm:h-full sm:border-r-[1px] sm:p-3 sm:flex-col",
+    "max-sm:w-full max-sm:bottom-0 max-sm:border-t-[1px] max-sm:justify-around"
+  ]}>
+    <div class="sm:py-2.5 max-sm:hidden">
+      <.nav_button patch={~p"/"} icon_name="instagram-logo" size={:small} />
+    </div>
+
+    <.nav_button
+      patch={~p"/"}
+      icon_name="hero-home"
+      icon_name_solid="hero-home-solid"
+      solid?={@socket.view == InstagrainWeb.PostLive.Index}
+    />
+
+    <.nav_button patch={~p"/p/new"} icon_name="hero-plus-circle" />
+
+    <.nav_button
+      patch={~p"/users/settings"}
+      icon_name="hero-cog-8-tooth"
+      icon_name_solid="hero-cog-8-tooth-solid"
+      solid?={@socket.view == InstagrainWeb.UserSettingsLive}
+    />
+  </nav>
+<% end %>
+
+<main class="sm:py-20 sm:px-6 lg:px-8 grow">
   <.flash_group flash={@flash} />
   <%= @inner_content %>
 </main>

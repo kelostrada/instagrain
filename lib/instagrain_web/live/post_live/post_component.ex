@@ -32,7 +32,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       <img src={~p"/uploads/#{@post.image}"} class="w-full" />
 
-      <div class="grid grid-cols-2">
+      <div class="grid grid-cols-2 px-3">
         <div class="flex gap-4 py-3">
           <%= if @post.liked_by_current_user? do %>
             <span phx-click="unlike" phx-target={@myself}>
@@ -60,11 +60,11 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </div>
       </div>
 
-      <div class="font-semibold	text-sm">
+      <div class="font-semibold	text-sm px-3">
         <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
       </div>
 
-      <div class="my-1 text-sm">
+      <div class="my-1 text-sm px-3">
         <span class="font-semibold">
           <%= @post.user.email |> String.split("@") |> List.first() %>
         </span>
@@ -83,6 +83,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         phx-target={@myself}
         phx-change="comment-edit"
         phx-submit="save-comment"
+        class="px-3"
       >
         <div class="flex justify-between">
           <textarea
