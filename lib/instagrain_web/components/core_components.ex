@@ -314,7 +314,7 @@ defmodule InstagrainWeb.CoreComponents do
 
     ~H"""
     <div phx-feedback-for={@name} class="mb-[-6px]">
-      <label class="inline-flex items-center cursor-pointer">
+      <label class="inline-flex items-center cursor-pointer text-sm">
         <input
           type="checkbox"
           id={@id}
@@ -326,7 +326,9 @@ defmodule InstagrainWeb.CoreComponents do
         />
         <div class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-4 rtl:peer-checked:after:-translate-x-4 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black">
         </div>
+        <span class="ml-2"><%= @label %></span>
       </label>
+      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end
