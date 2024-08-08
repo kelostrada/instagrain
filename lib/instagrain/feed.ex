@@ -22,11 +22,16 @@ defmodule Instagrain.Feed do
       [%Post{}, ...]
 
   """
-  def list_posts(current_user_id) do
+  def list_posts(current_user_id, page \\ 0) do
+    limit = 3
+    offset = 3 * page
+
     from(p in Post,
       left_join: l in Like,
       on: l.post_id == p.id and l.user_id == ^current_user_id,
       order_by: {:desc, p.inserted_at},
+      offset: ^offset,
+      limit: ^limit,
       select: %{p | liked_by_current_user?: not is_nil(l.post_id)}
     )
     |> Repo.all()

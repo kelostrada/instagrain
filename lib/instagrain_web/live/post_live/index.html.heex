@@ -2,6 +2,7 @@
   id="posts"
   class="max-w-[470px] divide-y divide-zinc-200 mx-auto"
   phx-update={match?(%Phoenix.LiveView.LiveStream{}, @streams.posts) && "stream"}
+  phx-viewport-bottom={!@end_reached? && "load-more"}
 >
   <div :for={{id, post} <- @streams.posts} id={id} class="py-4">
     <.live_component
@@ -11,6 +12,10 @@
       user={@current_user}
     />
   </div>
+</div>
+
+<div :if={@end_reached?} class="mt-5 text-xl text-center">
+  No more posts available
 </div>
 
 <.modal :if={@live_action in [:new, :edit]} id="post-modal" show on_cancel={JS.patch(~p"/")}>

@@ -6,7 +6,10 @@ defmodule InstagrainWeb.PostLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :posts, Feed.list_posts(socket.assigns.current_user.id))}
+    {:ok,
+     socket
+     |> stream(:posts, Feed.list_posts(socket.assigns.current_user.id))
+     |> assign(page: 0, end_reached?: false)}
   end
 
   @impl true
@@ -47,5 +50,20 @@ defmodule InstagrainWeb.PostLive.Index do
     {:ok, _} = Feed.delete_post(post)
 
     {:noreply, stream_delete(socket, :posts, post)}
+  end
+
+  def handle_event("load-more", _, socket) do
+    posts = Feed.list_posts(socket.assigns.current_user.id, socket.assigns.page + 1)
+
+    if posts == [] do
+      {:noreply, assign(socket, end_reached?: true)}
+    else
+      socket =
+        Enum.reduce(posts, socket, fn post, socket ->
+          stream_insert(socket, :posts, post)
+        end)
+
+      {:noreply, assign(socket, page: socket.assigns.page + 1)}
+    end
   end
 end
