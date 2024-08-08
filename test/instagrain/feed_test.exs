@@ -286,7 +286,8 @@ defmodule Instagrain.FeedTest do
       comment_like = comment_like_fixture()
       update_attrs = %{}
 
-      assert {:ok, %CommentLike{} = comment_like} = Feed.update_comment_like(comment_like, update_attrs)
+      assert {:ok, %CommentLike{} = comment_like} =
+               Feed.update_comment_like(comment_like, update_attrs)
     end
 
     test "update_comment_like/2 with invalid data returns error changeset" do
@@ -304,6 +305,58 @@ defmodule Instagrain.FeedTest do
     test "change_comment_like/1 returns a comment_like changeset" do
       comment_like = comment_like_fixture()
       assert %Ecto.Changeset{} = Feed.change_comment_like(comment_like)
+    end
+  end
+
+  describe "post_saves" do
+    alias Instagrain.Feed.Post.Save
+
+    import Instagrain.FeedFixtures
+
+    @invalid_attrs %{}
+
+    test "list_post_saves/0 returns all post_saves" do
+      save = save_fixture()
+      assert Feed.list_post_saves() == [save]
+    end
+
+    test "get_save!/1 returns the save with given id" do
+      save = save_fixture()
+      assert Feed.get_save!(save.id) == save
+    end
+
+    test "create_save/1 with valid data creates a save" do
+      valid_attrs = %{}
+
+      assert {:ok, %Save{} = save} = Feed.create_save(valid_attrs)
+    end
+
+    test "create_save/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Feed.create_save(@invalid_attrs)
+    end
+
+    test "update_save/2 with valid data updates the save" do
+      save = save_fixture()
+      update_attrs = %{}
+
+      assert {:ok, %Save{} = save} = Feed.update_save(save, update_attrs)
+    end
+
+    test "update_save/2 with invalid data returns error changeset" do
+      save = save_fixture()
+      assert {:error, %Ecto.Changeset{}} = Feed.update_save(save, @invalid_attrs)
+      assert save == Feed.get_save!(save.id)
+    end
+
+    test "delete_save/1 deletes the save" do
+      save = save_fixture()
+      assert {:ok, %Save{}} = Feed.delete_save(save)
+      assert_raise Ecto.NoResultsError, fn -> Feed.get_save!(save.id) end
+    end
+
+    test "change_save/1 returns a save changeset" do
+      save = save_fixture()
+      assert %Ecto.Changeset{} = Feed.change_save(save)
     end
   end
 end

@@ -58,7 +58,18 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           />
         </div>
         <div class="flex py-3 flex-row-reverse">
-          <.icon name="hero-bookmark" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
+          <%= if @post.saved_by_current_user? do %>
+            <span phx-click="remove-save" phx-target={@myself}>
+              <.icon
+                name="hero-bookmark-solid"
+                class="w-7 h-7 cursor-pointer hover:text-neutral-400 bg-black"
+              />
+            </span>
+          <% else %>
+            <span phx-click="save" phx-target={@myself}>
+              <.icon name="hero-bookmark" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
+            </span>
+          <% end %>
         </div>
       </div>
 
@@ -209,6 +220,28 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       _ ->
         notify_parent({:error, "Unlike failed"})
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("save", _, socket) do
+    case Instagrain.Feed.save_post(socket.assigns.post.id, socket.assigns.user.id) do
+      {:ok, _} ->
+        {:noreply, assign(socket, post: %{socket.assigns.post | saved_by_current_user?: true})}
+
+      _ ->
+        notify_parent({:error, "Save failed"})
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("remove-save", _, socket) do
+    case Instagrain.Feed.remove_save_post(socket.assigns.post.id, socket.assigns.user.id) do
+      :ok ->
+        {:noreply, assign(socket, post: %{socket.assigns.post | saved_by_current_user?: false})}
+
+      _ ->
+        notify_parent({:error, "Remove Save failed"})
         {:noreply, socket}
     end
   end

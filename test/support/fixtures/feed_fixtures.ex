@@ -72,11 +72,21 @@ defmodule Instagrain.FeedFixtures do
   def comment_like_fixture(attrs \\ %{}) do
     {:ok, comment_like} =
       attrs
-      |> Enum.into(%{
-
-      })
+      |> Enum.into(%{})
       |> Instagrain.Feed.create_comment_like()
 
     comment_like
+  end
+
+  @doc """
+  Generate a save.
+  """
+  def save_fixture(attrs \\ %{}) do
+    {:ok, save} =
+      attrs
+      |> Enum.into(%{})
+      |> Instagrain.Feed.create_save()
+
+    save
   end
 end

@@ -12,6 +12,7 @@ defmodule Instagrain.Feed do
   alias Instagrain.Feed.Post.CommentLike
   alias Instagrain.Feed.Post.Like
   alias Instagrain.Feed.Post.Resource
+  alias Instagrain.Feed.Post.Save
 
   @doc """
   Returns the list of posts.
@@ -29,10 +30,16 @@ defmodule Instagrain.Feed do
     from(p in Post,
       left_join: l in Like,
       on: l.post_id == p.id and l.user_id == ^current_user_id,
+      left_join: s in Save,
+      on: s.post_id == p.id and s.user_id == ^current_user_id,
       order_by: {:desc, p.inserted_at},
       offset: ^offset,
       limit: ^limit,
-      select: %{p | liked_by_current_user?: not is_nil(l.post_id)}
+      select: %{
+        p
+        | liked_by_current_user?: not is_nil(l.post_id),
+          saved_by_current_user?: not is_nil(s.post_id)
+      }
     )
     |> Repo.all()
     |> Repo.preload([:user, :resources, comments: [:user, :comment_likes]])
@@ -409,6 +416,19 @@ defmodule Instagrain.Feed do
 
       error ->
         error
+    end
+  end
+
+  def save_post(post_id, user_id) do
+    %Save{}
+    |> Save.changeset(%{post_id: post_id, user_id: user_id})
+    |> Repo.insert()
+  end
+
+  def remove_save_post(post_id, user_id) do
+    case Repo.delete_all(from s in Save, where: s.post_id == ^post_id and s.user_id == ^user_id) do
+      {1, _} -> :ok
+      _ -> {:error, :not_found}
     end
   end
 end
