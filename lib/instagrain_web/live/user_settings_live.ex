@@ -3,6 +3,7 @@ defmodule InstagrainWeb.UserSettingsLive do
 
   alias Instagrain.Accounts
 
+  @impl true
   def render(assigns) do
     ~H"""
     <.header class="text-center">
@@ -73,6 +74,7 @@ defmodule InstagrainWeb.UserSettingsLive do
     """
   end
 
+  @impl true
   def mount(%{"token" => token}, _session, socket) do
     socket =
       case Accounts.update_user_email(socket.assigns.current_user, token) do
@@ -103,6 +105,7 @@ defmodule InstagrainWeb.UserSettingsLive do
     {:ok, socket}
   end
 
+  @impl true
   def handle_event("validate_email", params, socket) do
     %{"current_password" => password, "user" => user_params} = params
 

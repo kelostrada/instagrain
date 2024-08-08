@@ -5,8 +5,14 @@
     "sm:h-full sm:border-r-[1px] sm:p-3 sm:flex-col",
     "max-sm:w-full max-sm:bottom-0 max-sm:border-t-[1px] max-sm:justify-around"
   ]}>
-    <div class="sm:py-2.5 max-sm:hidden">
-      <.nav_button patch={~p"/"} icon_name="instagram-logo" size={:small} />
+    <div class="sm:py-2.5 max-sm:hidden lg:hidden -rotate-90">
+      <.nav_button patch={~p"/"} icon_name="instagrain-logo" size={:small} label="Home" />
+    </div>
+
+    <div class="max-lg:hidden px-3 py-6 w-48">
+      <.link patch={~p"/"} class="">
+        <img src={~p"/images/logo.svg"} />
+      </.link>
     </div>
 
     <.nav_button
@@ -14,20 +20,22 @@
       icon_name="hero-home"
       icon_name_solid="hero-home-solid"
       solid?={@socket.view == InstagrainWeb.PostLive.Index}
+      label="Home"
     />
 
-    <.nav_button patch={~p"/p/new"} icon_name="hero-plus-circle" />
+    <.nav_button patch={~p"/p/new"} icon_name="hero-plus-circle" label="Create" />
 
     <.nav_button
       patch={~p"/users/settings"}
       icon_name="hero-cog-8-tooth"
       icon_name_solid="hero-cog-8-tooth-solid"
       solid?={@socket.view == InstagrainWeb.UserSettingsLive}
+      label="Settings"
     />
   </nav>
 <% end %>
 
-<main class="sm:py-20 sm:px-6 lg:px-8 grow">
+<main class="sm:py-20 sm:px-6 sm:ml-[73px] lg:px-8 lg:ml-[217px] grow">
   <.flash_group flash={@flash} />
   <%= @inner_content %>
 </main>
