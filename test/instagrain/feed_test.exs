@@ -254,4 +254,56 @@ defmodule Instagrain.FeedTest do
       assert %Ecto.Changeset{} = Feed.change_comment(comment)
     end
   end
+
+  describe "post_comment_likes" do
+    alias Instagrain.Feed.Post.CommentLike
+
+    import Instagrain.FeedFixtures
+
+    @invalid_attrs %{}
+
+    test "list_post_comment_likes/0 returns all post_comment_likes" do
+      comment_like = comment_like_fixture()
+      assert Feed.list_post_comment_likes() == [comment_like]
+    end
+
+    test "get_comment_like!/1 returns the comment_like with given id" do
+      comment_like = comment_like_fixture()
+      assert Feed.get_comment_like!(comment_like.id) == comment_like
+    end
+
+    test "create_comment_like/1 with valid data creates a comment_like" do
+      valid_attrs = %{}
+
+      assert {:ok, %CommentLike{} = comment_like} = Feed.create_comment_like(valid_attrs)
+    end
+
+    test "create_comment_like/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Feed.create_comment_like(@invalid_attrs)
+    end
+
+    test "update_comment_like/2 with valid data updates the comment_like" do
+      comment_like = comment_like_fixture()
+      update_attrs = %{}
+
+      assert {:ok, %CommentLike{} = comment_like} = Feed.update_comment_like(comment_like, update_attrs)
+    end
+
+    test "update_comment_like/2 with invalid data returns error changeset" do
+      comment_like = comment_like_fixture()
+      assert {:error, %Ecto.Changeset{}} = Feed.update_comment_like(comment_like, @invalid_attrs)
+      assert comment_like == Feed.get_comment_like!(comment_like.id)
+    end
+
+    test "delete_comment_like/1 deletes the comment_like" do
+      comment_like = comment_like_fixture()
+      assert {:ok, %CommentLike{}} = Feed.delete_comment_like(comment_like)
+      assert_raise Ecto.NoResultsError, fn -> Feed.get_comment_like!(comment_like.id) end
+    end
+
+    test "change_comment_like/1 returns a comment_like changeset" do
+      comment_like = comment_like_fixture()
+      assert %Ecto.Changeset{} = Feed.change_comment_like(comment_like)
+    end
+  end
 end

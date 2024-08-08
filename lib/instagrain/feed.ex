@@ -9,6 +9,7 @@ defmodule Instagrain.Feed do
 
   alias Instagrain.Feed.Post
   alias Instagrain.Feed.Post.Comment
+  alias Instagrain.Feed.Post.CommentLike
   alias Instagrain.Feed.Post.Like
   alias Instagrain.Feed.Post.Resource
 
@@ -29,7 +30,21 @@ defmodule Instagrain.Feed do
       select: %{p | liked_by_current_user?: not is_nil(l.post_id)}
     )
     |> Repo.all()
-    |> Repo.preload([:user, :resources, comments: :user])
+    |> Repo.preload([:user, :resources, comments: [:user, :comment_likes]])
+    |> Enum.map(fn post ->
+      comments =
+        Enum.map(post.comments, fn comment ->
+          %{
+            comment
+            | liked_by_current_user?:
+                Enum.any?(comment.comment_likes, fn like ->
+                  like.user_id == current_user_id
+                end)
+          }
+        end)
+
+      %{post | comments: comments}
+    end)
   end
 
   @doc """
@@ -339,5 +354,52 @@ defmodule Instagrain.Feed do
   """
   def change_comment(%Comment{} = comment, attrs \\ %{}) do
     Comment.changeset(comment, attrs)
+  end
+
+  @doc """
+  Creates a like for comment, updates comment likes count.
+  """
+  def like_comment(comment_id, user_id) do
+    Multi.new()
+    |> Multi.insert(
+      :comment_like,
+      CommentLike.changeset(%CommentLike{}, %{comment_id: comment_id, user_id: user_id})
+    )
+    |> Multi.update_all(
+      :comment_update,
+      from(c in Comment, where: c.id == ^comment_id),
+      inc: [likes: 1]
+    )
+    |> Multi.one(:comment, from(c in Comment, where: c.id == ^comment_id))
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{comment: comment}} ->
+        {:ok, %{comment | liked_by_current_user?: true}}
+
+      error ->
+        error
+    end
+  end
+
+  def unlike_comment(comment_id, user_id) do
+    Multi.new()
+    |> Multi.delete_all(
+      :delete_comment_like,
+      from(cl in CommentLike, where: cl.comment_id == ^comment_id and cl.user_id == ^user_id)
+    )
+    |> Multi.update_all(
+      :comment_update,
+      from(c in Comment, where: c.id == ^comment_id),
+      inc: [likes: -1]
+    )
+    |> Multi.one(:comment, from(c in Comment, where: c.id == ^comment_id))
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{comment: comment}} ->
+        {:ok, %{comment | liked_by_current_user?: false}}
+
+      error ->
+        error
+    end
   end
 end

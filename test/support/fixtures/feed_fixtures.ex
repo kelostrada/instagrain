@@ -65,4 +65,18 @@ defmodule Instagrain.FeedFixtures do
 
     comment
   end
+
+  @doc """
+  Generate a comment_like.
+  """
+  def comment_like_fixture(attrs \\ %{}) do
+    {:ok, comment_like} =
+      attrs
+      |> Enum.into(%{
+
+      })
+      |> Instagrain.Feed.create_comment_like()
+
+    comment_like
+  end
 end
