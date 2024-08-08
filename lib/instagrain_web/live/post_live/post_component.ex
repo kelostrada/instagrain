@@ -7,7 +7,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   def render(assigns) do
     ~H"""
     <div id={"post-#{@post.id}"} class="w-full">
-      <div class="flex items-center justify-between px-1 pb-3">
+      <div class="flex items-center justify-between pb-3 max-sm:px-3">
         <div class="flex items-center gap-2">
           <div class="rounded-full border">
             <.icon name="hero-user" class="h-7 w-7" />
@@ -34,7 +34,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       <img src={~p"/uploads/#{@post.image}"} class="w-full" />
 
-      <div class="grid grid-cols-2 px-3">
+      <div class="grid grid-cols-2 max-sm:px-3">
         <div class="flex gap-4 py-3">
           <%= if @post.liked_by_current_user? do %>
             <span phx-click="unlike" phx-target={@myself}>
@@ -62,11 +62,11 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </div>
       </div>
 
-      <div class="font-semibold	text-sm px-3">
+      <div class="font-semibold	text-sm max-sm:px-3">
         <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
       </div>
 
-      <div class="my-1 text-sm px-3">
+      <div class="my-1 text-sm max-sm:px-3">
         <span class="font-semibold">
           <%= @post.user.email |> String.split("@") |> List.first() %>
         </span>
@@ -84,7 +84,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
       <% comments_length = length(@post.comments) %>
 
       <%= if comments_length > 0 do %>
-        <div class="my-1 px-3 text-sm">
+        <div class="my-1 max-sm:px-3 text-sm">
           <.link class="text-neutral-500 text-sm font-medium">
             <%= if comments_length == 1 do %>
               View 1 comment
@@ -95,7 +95,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </div>
       <% end %>
 
-      <div :for={comment <- @highlighted_comments} class="my-1 px-3 text-sm flex gap-2">
+      <div :for={comment <- @highlighted_comments} class="my-1 max-sm:px-3 text-sm flex gap-2">
         <div class="grow">
           <span class="font-bold">
             <%= comment.user.email |> String.split("@") |> List.first() %>
@@ -112,7 +112,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         phx-target={@myself}
         phx-change="comment-edit"
         phx-submit="save-comment"
-        class="px-3"
+        class="max-sm:px-3"
       >
         <div class="flex justify-between">
           <textarea

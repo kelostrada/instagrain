@@ -641,7 +641,7 @@ defmodule InstagrainWeb.CoreComponents do
       class={[
         "flex items-center justify-center p-2.5 group",
         "sm:w-12 sm:h-12 sm:hover:bg-neutral-200 sm:rounded-lg sm:my-1",
-        "lg:w-48 lg:justify-start"
+        "lg:w-56 lg:justify-start"
       ]}
     >
       <.icon
