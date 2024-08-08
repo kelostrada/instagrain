@@ -178,9 +178,16 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   def handle_event("like", _, socket) do
-    case Instagrain.Feed.like(socket.assigns.post, socket.assigns.user.id) do
+    case Instagrain.Feed.like(socket.assigns.post.id, socket.assigns.user.id) do
       {:ok, post} ->
-        {:noreply, assign(socket, post: post)}
+        {:noreply,
+         assign(socket,
+           post: %{
+             socket.assigns.post
+             | liked_by_current_user?: post.liked_by_current_user?,
+               likes: post.likes
+           }
+         )}
 
       _ ->
         notify_parent({:error, "Like failed"})
@@ -189,9 +196,16 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   def handle_event("unlike", _, socket) do
-    case Instagrain.Feed.unlike(socket.assigns.post, socket.assigns.user.id) do
+    case Instagrain.Feed.unlike(socket.assigns.post.id, socket.assigns.user.id) do
       {:ok, post} ->
-        {:noreply, assign(socket, post: post)}
+        {:noreply,
+         assign(socket,
+           post: %{
+             socket.assigns.post
+             | liked_by_current_user?: post.liked_by_current_user?,
+               likes: post.likes
+           }
+         )}
 
       _ ->
         notify_parent({:error, "Unlike failed"})

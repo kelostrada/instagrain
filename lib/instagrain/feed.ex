@@ -225,10 +225,15 @@ defmodule Instagrain.Feed do
   @doc """
   Creates a like, updates post.
   """
-  def like(%Post{} = post, user_id) do
+  def like(post_id, user_id) do
     Multi.new()
-    |> Multi.insert(:like, Like.changeset(%Like{}, %{post_id: post.id, user_id: user_id}))
-    |> Multi.update(:post, Post.changeset(post, %{likes: post.likes + 1}))
+    |> Multi.insert(:like, Like.changeset(%Like{}, %{post_id: post_id, user_id: user_id}))
+    |> Multi.update_all(
+      :post_update,
+      from(p in Post, where: p.id == ^post_id),
+      inc: [likes: 1]
+    )
+    |> Multi.one(:post, from(p in Post, where: p.id == ^post_id))
     |> Repo.transaction()
     |> case do
       {:ok, %{post: post}} ->
@@ -239,19 +244,18 @@ defmodule Instagrain.Feed do
     end
   end
 
-  def unlike(%Post{id: post_id} = post, user_id) do
+  def unlike(post_id, user_id) do
     Multi.new()
     |> Multi.delete_all(
       :delete_like,
       from(l in Like, where: l.post_id == ^post_id and l.user_id == ^user_id)
     )
-    |> Multi.update(:post, fn %{delete_like: {deleted, _}} ->
-      if deleted == 1 do
-        Post.changeset(post, %{likes: post.likes - 1})
-      else
-        Post.changeset(post, %{})
-      end
-    end)
+    |> Multi.update_all(
+      :post_update,
+      from(p in Post, where: p.id == ^post_id),
+      inc: [likes: -1]
+    )
+    |> Multi.one(:post, from(p in Post, where: p.id == ^post_id))
     |> Repo.transaction()
     |> case do
       {:ok, %{post: post}} ->
