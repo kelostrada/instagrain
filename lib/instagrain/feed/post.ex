@@ -11,6 +11,7 @@ defmodule Instagrain.Feed.Post do
     field :disable_comments, :boolean, default: false
     belongs_to :user, Instagrain.Accounts.User
     has_many :resources, Instagrain.Feed.Post.Resource
+    has_many :comments, Instagrain.Feed.Post.Comment
 
     field :location, :string, virtual: true
     field :alts, :map, virtual: true

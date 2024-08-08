@@ -1,6 +1,8 @@
 defmodule InstagrainWeb.PostLive.PostComponent do
   use InstagrainWeb, :live_component
 
+  alias Instagrain.Feed
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -70,14 +72,41 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </span>
 
         <%= if @show_more || !@post.caption || String.length(@post.caption) <= 125 do %>
-          <span><%= @post.caption %></span>
+          <span class="font-medium"><%= @post.caption %></span>
         <% else %>
-          <span><%= String.slice(@post.caption, 0, 125) %>...</span>
+          <span class="font-medium"><%= String.slice(@post.caption, 0, 125) %>...</span>
           <span class="text-neutral-500 cursor-pointer" phx-click="show-more" phx-target={@myself}>
             more
           </span>
         <% end %>
       </div>
+
+      <% comments_length = length(@post.comments) %>
+
+      <%= if comments_length > 0 do %>
+        <div class="my-1 px-3 text-sm">
+          <.link class="text-neutral-500 text-sm font-medium">
+            <%= if comments_length == 1 do %>
+              View 1 comment
+            <% else %>
+              View all <%= comments_length %> comments
+            <% end %>
+          </.link>
+        </div>
+      <% end %>
+
+      <div :for={comment <- @highlighted_comments} class="my-1 px-3 text-sm flex gap-2">
+        <div class="grow">
+          <span class="font-bold">
+            <%= comment.user.email |> String.split("@") |> List.first() %>
+          </span>
+          <span><%= comment.comment %></span>
+        </div>
+        <div>
+          <.icon name="hero-heart" class="w-3 h-3 cursor-pointer hover:text-neutral-400" />
+        </div>
+      </div>
+
       <form
         id={"post-comment-form-#{@post.id}"}
         phx-target={@myself}
@@ -115,6 +144,24 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   @impl true
+  def update(assigns, socket) do
+    amount =
+      case length(assigns.post.comments) do
+        len when len < 3 -> 0
+        len when len < 5 -> 1
+        len when len < 10 -> 2
+        _ -> 3
+      end
+
+    highlighted_comments =
+      assigns.post.comments
+      |> Enum.sort_by(& &1.likes, :desc)
+      |> Enum.take(amount)
+
+    {:ok, socket |> assign(highlighted_comments: highlighted_comments) |> assign(assigns)}
+  end
+
+  @impl true
   def handle_event("show-more", _, socket) do
     {:noreply, assign(socket, show_more: true)}
   end
@@ -146,10 +193,19 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   def handle_event("save-comment", %{"comment" => comment}, socket) do
-    # TODO: handle saving comments
-    IO.inspect(comment)
+    case Feed.create_comment(%{
+           comment: comment,
+           post_id: socket.assigns.post.id,
+           user_id: socket.assigns.user.id
+         }) do
+      {:ok, comment} ->
+        post = Map.update!(socket.assigns.post, :comments, &(&1 ++ [comment]))
+        {:noreply, assign(socket, comment: "", post: post)}
 
-    {:noreply, socket}
+      {:error, _error} ->
+        notify_parent({:error, "Saving comment failed"})
+        {:noreply, assign(socket, comment: "")}
+    end
   end
 
   def format_seconds(seconds) when seconds < 60 do
