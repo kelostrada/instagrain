@@ -371,8 +371,6 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     with {:ok, post} <- Feed.create_post(post_params),
          {:ok, image} <- save_resources(post, post_params, uploaded_files),
          {:ok, post} <- Feed.update_post(post, %{image: image}) do
-      post = Instagrain.Repo.preload(post, [:user, :resources])
-
       notify_parent({:saved, post})
 
       {:noreply,

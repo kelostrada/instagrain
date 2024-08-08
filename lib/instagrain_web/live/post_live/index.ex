@@ -37,6 +37,8 @@ defmodule InstagrainWeb.PostLive.Index do
 
   @impl true
   def handle_info({InstagrainWeb.PostLive.FormComponent, {:saved, post}}, socket) do
+    post = Feed.get_post!(post.id, socket.assigns.current_user.id)
+
     {:noreply, stream_insert(socket, :posts, post, at: 0)}
   end
 

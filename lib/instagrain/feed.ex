@@ -73,7 +73,36 @@ defmodule Instagrain.Feed do
       ** (Ecto.NoResultsError)
 
   """
-  def get_post!(id), do: Repo.get!(Post, id)
+  def get_post!(post_id, current_user_id) do
+    from(p in Post,
+      left_join: l in Like,
+      on: l.post_id == p.id and l.user_id == ^current_user_id,
+      left_join: s in Save,
+      on: s.post_id == p.id and s.user_id == ^current_user_id,
+      where: p.id == ^post_id,
+      select: %{
+        p
+        | liked_by_current_user?: not is_nil(l.post_id),
+          saved_by_current_user?: not is_nil(s.post_id)
+      }
+    )
+    |> Repo.one!()
+    |> Repo.preload([:user, :resources, comments: [:user, :comment_likes]])
+    |> then(fn post ->
+      comments =
+        Enum.map(post.comments, fn comment ->
+          %{
+            comment
+            | liked_by_current_user?:
+                Enum.any?(comment.comment_likes, fn like ->
+                  like.user_id == current_user_id
+                end)
+          }
+        end)
+
+      %{post | comments: comments}
+    end)
+  end
 
   @doc """
   Creates a post.
