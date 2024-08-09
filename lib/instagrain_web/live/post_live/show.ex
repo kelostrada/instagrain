@@ -13,7 +13,7 @@ defmodule InstagrainWeb.PostLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:post, Feed.get_post!(id))}
+     |> assign(:post, Feed.get_post!(id, socket.assigns.current_user.id))}
   end
 
   defp page_title(:show), do: "Show Post"

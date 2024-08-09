@@ -20,7 +20,7 @@ defmodule InstagrainWeb.PostLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Post")
-    |> assign(:post, Feed.get_post!(id))
+    |> assign(:post, Feed.get_post!(id, socket.assigns.current_user.id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -48,7 +48,7 @@ defmodule InstagrainWeb.PostLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    post = Feed.get_post!(id)
+    post = Feed.get_post!(id, socket.assigns.current_user.id)
     {:ok, _} = Feed.delete_post(post)
 
     {:noreply, stream_delete(socket, :posts, post)}

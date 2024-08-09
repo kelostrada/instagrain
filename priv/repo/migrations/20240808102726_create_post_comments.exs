@@ -3,10 +3,10 @@ defmodule Instagrain.Repo.Migrations.CreatePostComments do
 
   def change do
     create table(:post_comments) do
-      add :comment, :text
-      add :likes, :integer
-      add :post_id, references(:posts, on_delete: :delete_all)
-      add :user_id, references(:users, on_delete: :delete_all)
+      add :comment, :text, null: false
+      add :likes, :integer, null: false
+      add :post_id, references(:posts, on_delete: :delete_all), null: false
+      add :user_id, references(:users, on_delete: :delete_all), null: false
       add :reply_to_id, references(:post_comments, on_delete: :delete_all)
 
       timestamps(type: :utc_datetime)

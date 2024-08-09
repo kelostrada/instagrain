@@ -4,7 +4,7 @@ defmodule Instagrain.Repo.Migrations.CreatePosts do
   def change do
     create table(:posts) do
       add :image, :string
-      add :likes, :integer
+      add :likes, :integer, null: false
       add :caption, :text
       add :location_id, :integer
       add :hide_likes, :boolean, default: false, null: false

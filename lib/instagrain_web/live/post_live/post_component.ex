@@ -32,7 +32,48 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </div>
       </div>
 
-      <img src={~p"/uploads/#{@post.image}"} class="w-full" />
+      <div class="relative w-full overflow-hidden border-[0.5px] shadow-sm">
+        <div class={[
+          "flex transition-transform duration-500 items-center",
+          "translate-x-[-#{@current_resource * 100}%]"
+        ]}>
+          <div :for={resource <- @post.resources} class="w-full flex-shrink-0">
+            <img src={~p"/uploads/#{resource.file}"} alt={resource.alt} class="w-full h-auto" />
+          </div>
+        </div>
+
+        <% resources_len = length(@post.resources) %>
+
+        <div
+          :if={resources_len > 1 && @current_resource > 0}
+          phx-click="previous-resource"
+          phx-target={@myself}
+          class={[
+            "rounded-full cursor-pointer w-8 h-8 m-2",
+            "flex items-center justify-center",
+            "absolute left-0 top-1/2 translate-y-[-50%]",
+            "bg-neutral-900/80 hover:bg-neutral-900/50",
+            "transition ease-in-out duration-300"
+          ]}
+        >
+          <InstagrainWeb.PostLive.FormComponent.left_chevron_icon class="text-white" />
+        </div>
+
+        <div
+          :if={resources_len > 1 && @current_resource < resources_len - 1}
+          phx-click="next-resource"
+          phx-target={@myself}
+          class={[
+            "rounded-full cursor-pointer w-8 h-8 m-2",
+            "flex items-center justify-center",
+            "absolute right-0 top-1/2 translate-y-[-50%]",
+            "bg-neutral-900/80 hover:bg-neutral-900/50",
+            "transition ease-in-out duration-300"
+          ]}
+        >
+          <InstagrainWeb.PostLive.FormComponent.right_chevron_icon class="text-white" />
+        </div>
+      </div>
 
       <div class="grid grid-cols-2 max-sm:px-3">
         <div class="flex gap-4 py-3">
@@ -162,7 +203,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, show_more: false, comment: "")}
+    {:ok, assign(socket, show_more: false, comment: "", current_resource: 0)}
   end
 
   @impl true
@@ -186,6 +227,14 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   @impl true
   def handle_event("show-more", _, socket) do
     {:noreply, assign(socket, show_more: true)}
+  end
+
+  def handle_event("next-resource", _, socket) do
+    {:noreply, assign(socket, current_resource: socket.assigns.current_resource + 1)}
+  end
+
+  def handle_event("previous-resource", _, socket) do
+    {:noreply, assign(socket, current_resource: socket.assigns.current_resource - 1)}
   end
 
   def handle_event("like", _, socket) do

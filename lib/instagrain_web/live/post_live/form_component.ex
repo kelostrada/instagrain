@@ -458,7 +458,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     """
   end
 
-  defp right_chevron_icon(assigns) do
+  def right_chevron_icon(assigns) do
     ~H"""
     <svg
       aria-label="Right chevron"
@@ -483,7 +483,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     """
   end
 
-  defp left_chevron_icon(assigns) do
+  def left_chevron_icon(assigns) do
     ~H"""
     <svg
       aria-label="Left chevron"
