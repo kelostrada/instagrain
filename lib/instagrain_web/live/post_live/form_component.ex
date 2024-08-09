@@ -65,61 +65,67 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <% end %>
 
           <%= if @step != :create do %>
-            <div class={"grow h-full bg-neutral-50 #{if @step == :final, do: "max-sm:hidden"}"}>
-              <div class="relative w-full h-full">
-                <% entry = Enum.at(@uploads.file.entries, @selected_item) %>
-
-                <.live_img_preview
-                  entry={entry}
-                  id={"preview-#{entry.ref}"}
-                  class="w-full h-full object-contain absolute top-0 left-0"
-                />
-
-                <button
-                  type="button"
-                  phx-click="cancel-upload"
-                  phx-value-ref={entry.ref}
-                  phx-target={@myself}
-                  aria-label="cancel"
-                  class="absolute top-6 right-6"
+            <div class={"grow h-full bg-neutral-50 #{if @step == :final, do: "max-sm:hidden"} relative overflow-hidden border-[0.5px] shadow-sm"}>
+              <div class={[
+                "w-full h-full flex transition-transform duration-500 items-center",
+                "translate-x-[-#{@selected_item * 100}%]"
+              ]}>
+                <div
+                  :for={entry <- @uploads.file.entries}
+                  class="relative w-full h-full flex-shrink-0"
                 >
-                  &times;
-                </button>
+                  <.live_img_preview
+                    entry={entry}
+                    id={"preview-#{entry.ref}"}
+                    class="w-full h-full object-contain"
+                  />
 
-                <% entries_len = length(@uploads.file.entries) %>
-                <%= if entries_len > 1 && @selected_item > 0 do %>
-                  <div
-                    phx-click="previous-item"
+                  <button
+                    type="button"
+                    phx-click="cancel-upload"
+                    phx-value-ref={entry.ref}
                     phx-target={@myself}
-                    class={[
-                      "rounded-full cursor-pointer w-8 h-8 m-2",
-                      "flex items-center justify-center",
-                      "absolute left-0 top-1/2 translate-y-[-50%]",
-                      "bg-neutral-900/80 hover:bg-neutral-900/50",
-                      "transition ease-in-out duration-300"
-                    ]}
+                    aria-label="cancel"
+                    class="absolute top-6 right-6"
                   >
-                    <.left_chevron_icon class="text-white" />
-                  </div>
-                <% end %>
+                    &times;
+                  </button>
+                </div>
+              </div>
 
-                <%= if entries_len > 1 && @selected_item < entries_len - 1 do %>
-                  <div
-                    phx-click="next-item"
-                    phx-target={@myself}
-                    class={[
-                      "rounded-full cursor-pointer w-8 h-8 m-2",
-                      "flex items-center justify-center",
-                      "absolute right-0 top-1/2 translate-y-[-50%]",
-                      "bg-neutral-900/80 hover:bg-neutral-900/50",
-                      "transition ease-in-out duration-300"
-                    ]}
-                  >
-                    <.right_chevron_icon class="text-white" />
-                  </div>
-                <% end %>
+              <% entries_len = length(@uploads.file.entries) %>
+
+              <div
+                :if={entries_len > 1 && @selected_item > 0}
+                phx-click="previous-item"
+                phx-target={@myself}
+                class={[
+                  "rounded-full cursor-pointer w-8 h-8 m-2",
+                  "flex items-center justify-center",
+                  "absolute left-0 top-1/2 translate-y-[-50%]",
+                  "bg-neutral-900/80 hover:bg-neutral-900/50",
+                  "transition ease-in-out duration-300"
+                ]}
+              >
+                <.left_chevron_icon class="text-white" />
+              </div>
+
+              <div
+                :if={entries_len > 1 && @selected_item < entries_len - 1}
+                phx-click="next-item"
+                phx-target={@myself}
+                class={[
+                  "rounded-full cursor-pointer w-8 h-8 m-2",
+                  "flex items-center justify-center",
+                  "absolute right-0 top-1/2 translate-y-[-50%]",
+                  "bg-neutral-900/80 hover:bg-neutral-900/50",
+                  "transition ease-in-out duration-300"
+                ]}
+              >
+                <.right_chevron_icon class="text-white" />
               </div>
             </div>
+
             <%= if @step == :final do %>
               <div class="flex-none max-sm:w-full md:w-85 overflow-auto">
                 <div class="flex px-4 pt-4.5 pb-3.5 items-center">
