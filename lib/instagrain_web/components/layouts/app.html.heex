@@ -1,41 +1,43 @@
-<%= if @current_user do %>
-  <nav class={[
-    "flex items-center",
-    "bg-white  z-10 fixed",
-    "sm:h-full sm:border-r-[1px] sm:p-3 sm:flex-col",
-    "max-sm:w-full max-sm:bottom-0 max-sm:border-t-[1px] max-sm:justify-around"
-  ]}>
-    <div class="sm:pb-5 sm:pt-2.5 max-sm:hidden lg:hidden">
-      <.nav_button patch={~p"/"} icon_name="instagrain-logo" size={:small} label="Home" />
-    </div>
+<div class="flex sm:flex-row-reverse max-sm:flex-col h-screen max-sm:divide-y-[1px]">
+  <main class="sm:py-10 max-sm:py-1 sm:px-6 lg:px-8 grow overflow-y-scroll">
+    <.flash_group flash={@flash} />
+    <%= @inner_content %>
+  </main>
 
-    <div class="max-lg:hidden px-3 py-7 w-56">
-      <.link patch={~p"/"} class="">
-        <img src={~p"/images/logo.svg"} />
-      </.link>
-    </div>
+  <%= if @current_user do %>
+    <nav class={[
+      "flex items-center",
+      "bg-white",
+      "sm:h-full sm:border-r-[1px] sm:p-3 sm:flex-col",
+      "max-sm:w-full max-sm:justify-around"
+    ]}>
+      <div class="sm:pb-5 sm:pt-2.5 max-sm:hidden lg:hidden">
+        <.nav_button patch={~p"/"} icon_name="instagrain-logo" size={:small} label="Home" />
+      </div>
 
-    <.nav_button
-      patch={~p"/"}
-      icon_name="hero-home"
-      icon_name_solid="hero-home-solid"
-      solid?={@socket.view == InstagrainWeb.PostLive.Index}
-      label="Home"
-    />
+      <div class="max-lg:hidden px-3 py-7 w-56">
+        <.link patch={~p"/"} class="">
+          <img src={~p"/images/logo.svg"} />
+        </.link>
+      </div>
 
-    <.nav_button patch={~p"/p/new"} icon_name="hero-plus-circle" label="Create" />
+      <.nav_button
+        patch={~p"/"}
+        icon_name="hero-home"
+        icon_name_solid="hero-home-solid"
+        solid?={@socket.view == InstagrainWeb.PostLive.Index}
+        label="Home"
+      />
 
-    <.nav_button
-      patch={~p"/users/settings"}
-      icon_name="hero-cog-8-tooth"
-      icon_name_solid="hero-cog-8-tooth-solid"
-      solid?={@socket.view == InstagrainWeb.UserSettingsLive}
-      label="Settings"
-    />
-  </nav>
-<% end %>
+      <.nav_button patch={~p"/p/new"} icon_name="hero-plus-circle" label="Create" />
 
-<main class="sm:py-20 sm:px-6 sm:ml-[73px] lg:px-8 lg:ml-[249px] grow">
-  <.flash_group flash={@flash} />
-  <%= @inner_content %>
-</main>
+      <.nav_button
+        patch={~p"/users/settings"}
+        icon_name="hero-cog-8-tooth"
+        icon_name_solid="hero-cog-8-tooth-solid"
+        solid?={@socket.view == InstagrainWeb.UserSettingsLive}
+        label="Settings"
+      />
+    </nav>
+  <% end %>
+</div>
