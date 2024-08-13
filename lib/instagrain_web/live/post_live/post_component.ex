@@ -15,7 +15,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
           <div>
             <span class="text-black font-bold text-sm">
-              <%= @post.user.email |> String.split("@") |> List.first() %>
+              <%= @post.user.username %>
             </span>
 
             <time
@@ -120,7 +120,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       <div class="my-1 text-sm max-sm:px-3">
         <span class="font-semibold">
-          <%= @post.user.email |> String.split("@") |> List.first() %>
+          <%= @post.user.username %>
         </span>
 
         <%= if @show_more || !@post.caption || String.length(@post.caption) <= 125 do %>
@@ -150,7 +150,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
       <div :for={comment <- @highlighted_comments} class="my-1 max-sm:px-3 text-sm flex gap-2">
         <div class="grow">
           <span class="font-bold">
-            <%= comment.user.email |> String.split("@") |> List.first() %>
+            <%= comment.user.username %>
           </span>
           <span><%= comment.comment %></span>
         </div>

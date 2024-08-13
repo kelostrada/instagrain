@@ -136,7 +136,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                   </div>
                   <div>
                     <span class="text-black font-bold text-sm">
-                      <%= @user.email |> String.split("@") |> List.first() %>
+                      <%= @user.username %>
                     </span>
                   </div>
                 </div>

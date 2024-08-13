@@ -14,6 +14,19 @@ defmodule InstagrainWeb.UserSettingsLive do
     <div class="space-y-12 divide-y">
       <div>
         <.simple_form
+          for={@username_form}
+          id="username_form"
+          phx-submit="update_username"
+          phx-change="validate_username"
+        >
+          <.input field={@username_form[:username]} type="text" label="Username" required />
+          <:actions>
+            <.button phx-disable-with="Changing...">Change Username</.button>
+          </:actions>
+        </.simple_form>
+      </div>
+      <div>
+        <.simple_form
           for={@email_form}
           id="email_form"
           phx-submit="update_email"
@@ -92,14 +105,17 @@ defmodule InstagrainWeb.UserSettingsLive do
     user = socket.assigns.current_user
     email_changeset = Accounts.change_user_email(user)
     password_changeset = Accounts.change_user_password(user)
+    username_changeset = Accounts.change_user_username(user)
 
     socket =
       socket
       |> assign(:current_password, nil)
       |> assign(:email_form_current_password, nil)
       |> assign(:current_email, user.email)
+      |> assign(:current_username, user.username)
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
+      |> assign(:username_form, to_form(username_changeset))
       |> assign(:trigger_submit, false)
 
     {:ok, socket}
@@ -135,6 +151,32 @@ defmodule InstagrainWeb.UserSettingsLive do
 
       {:error, changeset} ->
         {:noreply, assign(socket, :email_form, to_form(Map.put(changeset, :action, :insert)))}
+    end
+  end
+
+  def handle_event("validate_username", params, socket) do
+    %{"user" => user_params} = params
+
+    username_form =
+      socket.assigns.current_user
+      |> Accounts.change_user_username(user_params)
+      |> Map.put(:action, :validate)
+      |> to_form()
+
+    {:noreply, assign(socket, username_form: username_form)}
+  end
+
+  def handle_event("update_username", params, socket) do
+    %{"user" => user_params} = params
+    user = socket.assigns.current_user
+
+    case Accounts.update_user_username(user, user_params) do
+      {:ok, updated_user} ->
+        info = "Username updated successfully."
+        {:noreply, socket |> put_flash(:info, info)}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :username_form, to_form(Map.put(changeset, :action, :insert)))}
     end
   end
 

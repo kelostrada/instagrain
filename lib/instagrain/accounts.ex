@@ -350,4 +350,37 @@ defmodule Instagrain.Accounts do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user username.
+
+  ## Examples
+
+      iex> change_user_username(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_username(user, attrs \\ %{}) do
+    User.username_changeset(user, attrs, validate_username: false)
+  end
+
+  @doc """
+  Updates the user username.
+
+  ## Examples
+
+      iex> update_user_username(user, "valid username")
+      {:ok, %User{}}
+
+      iex> update_user_username(user, "invalid username")
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_username(user, attrs) do
+    # TODO: Update handles in comments / captions
+
+    user
+    |> User.username_changeset(attrs)
+    |> Repo.update()
+  end
 end
