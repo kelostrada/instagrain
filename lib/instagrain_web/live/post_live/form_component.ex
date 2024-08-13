@@ -70,7 +70,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
             <div class={"grow h-full bg-neutral-50 #{if @step == :final, do: "max-sm:hidden"} relative overflow-hidden border-[0.5px] shadow-sm"}>
               <div class={[
                 "w-full h-full flex transition-transform duration-500 items-center",
-                "translate-x-[-#{@selected_item * 100}%]"
+                translate_full(@selected_item)
               ]}>
                 <div
                   :for={entry <- @uploads.file.entries}
@@ -513,4 +513,15 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     </svg>
     """
   end
+
+  defp translate_full(0), do: ""
+  defp translate_full(1), do: "-translate-x-[100%]"
+  defp translate_full(2), do: "-translate-x-[200%]"
+  defp translate_full(3), do: "-translate-x-[300%]"
+  defp translate_full(4), do: "-translate-x-[400%]"
+  defp translate_full(5), do: "-translate-x-[500%]"
+  defp translate_full(6), do: "-translate-x-[600%]"
+  defp translate_full(7), do: "-translate-x-[700%]"
+  defp translate_full(8), do: "-translate-x-[800%]"
+  defp translate_full(9), do: "-translate-x-[900%]"
 end

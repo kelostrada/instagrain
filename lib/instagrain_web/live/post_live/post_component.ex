@@ -35,7 +35,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
       <div class="relative w-full overflow-hidden border-[0.5px] shadow-sm">
         <div class={[
           "flex transition-transform duration-500 items-center",
-          "translate-x-[-#{@current_resource * 100}%]"
+          translate_full(@current_resource)
         ]}>
           <div :for={resource <- @post.resources} class="w-full flex-shrink-0">
             <img src={~p"/uploads/#{resource.file}"} alt={resource.alt} class="w-full h-auto" />
@@ -420,4 +420,15 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  defp translate_full(0), do: ""
+  defp translate_full(1), do: "-translate-x-[100%]"
+  defp translate_full(2), do: "-translate-x-[200%]"
+  defp translate_full(3), do: "-translate-x-[300%]"
+  defp translate_full(4), do: "-translate-x-[400%]"
+  defp translate_full(5), do: "-translate-x-[500%]"
+  defp translate_full(6), do: "-translate-x-[600%]"
+  defp translate_full(7), do: "-translate-x-[700%]"
+  defp translate_full(8), do: "-translate-x-[800%]"
+  defp translate_full(9), do: "-translate-x-[900%]"
 end
