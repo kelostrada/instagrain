@@ -1,6 +1,8 @@
 defmodule InstagrainWeb.PostLive.PostComponent do
   use InstagrainWeb, :live_component
 
+  import InstagrainWeb.UserComponents
+
   alias Instagrain.Feed
 
   @impl true
@@ -9,9 +11,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
     <div id={"post-#{@post.id}"} class="w-full">
       <div class="flex items-center justify-between pb-3 max-sm:px-3">
         <div class="flex items-center gap-2">
-          <div class="rounded-full border">
-            <.icon name="hero-user" class="h-7 w-7" />
-          </div>
+          <.avatar user={@user} />
 
           <div>
             <span class="text-black font-bold text-sm">

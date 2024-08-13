@@ -13,6 +13,52 @@ defmodule InstagrainWeb.UserSettingsLive do
 
     <div class="space-y-12 divide-y">
       <div>
+        <form
+          id="avatar-form"
+          phx-change="validate_avatar"
+          phx-submit="update_avatar"
+          phx-drop-target={@uploads.avatar.ref}
+          class="w-48 flex flex-col items-center justify-center gap-2 cursor-pointer"
+        >
+          <% entry = List.first(@uploads.avatar.entries) %>
+          <.live_file_input id="avatar-form-upload" upload={@uploads.avatar} class="hidden" />
+          <div
+            id="avatar-container"
+            class="w-48 h-48 rounded-full border-2"
+            phx-hook="TriggerClick"
+            data-click-target={@uploads.avatar.ref}
+          >
+            <.live_img_preview
+              :if={!is_nil(entry)}
+              entry={entry}
+              id={"avatar-#{entry.ref}"}
+              class="w-full h-full object-cover rounded-full"
+            />
+            <img
+              :if={is_nil(entry) && !is_nil(@current_user.avatar)}
+              src={~p"/uploads/avatars/#{@current_user.avatar}"}
+              class="w-full h-full object-cover rounded-full"
+            />
+            <.icon
+              :if={is_nil(entry) && is_nil(@current_user.avatar)}
+              name="hero-user"
+              class="h-full w-full rounded-full"
+            />
+          </div>
+          <.button :if={@uploads.avatar.entries != []} type="submit">Update Avatar</.button>
+
+          <%= if entry do %>
+            <p
+              :for={err <- Phoenix.Component.upload_errors(@uploads.avatar, entry)}
+              class="alert alert-danger"
+            >
+              Error: <%= err %>
+            </p>
+          <% end %>
+        </form>
+      </div>
+
+      <div>
         <.simple_form
           for={@username_form}
           id="username_form"
@@ -117,6 +163,7 @@ defmodule InstagrainWeb.UserSettingsLive do
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:username_form, to_form(username_changeset))
       |> assign(:trigger_submit, false)
+      |> allow_upload(:avatar, accept: ~w(.jpg .jpeg .png), max_entries: 1)
 
     {:ok, socket}
   end
@@ -173,7 +220,7 @@ defmodule InstagrainWeb.UserSettingsLive do
     case Accounts.update_user_username(user, user_params) do
       {:ok, updated_user} ->
         info = "Username updated successfully."
-        {:noreply, socket |> put_flash(:info, info)}
+        {:noreply, socket |> put_flash(:info, info) |> assign(:current_user, updated_user)}
 
       {:error, changeset} ->
         {:noreply, assign(socket, :username_form, to_form(Map.put(changeset, :action, :insert)))}
@@ -207,6 +254,33 @@ defmodule InstagrainWeb.UserSettingsLive do
 
       {:error, changeset} ->
         {:noreply, assign(socket, password_form: to_form(changeset))}
+    end
+  end
+
+  def handle_event("validate_avatar", _, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("update_avatar", _, socket) do
+    socket
+    |> consume_uploaded_entries(:avatar, fn %{path: path}, entry ->
+      filename = Path.basename(path) <> Path.extname(entry.client_name)
+      dest = Path.join([:code.priv_dir(:instagrain), "static", "uploads", "avatars", filename])
+
+      File.cp!(path, dest)
+
+      {:ok, filename}
+    end)
+    |> List.first()
+    |> then(fn filename ->
+      Accounts.update_user_avatar(socket.assigns.current_user, %{avatar: filename})
+    end)
+    |> case do
+      {:ok, user} ->
+        {:noreply, assign(socket, current_user: user)}
+
+      {:error, _changeset} ->
+        {:noreply, socket |> put_flash(:error, "Error uploading avatar")}
     end
   end
 
