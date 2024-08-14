@@ -9,6 +9,20 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   def render(assigns) do
     ~H"""
     <div id={"post-#{@post.id}"} class="w-full">
+      <.modal
+        :if={@open_details}
+        id="post-details-modal"
+        show={@open_details}
+        on_cancel={JS.push("close-details", target: @myself)}
+      >
+        <.live_component
+          user={@user}
+          module={InstagrainWeb.PostLive.PostDetailsComponent}
+          id={@post.id}
+          post={@post}
+        />
+      </.modal>
+
       <div class="flex items-center justify-between pb-3 max-sm:px-3">
         <div class="flex items-center gap-2">
           <.avatar user={@user} />
@@ -89,10 +103,12 @@ defmodule InstagrainWeb.PostLive.PostComponent do
               <.icon name="hero-heart" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
             </span>
           <% end %>
-          <.icon
-            name="hero-chat-bubble-oval-left"
-            class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
-          />
+          <span phx-click="open-details" phx-target={@myself}>
+            <.icon
+              name="hero-chat-bubble-oval-left"
+              class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
+            />
+          </span>
           <.icon
             name="hero-paper-airplane"
             class="w-7 h-7 ml-1 rotate-[-27deg] translate-y-[-0.1875rem] cursor-pointer hover:text-neutral-400 "
@@ -137,7 +153,11 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       <%= if comments_length > 0 do %>
         <div class="my-1 max-sm:px-3 text-sm">
-          <.link class="text-neutral-500 text-sm font-medium">
+          <.link
+            class="text-neutral-500 text-sm font-medium"
+            phx-click="open-details"
+            phx-target={@myself}
+          >
             <%= if comments_length == 1 do %>
               View 1 comment
             <% else %>
@@ -203,7 +223,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, show_more: false, comment: "", current_resource: 0)}
+    {:ok, assign(socket, show_more: false, comment: "", current_resource: 0, open_details: false)}
   end
 
   @impl true
@@ -383,6 +403,14 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         notify_parent({:error, "Saving comment failed"})
         {:noreply, assign(socket, comment: "")}
     end
+  end
+
+  def handle_event("open-details", _, socket) do
+    {:noreply, assign(socket, open_details: true)}
+  end
+
+  def handle_event("close-details", _, socket) do
+    {:noreply, assign(socket, open_details: false)}
   end
 
   def format_seconds(seconds) when seconds < 60 do
