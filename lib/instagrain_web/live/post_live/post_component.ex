@@ -86,24 +86,30 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       <div class="grid grid-cols-2 max-sm:px-3">
         <div class="flex gap-4 py-3">
-          <%= if @post.liked_by_current_user? do %>
-            <span phx-click="unlike" phx-target={@myself}>
+          <%= unless @post.hide_likes do %>
+            <%= if @post.liked_by_current_user? do %>
+              <span phx-click="unlike" phx-target={@myself}>
+                <.icon
+                  name="hero-heart-solid"
+                  class="w-7 h-7 cursor-pointer hover:text-neutral-400 bg-red-500"
+                />
+              </span>
+            <% else %>
+              <span phx-click="like" phx-target={@myself}>
+                <.icon name="hero-heart" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
+              </span>
+            <% end %>
+          <% end %>
+
+          <%= unless @post.disable_comments do %>
+            <span phx-click={show_modal("post-details-modal-#{@post.id}")} phx-target={@myself}>
               <.icon
-                name="hero-heart-solid"
-                class="w-7 h-7 cursor-pointer hover:text-neutral-400 bg-red-500"
+                name="hero-chat-bubble-oval-left"
+                class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
               />
             </span>
-          <% else %>
-            <span phx-click="like" phx-target={@myself}>
-              <.icon name="hero-heart" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
-            </span>
           <% end %>
-          <span phx-click={show_modal("post-details-modal-#{@post.id}")} phx-target={@myself}>
-            <.icon
-              name="hero-chat-bubble-oval-left"
-              class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
-            />
-          </span>
+
           <.icon
             name="hero-paper-airplane"
             class="w-7 h-7 ml-1 rotate-[-27deg] translate-y-[-0.1875rem] cursor-pointer hover:text-neutral-400 "
@@ -125,9 +131,11 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </div>
       </div>
 
-      <div class="font-semibold	text-sm max-sm:px-3">
-        <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
-      </div>
+      <%= unless @post.hide_likes do %>
+        <div class="font-semibold	text-sm max-sm:px-3">
+          <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
+        </div>
+      <% end %>
 
       <div class="my-1 text-sm max-sm:px-3">
         <span class="font-semibold">
@@ -144,73 +152,75 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         <% end %>
       </div>
 
-      <% comments_length = length(@post.comments) %>
+      <%= unless @post.disable_comments do %>
+        <% comments_length = length(@post.comments) %>
 
-      <%= if comments_length > 0 do %>
-        <div class="my-1 max-sm:px-3 text-sm">
-          <.link
-            class="text-neutral-500 text-sm font-medium"
-            phx-click={show_modal("post-details-modal-#{@post.id}")}
-          >
-            <%= if comments_length == 1 do %>
-              View 1 comment
+        <%= if comments_length > 0 do %>
+          <div class="my-1 max-sm:px-3 text-sm">
+            <.link
+              class="text-neutral-500 text-sm font-medium"
+              phx-click={show_modal("post-details-modal-#{@post.id}")}
+            >
+              <%= if comments_length == 1 do %>
+                View 1 comment
+              <% else %>
+                View all <%= comments_length %> comments
+              <% end %>
+            </.link>
+          </div>
+        <% end %>
+
+        <div :for={comment <- @highlighted_comments} class="my-1 max-sm:px-3 text-sm flex gap-2">
+          <div class="grow">
+            <span class="font-bold">
+              <%= comment.user.username %>
+            </span>
+            <span><%= comment.comment %></span>
+          </div>
+          <div>
+            <%= if comment.liked_by_current_user? do %>
+              <span phx-click="unlike-comment" phx-value-comment_id={comment.id} phx-target={@myself}>
+                <.icon
+                  name="hero-heart-solid"
+                  class="w-3 h-3 cursor-pointer hover:text-neutral-400 bg-red-500"
+                />
+              </span>
             <% else %>
-              View all <%= comments_length %> comments
-            <% end %>
-          </.link>
-        </div>
-      <% end %>
-
-      <div :for={comment <- @highlighted_comments} class="my-1 max-sm:px-3 text-sm flex gap-2">
-        <div class="grow">
-          <span class="font-bold">
-            <%= comment.user.username %>
-          </span>
-          <span><%= comment.comment %></span>
-        </div>
-        <div>
-          <%= if comment.liked_by_current_user? do %>
-            <span phx-click="unlike-comment" phx-value-comment_id={comment.id} phx-target={@myself}>
-              <.icon
-                name="hero-heart-solid"
-                class="w-3 h-3 cursor-pointer hover:text-neutral-400 bg-red-500"
-              />
-            </span>
-          <% else %>
-            <span phx-click="like-comment" phx-value-comment_id={comment.id} phx-target={@myself}>
-              <.icon name="hero-heart" class="w-3 h-3 cursor-pointer hover:text-neutral-400" />
-            </span>
-          <% end %>
-        </div>
-      </div>
-
-      <form
-        id={"post-comment-form-#{@post.id}"}
-        phx-target={@myself}
-        phx-change="comment-edit"
-        phx-submit="save-comment"
-        class="max-sm:px-3"
-      >
-        <div class="flex justify-between">
-          <textarea
-            id={"comment-#{@post.id}"}
-            name="comment"
-            phx-hook="Resizable"
-            class={[
-              "block w-full p-0 border-0 outline-none outline-clear",
-              "resize-none overflow-hidden placeholder:font-medium placeholder:text-neutral-500 text-black font-medium text-sm"
-            ]}
-            placeholder="Add a comment..."
-          ><%= Phoenix.HTML.Form.normalize_value("textarea", @comment) %></textarea>
-          <div class="">
-            <%= if String.length(@comment) > 0 do %>
-              <button class="cursor-pointer font-bold text-sm text-sky-500 hover:text-sky-900">
-                Post
-              </button>
+              <span phx-click="like-comment" phx-value-comment_id={comment.id} phx-target={@myself}>
+                <.icon name="hero-heart" class="w-3 h-3 cursor-pointer hover:text-neutral-400" />
+              </span>
             <% end %>
           </div>
         </div>
-      </form>
+
+        <form
+          id={"post-comment-form-#{@post.id}"}
+          phx-target={@myself}
+          phx-change="comment-edit"
+          phx-submit="save-comment"
+          class="max-sm:px-3"
+        >
+          <div class="flex justify-between">
+            <textarea
+              id={"comment-#{@post.id}"}
+              name="comment"
+              phx-hook="Resizable"
+              class={[
+                "block w-full p-0 border-0 outline-none outline-clear",
+                "resize-none overflow-hidden placeholder:font-medium placeholder:text-neutral-500 text-black font-medium text-sm"
+              ]}
+              placeholder="Add a comment..."
+            ><%= Phoenix.HTML.Form.normalize_value("textarea", @comment) %></textarea>
+            <div class="">
+              <%= if String.length(@comment) > 0 do %>
+                <button class="cursor-pointer font-bold text-sm text-sky-500 hover:text-sky-900">
+                  Post
+                </button>
+              <% end %>
+            </div>
+          </div>
+        </form>
+      <% end %>
     </div>
     """
   end
