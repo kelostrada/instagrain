@@ -9,7 +9,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   def render(assigns) do
     ~H"""
     <div id={"post-#{@post.id}"} class="w-full">
-      <.modal id={"post-details-modal-#{@post.id}"}>
+      <.modal id={"post-details-modal-#{@post.id}"} corner_style={:md}>
         <.live_component
           user={@user}
           module={InstagrainWeb.PostLive.PostDetailsComponent}

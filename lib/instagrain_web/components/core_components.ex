@@ -39,6 +39,7 @@ defmodule InstagrainWeb.CoreComponents do
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
+  attr :corner_style, :atom, values: [:sm, :md, :xl], default: :xl
   slot :inner_block, required: true
 
   def modal(assigns) do
@@ -78,7 +79,12 @@ defmodule InstagrainWeb.CoreComponents do
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 h-full hidden rounded-2xl bg-white shadow-lg ring-1 transition"
+              class={[
+                "shadow-zinc-700/10 ring-zinc-700/10 h-full hidden bg-white shadow-lg ring-1 transition",
+                @corner_style == :sm && "rounded-sm",
+                @corner_style == :md && "rounded-md",
+                @corner_style == :xl && "rounded-2xl"
+              ]}
             >
               <div id={"#{@id}-content"} class="h-full">
                 <%= render_slot(@inner_block) %>
