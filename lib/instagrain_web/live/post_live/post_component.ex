@@ -71,48 +71,11 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </div>
       </div>
 
-      <div class="relative w-full overflow-hidden border-[0.5px] shadow-sm">
-        <div class={[
-          "flex transition-transform duration-500 items-center",
-          translate_full(@current_resource)
-        ]}>
-          <div :for={resource <- @post.resources} class="w-full flex-shrink-0">
-            <img src={~p"/uploads/#{resource.file}"} alt={resource.alt} class="w-full h-auto" />
-          </div>
-        </div>
-
-        <% resources_len = length(@post.resources) %>
-
-        <div
-          :if={resources_len > 1 && @current_resource > 0}
-          phx-click="previous-resource"
-          phx-target={@myself}
-          class={[
-            "rounded-full cursor-pointer w-8 h-8 m-2",
-            "flex items-center justify-center",
-            "absolute left-0 top-1/2 translate-y-[-50%]",
-            "bg-neutral-900/80 hover:bg-neutral-900/50",
-            "transition ease-in-out duration-300"
-          ]}
-        >
-          <InstagrainWeb.PostLive.FormComponent.left_chevron_icon class="text-white" />
-        </div>
-
-        <div
-          :if={resources_len > 1 && @current_resource < resources_len - 1}
-          phx-click="next-resource"
-          phx-target={@myself}
-          class={[
-            "rounded-full cursor-pointer w-8 h-8 m-2",
-            "flex items-center justify-center",
-            "absolute right-0 top-1/2 translate-y-[-50%]",
-            "bg-neutral-900/80 hover:bg-neutral-900/50",
-            "transition ease-in-out duration-300"
-          ]}
-        >
-          <InstagrainWeb.PostLive.FormComponent.right_chevron_icon class="text-white" />
-        </div>
-      </div>
+      <.live_component
+        id={"post-slider-#{@post.id}"}
+        module={InstagrainWeb.PostLive.SliderComponent}
+        resources={@post.resources}
+      />
 
       <div class="grid grid-cols-2 max-sm:px-3">
         <div class="flex gap-4 py-3">
@@ -257,7 +220,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, show_more: false, comment: "", current_resource: 0)}
+    {:ok, assign(socket, show_more: false, comment: "")}
   end
 
   @impl true
@@ -281,14 +244,6 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   @impl true
   def handle_event("show-more", _, socket) do
     {:noreply, assign(socket, show_more: true)}
-  end
-
-  def handle_event("next-resource", _, socket) do
-    {:noreply, assign(socket, current_resource: socket.assigns.current_resource + 1)}
-  end
-
-  def handle_event("previous-resource", _, socket) do
-    {:noreply, assign(socket, current_resource: socket.assigns.current_resource - 1)}
   end
 
   def handle_event("like", _, socket) do
@@ -474,15 +429,4 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
-
-  defp translate_full(0), do: ""
-  defp translate_full(1), do: "-translate-x-[100%]"
-  defp translate_full(2), do: "-translate-x-[200%]"
-  defp translate_full(3), do: "-translate-x-[300%]"
-  defp translate_full(4), do: "-translate-x-[400%]"
-  defp translate_full(5), do: "-translate-x-[500%]"
-  defp translate_full(6), do: "-translate-x-[600%]"
-  defp translate_full(7), do: "-translate-x-[700%]"
-  defp translate_full(8), do: "-translate-x-[800%]"
-  defp translate_full(9), do: "-translate-x-[900%]"
 end
