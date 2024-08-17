@@ -18,6 +18,34 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         />
       </.modal>
 
+      <.modal id={"post-menu-#{@post.id}"}>
+        <div class="max-sm:w-80 sm:w-96 flex flex-col divide-y">
+          <div class="flex items-center justify-center text-sm font-semibold p-3.5 cursor-pointer">
+            Follow
+          </div>
+          <div
+            class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer sm:hidden"
+            phx-click={JS.patch(~p"/p/#{@post.id}")}
+          >
+            Go to post
+          </div>
+          <div
+            class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer max-sm:hidden"
+            phx-click={
+              hide_modal("post-menu-#{@post.id}") |> show_modal("post-details-modal-#{@post.id}")
+            }
+          >
+            Go to post
+          </div>
+          <div
+            class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer"
+            phx-click={hide_modal("post-menu-#{@post.id}")}
+          >
+            Cancel
+          </div>
+        </div>
+      </.modal>
+
       <div class="flex items-center justify-between pb-3 max-sm:px-3">
         <div class="flex items-center gap-2">
           <.avatar user={@user} />
@@ -37,7 +65,9 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           </div>
         </div>
         <div>
-          <.icon name="hero-ellipsis-horizontal" class="h-7 w-7 cursor-pointer" />
+          <span phx-click={show_modal("post-menu-#{@post.id}")}>
+            <.icon name="hero-ellipsis-horizontal" class="h-7 w-7 cursor-pointer" />
+          </span>
         </div>
       </div>
 
@@ -102,7 +132,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           <% end %>
 
           <%= unless @post.disable_comments do %>
-            <span phx-click={show_modal("post-details-modal-#{@post.id}")} phx-target={@myself}>
+            <span phx-click={show_modal("post-details-modal-#{@post.id}")}>
               <.icon
                 name="hero-chat-bubble-oval-left"
                 class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
