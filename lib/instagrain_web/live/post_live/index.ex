@@ -2,7 +2,6 @@ defmodule InstagrainWeb.PostLive.Index do
   use InstagrainWeb, :live_view
 
   alias Instagrain.Feed
-  alias Instagrain.Feed.Post
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,35 +12,11 @@ defmodule InstagrainWeb.PostLive.Index do
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
-  end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Post")
-    |> assign(:post, Feed.get_post!(id, socket.assigns.current_user.id))
-  end
-
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "Create new post")
-    |> assign(:post, %Post{})
-  end
-
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, nil)
-    |> assign(:post, nil)
+  def handle_params(_params, _url, socket) do
+    {:noreply, socket}
   end
 
   @impl true
-  def handle_info({InstagrainWeb.PostLive.FormComponent, {:saved, post}}, socket) do
-    post = Feed.get_post!(post.id, socket.assigns.current_user.id)
-
-    {:noreply, stream_insert(socket, :posts, post, at: 0)}
-  end
-
   def handle_info({InstagrainWeb.PostLive.PostComponent, {:error, message}}, socket) do
     {:noreply, put_flash(socket, :error, message)}
   end

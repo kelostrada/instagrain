@@ -37,7 +37,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           </div>
         </div>
         <div>
-          <.icon name="hero-ellipsis-horizontal" class="h-7 w-7" />
+          <.icon name="hero-ellipsis-horizontal" class="h-7 w-7 cursor-pointer" />
         </div>
       </div>
 
