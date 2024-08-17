@@ -29,7 +29,11 @@
         label="Home"
       />
 
-      <.nav_button patch={~p"/p/new"} icon_name="hero-plus-circle" label="Create" />
+      <.nav_button
+        phx-click={show_modal("new-post-modal")}
+        icon_name="hero-plus-circle"
+        label="Create"
+      />
 
       <.nav_button
         patch={~p"/users/settings"}
@@ -39,5 +43,13 @@
         label="Settings"
       />
     </nav>
+
+    <.modal id="new-post-modal">
+      <.live_component
+        user={@current_user}
+        module={InstagrainWeb.PostLive.FormComponent}
+        id="new-post-modal-content"
+      />
+    </.modal>
   <% end %>
 </div>

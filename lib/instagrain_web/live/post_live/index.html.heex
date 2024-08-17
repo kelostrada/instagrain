@@ -17,14 +17,3 @@
 <div :if={@end_reached?} class="my-5 text-xl text-center">
   No more posts available
 </div>
-
-<.modal :if={@live_action in [:new, :edit]} id="post-modal" show on_cancel={JS.patch(~p"/")}>
-  <.live_component
-    user={@current_user}
-    module={InstagrainWeb.PostLive.FormComponent}
-    id={@post.id || :new}
-    action={@live_action}
-    post={@post}
-    patch={~p"/"}
-  />
-</.modal>

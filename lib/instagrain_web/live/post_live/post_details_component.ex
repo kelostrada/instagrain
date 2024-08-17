@@ -8,9 +8,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="wide-modal">
-      Post details
-    </div>
+    <div class=""><%= @post.id %></div>
     """
   end
 end

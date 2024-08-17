@@ -51,6 +51,18 @@ defmodule InstagrainWeb.CoreComponents do
       class="relative z-50 hidden"
     >
       <div id={"#{@id}-bg"} class="bg-black/65 fixed inset-0 transition-opacity" aria-hidden="true" />
+
+      <div class="fixed top-6 right-6 z-10">
+        <button
+          phx-click={JS.exec("data-cancel", to: "##{@id}")}
+          type="button"
+          class="-m-3 flex-none p-3"
+          aria-label={gettext("close")}
+        >
+          <.icon name="hero-x-mark-solid" class="h-6 w-6 text-white stroke-2" />
+        </button>
+      </div>
+
       <div
         class="fixed inset-0 overflow-y-auto"
         aria-labelledby={"#{@id}-title"}
@@ -66,18 +78,8 @@ defmodule InstagrainWeb.CoreComponents do
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 h-full relative hidden rounded-2xl bg-white shadow-lg ring-1 transition"
+              class="shadow-zinc-700/10 ring-zinc-700/10 h-full hidden rounded-2xl bg-white shadow-lg ring-1 transition"
             >
-              <div class="fixed top-6 right-6">
-                <button
-                  phx-click={JS.exec("data-cancel", to: "##{@id}")}
-                  type="button"
-                  class="-m-3 flex-none p-3"
-                  aria-label={gettext("close")}
-                >
-                  <.icon name="hero-x-mark-solid" class="h-6 w-6 text-white stroke-2" />
-                </button>
-              </div>
               <div id={"#{@id}-content"} class="h-full">
                 <%= render_slot(@inner_block) %>
               </div>
@@ -627,22 +629,25 @@ defmodule InstagrainWeb.CoreComponents do
     """
   end
 
-  attr :patch, :string, required: true
   attr :icon_name, :string, required: true
   attr :icon_name_solid, :string, default: ""
   attr :solid?, :boolean, default: false
   attr :size, :atom, values: [:small, :regular], default: :regular
   attr :label, :string, required: true
 
+  attr :rest, :global,
+    include: ~w(patch),
+    doc: "the arbitrary HTML attributes to add to the nav button container"
+
   def nav_button(assigns) do
     ~H"""
     <.link
-      patch={@patch}
       class={[
         "flex items-center justify-center p-2.5 group",
         "sm:w-12 sm:h-12 sm:hover:bg-neutral-200 sm:rounded-lg sm:my-1",
         "lg:w-56 lg:justify-start"
       ]}
+      {@rest}
     >
       <.icon
         name={if @solid?, do: @icon_name_solid, else: @icon_name}

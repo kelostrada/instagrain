@@ -4,6 +4,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   import InstagrainWeb.UserComponents
 
   alias Instagrain.Feed
+  alias Instagrain.Feed.Post
 
   @impl true
   def render(assigns) do
@@ -274,12 +275,12 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   end
 
   @impl true
-  def update(%{post: post, user: user} = assigns, socket) do
+  def update(%{user: user} = assigns, socket) do
     {:ok,
      socket
      |> assign(assigns)
      |> assign_new(:form, fn ->
-       to_form(Feed.change_post(post, %{user_id: user.id}))
+       to_form(Feed.change_post(%Post{}, %{user_id: user.id}))
      end)
      |> allow_upload(:file, accept: ~w(.jpg .jpeg .png .avi .mov .mpg .mp4), max_entries: 9)}
   end
@@ -287,7 +288,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   @impl true
   def handle_event("validate", %{"post" => post_params}, socket) do
     post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
-    changeset = Feed.change_post(socket.assigns.post, post_params)
+    changeset = Feed.change_post(%Post{}, post_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
@@ -346,27 +347,6 @@ defmodule InstagrainWeb.PostLive.FormComponent do
          }}
       end)
 
-    save_post(socket, socket.assigns.action, post_params, uploaded_files)
-  end
-
-  defp save_post(socket, :edit, post_params, _uploaded_files) do
-    post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
-
-    case Feed.update_post(socket.assigns.post, post_params) do
-      {:ok, post} ->
-        notify_parent({:saved, post})
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Post updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
-    end
-  end
-
-  defp save_post(socket, :new, post_params, uploaded_files) do
     location_id = find_location(post_params["location"])
 
     post_params =
@@ -382,13 +362,13 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       {:noreply,
        socket
        |> put_flash(:info, "Post created successfully")
-       |> push_patch(to: socket.assigns.patch)}
+       |> push_navigate(to: ~p"/")}
     else
       _ ->
         {:noreply,
          socket
          |> put_flash(:error, "Post creation failed")
-         |> push_patch(to: socket.assigns.patch)}
+         |> push_navigate(to: ~p"/")}
     end
   end
 
