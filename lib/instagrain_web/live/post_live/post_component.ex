@@ -21,7 +21,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       <div class="flex items-center justify-between pb-3 max-sm:px-3">
         <div class="flex items-center gap-2">
-          <.avatar user={@current_user} />
+          <.avatar user={@post.user} />
 
           <div>
             <span class="text-black font-bold text-sm">
@@ -50,19 +50,17 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
       <div class="grid grid-cols-2 max-sm:px-3">
         <div class="flex gap-4 py-3">
-          <%= unless @post.hide_likes do %>
-            <%= if @post.liked_by_current_user? do %>
-              <span phx-click="unlike" phx-target={@myself}>
-                <.icon
-                  name="hero-heart-solid"
-                  class="w-7 h-7 cursor-pointer hover:text-neutral-400 bg-red-500"
-                />
-              </span>
-            <% else %>
-              <span phx-click="like" phx-target={@myself}>
-                <.icon name="hero-heart" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
-              </span>
-            <% end %>
+          <%= if @post.liked_by_current_user? do %>
+            <span phx-click="unlike" phx-target={@myself}>
+              <.icon
+                name="hero-heart-solid"
+                class="w-7 h-7 cursor-pointer hover:text-neutral-400 bg-red-500"
+              />
+            </span>
+          <% else %>
+            <span phx-click="like" phx-target={@myself}>
+              <.icon name="hero-heart" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
+            </span>
           <% end %>
 
           <%= unless @post.disable_comments do %>
@@ -95,7 +93,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </div>
       </div>
 
-      <%= unless @post.hide_likes do %>
+      <%= if !@post.hide_likes || @post.user.id == @current_user.id  do %>
         <div class="font-semibold	text-sm max-sm:px-3">
           <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
         </div>
@@ -218,7 +216,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   def handle_event("like", _, socket) do
-    case Instagrain.Feed.like(socket.assigns.post.id, socket.assigns.user.id) do
+    case Instagrain.Feed.like(socket.assigns.post.id, socket.assigns.current_user.id) do
       {:ok, post} ->
         {:noreply,
          assign(socket,
@@ -236,7 +234,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   def handle_event("unlike", _, socket) do
-    case Instagrain.Feed.unlike(socket.assigns.post.id, socket.assigns.user.id) do
+    case Instagrain.Feed.unlike(socket.assigns.post.id, socket.assigns.current_user.id) do
       {:ok, post} ->
         {:noreply,
          assign(socket,
@@ -254,7 +252,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   def handle_event("save", _, socket) do
-    case Instagrain.Feed.save_post(socket.assigns.post.id, socket.assigns.user.id) do
+    case Instagrain.Feed.save_post(socket.assigns.post.id, socket.assigns.current_user.id) do
       {:ok, _} ->
         {:noreply, assign(socket, post: %{socket.assigns.post | saved_by_current_user?: true})}
 
@@ -265,7 +263,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   def handle_event("remove-save", _, socket) do
-    case Instagrain.Feed.remove_save_post(socket.assigns.post.id, socket.assigns.user.id) do
+    case Instagrain.Feed.remove_save_post(socket.assigns.post.id, socket.assigns.current_user.id) do
       :ok ->
         {:noreply, assign(socket, post: %{socket.assigns.post | saved_by_current_user?: false})}
 
@@ -278,7 +276,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   def handle_event("like-comment", %{"comment_id" => comment_id}, socket) do
     comment_id = String.to_integer(comment_id)
 
-    case Instagrain.Feed.like_comment(comment_id, socket.assigns.user.id) do
+    case Instagrain.Feed.like_comment(comment_id, socket.assigns.current_user.id) do
       {:ok, comment} ->
         comments =
           Enum.map(socket.assigns.post.comments, fn
@@ -313,7 +311,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   def handle_event("unlike-comment", %{"comment_id" => comment_id}, socket) do
     comment_id = String.to_integer(comment_id)
 
-    case Instagrain.Feed.unlike_comment(comment_id, socket.assigns.user.id) do
+    case Instagrain.Feed.unlike_comment(comment_id, socket.assigns.current_user.id) do
       {:ok, comment} ->
         comments =
           Enum.map(socket.assigns.post.comments, fn
@@ -353,7 +351,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
     case Feed.create_comment(%{
            comment: comment,
            post_id: socket.assigns.post.id,
-           user_id: socket.assigns.user.id
+           user_id: socket.assigns.current_user.id
          }) do
       {:ok, comment} ->
         post = Map.update!(socket.assigns.post, :comments, &(&1 ++ [comment]))

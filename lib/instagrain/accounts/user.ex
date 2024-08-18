@@ -56,10 +56,10 @@ defmodule Instagrain.Accounts.User do
   defp validate_username(changeset, opts) do
     changeset
     |> validate_required([:username])
-    |> validate_format(:email, ~r/^[\w\.]+$/,
+    |> validate_format(:username, ~r/^[\w\.]+$/,
       message: "must have only regular characters, numbers and dot."
     )
-    |> validate_length(:email, min: 3, max: 36)
+    |> validate_length(:username, min: 3, max: 36)
     |> maybe_validate_unique_username(opts)
   end
 
