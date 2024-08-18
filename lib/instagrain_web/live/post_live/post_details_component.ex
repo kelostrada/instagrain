@@ -1,6 +1,7 @@
 defmodule InstagrainWeb.PostLive.PostDetailsComponent do
   use InstagrainWeb, :live_component
 
+  import InstagrainWeb.PostComponents
   import InstagrainWeb.UserComponents
 
   alias Instagrain.Feed
@@ -8,7 +9,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="flex max-md:flex-col">
+    <div class="flex max-md:flex-col border">
       <div class="flex-1 md:max-w-[600px] md:shrink max-md:w-full">
         <.live_component
           id={"post-details-slider-#{@post.id}"}
@@ -16,7 +17,20 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           resources={@post.resources}
         />
       </div>
-      <div class="md:w-96 max-md:w-full"></div>
+      <div class="md:w-96 max-md:w-full">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <.user_post_header user={@post.user} current_user={@current_user} />
+          </div>
+          <div class="flex justify-end px-4">
+            <.menu
+              current_user={@current_user}
+              modal_id={"post-details-menu-#{@post.id}"}
+              post={@post}
+            />
+          </div>
+        </div>
+      </div>
     </div>
     """
   end

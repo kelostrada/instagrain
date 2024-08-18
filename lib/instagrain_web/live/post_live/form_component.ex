@@ -131,16 +131,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
             <%= if @step == :final do %>
               <div class="flex-none max-sm:w-full md:w-85 overflow-auto">
-                <div class="flex px-4 pt-4.5 pb-3.5 items-center">
-                  <div class="pr-3">
-                    <.avatar user={@user} />
-                  </div>
-                  <div>
-                    <span class="text-black font-bold text-sm">
-                      <%= @user.username %>
-                    </span>
-                  </div>
-                </div>
+                <.user_post_header user={@current_user} current_user={@current_user} />
                 <div class="px-4">
                   <.input type="textarea" field={@form[:caption]} placeholder="Write a caption..." />
                 </div>
@@ -275,12 +266,12 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   end
 
   @impl true
-  def update(%{user: user} = assigns, socket) do
+  def update(%{current_user: current_user} = assigns, socket) do
     {:ok,
      socket
      |> assign(assigns)
      |> assign_new(:form, fn ->
-       to_form(Feed.change_post(%Post{}, %{user_id: user.id}))
+       to_form(Feed.change_post(%Post{}, %{user_id: current_user.id}))
      end)
      |> allow_upload(:file, accept: ~w(.jpg .jpeg .png .avi .mov .mpg .mp4), max_entries: 9)}
   end
