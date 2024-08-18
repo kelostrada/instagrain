@@ -17,8 +17,8 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           resources={@post.resources}
         />
       </div>
-      <div class="md:w-96 max-md:w-full">
-        <div class="flex items-center">
+      <div class="md:w-96 max-md:w-full flex flex-col">
+        <div class="flex items-center border-b">
           <div class="flex-1">
             <.user_post_header user={@post.user} current_user={@current_user} />
           </div>
@@ -29,6 +29,22 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
               post={@post}
             />
           </div>
+        </div>
+
+        <div class="flex-1 border-b">
+          Comments
+        </div>
+
+        <div>
+          Icons, likes etc
+        </div>
+
+        <div>
+          123 likes
+        </div>
+
+        <div>
+          Comment from user
         </div>
       </div>
     </div>
