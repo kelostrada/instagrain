@@ -28,13 +28,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
               <%= @post.user.username %>
             </span>
 
-            <time
-              class="text-neutral-500 font-normal text-sm"
-              datetime={@post.inserted_at}
-              title={DateTime.to_date(@post.inserted_at)}
-            >
-              • <%= DateTime.utc_now() |> DateTime.diff(@post.inserted_at) |> format_seconds() %>
-            </time>
+            <.time datetime={@post.inserted_at} />
           </div>
         </div>
         <div>
@@ -42,11 +36,13 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         </div>
       </div>
 
-      <.live_component
-        id={"post-slider-#{@post.id}"}
-        module={InstagrainWeb.PostLive.SliderComponent}
-        resources={@post.resources}
-      />
+      <div class="border-[0.5px]">
+        <.live_component
+          id={"post-slider-#{@post.id}"}
+          module={InstagrainWeb.PostLive.SliderComponent}
+          resources={@post.resources}
+        />
+      </div>
 
       <div class="grid grid-cols-2 max-sm:px-3">
         <div class="flex gap-4 py-3">
@@ -361,25 +357,6 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         notify_parent({:error, "Saving comment failed"})
         {:noreply, assign(socket, comment: "")}
     end
-  end
-
-  def format_seconds(seconds) when seconds < 60 do
-    "#{seconds} s"
-  end
-
-  def format_seconds(seconds) when seconds < 3600 do
-    minutes = div(seconds, 60)
-    "#{minutes} m"
-  end
-
-  def format_seconds(seconds) when seconds < 86_400 do
-    hours = div(seconds, 3600)
-    "#{hours} h"
-  end
-
-  def format_seconds(seconds) do
-    days = div(seconds, 86_400)
-    "#{days} d"
   end
 
   def format_number(number) when is_integer(number) do

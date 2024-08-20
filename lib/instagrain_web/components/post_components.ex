@@ -45,4 +45,50 @@ defmodule InstagrainWeb.PostComponents do
     </div>
     """
   end
+
+  attr :post, Post, required: true
+
+  def caption(assigns) do
+    ~H"""
+    <span class="font-medium text-sm">
+      <%= for part <- String.split(@post.caption || "", "\n") do %>
+        <%= part %>
+        <br />
+      <% end %>
+    </span>
+    """
+  end
+
+  attr :datetime, DateTime, required: true
+
+  def time(assigns) do
+    ~H"""
+    <time
+      class="text-neutral-500 font-normal text-sm"
+      datetime={@datetime}
+      title={DateTime.to_date(@datetime)}
+    >
+      • <%= DateTime.utc_now() |> DateTime.diff(@datetime) |> format_seconds() %>
+    </time>
+    """
+  end
+
+  def format_seconds(seconds) when seconds < 60 do
+    "#{seconds} s"
+  end
+
+  def format_seconds(seconds) when seconds < 3600 do
+    minutes = div(seconds, 60)
+    "#{minutes} m"
+  end
+
+  def format_seconds(seconds) when seconds < 86_400 do
+    hours = div(seconds, 3600)
+    "#{hours} h"
+  end
+
+  def format_seconds(seconds) do
+    days = div(seconds, 86_400)
+    "#{days} d"
+  end
 end

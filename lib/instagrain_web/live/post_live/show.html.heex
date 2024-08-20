@@ -1,10 +1,11 @@
-<.back navigate={~p"/"}>Back to posts</.back>
-
 <div class="flex justify-center">
-  <.live_component
-    current_user={@current_user}
-    module={InstagrainWeb.PostLive.PostDetailsComponent}
-    id={"#post-details-content-#{@post.id}"}
-    post={@post}
-  />
+  <div class="border">
+    <.live_component
+      current_user={@current_user}
+      module={InstagrainWeb.PostLive.PostDetailsComponent}
+      id={"#post-details-content-#{@post.id}"}
+      post={@post}
+    />
+  </div>
 </div>
+<.back navigate={~p"/"}>Back to posts</.back>

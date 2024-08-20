@@ -278,7 +278,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   @impl true
   def handle_event("validate", %{"post" => post_params}, socket) do
-    post_params = Map.put(post_params, "user_id", socket.assigns.user.id)
+    post_params = Map.put(post_params, "user_id", socket.assigns.current_user.id)
     changeset = Feed.change_post(%Post{}, post_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
@@ -342,7 +342,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
     post_params =
       post_params
-      |> Map.put("user_id", socket.assigns.user.id)
+      |> Map.put("user_id", socket.assigns.current_user.id)
       |> Map.put("location_id", location_id)
 
     with {:ok, post} <- Feed.create_post(post_params),

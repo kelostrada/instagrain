@@ -6,15 +6,20 @@ defmodule InstagrainWeb.UserComponents do
   alias Instagrain.Accounts.User
 
   attr :user, User, required: true
+  attr :size, :atom, values: [:xs, :sm], default: :xs
 
   def avatar(assigns) do
     ~H"""
     <div class="rounded-full border">
-      <.icon :if={is_nil(@user.avatar)} name="hero-user" class="h-7 w-7" />
+      <.icon
+        :if={is_nil(@user.avatar)}
+        name="hero-user"
+        class={[@size == :xs && "h-7 w-7", @size == :sm && "h-8 w-8"]}
+      />
       <img
         :if={!is_nil(@user.avatar)}
         src={~p"/uploads/avatars/#{@user.avatar}"}
-        class="w-7 h-7 object-cover rounded-full"
+        class={[@size == :xs && "h-7 w-7", @size == :sm && "h-8 w-8", "object-cover rounded-full"]}
       />
     </div>
     """
@@ -22,12 +27,17 @@ defmodule InstagrainWeb.UserComponents do
 
   attr :user, User, required: true
   attr :current_user, User, required: true
+  attr :size, :atom, values: [:xs, :sm], default: :xs
 
   def user_post_header(assigns) do
     ~H"""
-    <div class="flex px-4 pt-4.5 pb-3.5 items-center">
+    <div class={[
+      "flex px-4 items-center",
+      @size == :xs && "pt-4.5 pb-3.5",
+      @size == :sm && "pt-3.5 pb-2.5"
+    ]}>
       <div class="pr-3">
-        <.avatar user={@user} />
+        <.avatar user={@user} size={@size} />
       </div>
       <div>
         <span class="text-black font-bold text-sm">

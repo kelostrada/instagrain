@@ -4,13 +4,17 @@ defmodule InstagrainWeb.PostLive.SliderComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="relative w-full overflow-hidden border-[0.5px] shadow-sm">
+    <div class="relative w-full overflow-hidden shadow-sm">
       <div class={[
         "flex transition-transform duration-500 items-center",
         translate_full(@current_resource_index)
       ]}>
         <div :for={resource <- @resources} class="w-full flex-shrink-0">
-          <img src={~p"/uploads/#{resource.file}"} alt={resource.alt} class="w-full h-auto" />
+          <img
+            src={~p"/uploads/#{resource.file}"}
+            alt={resource.alt}
+            class="w-full h-auto max-h-[80vh]"
+          />
         </div>
       </div>
 
