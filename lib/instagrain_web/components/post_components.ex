@@ -73,6 +73,33 @@ defmodule InstagrainWeb.PostComponents do
     """
   end
 
+  attr :datetime, DateTime, required: true
+
+  def time_ago(assigns) do
+    ~H"""
+    <time
+      class="text-neutral-500 font-normal text-sm"
+      datetime={@datetime}
+      title={DateTime.to_date(@datetime)}
+    >
+      <%= DateTime.utc_now() |> DateTime.diff(@datetime) |> format_seconds_ago() %>
+    </time>
+    """
+  end
+
+  attr :post, Post, required: true
+  attr :current_user, User, required: true
+
+  def likes(assigns) do
+    ~H"""
+    <%= if !@post.hide_likes || @post.user.id == @current_user.id  do %>
+      <div class="font-semibold	text-sm">
+        <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
+      </div>
+    <% end %>
+    """
+  end
+
   def format_seconds(seconds) when seconds < 60 do
     "#{seconds} s"
   end
@@ -90,5 +117,43 @@ defmodule InstagrainWeb.PostComponents do
   def format_seconds(seconds) do
     days = div(seconds, 86_400)
     "#{days} d"
+  end
+
+  def format_seconds_ago(1) do
+    "1 second ago"
+  end
+
+  def format_seconds_ago(seconds) when seconds < 60 do
+    "#{seconds} seconds ago"
+  end
+
+  def format_seconds_ago(seconds) when seconds < 3600 do
+    minutes = div(seconds, 60)
+    "#{minutes} minute#{if minutes > 1, do: "s"} ago"
+  end
+
+  def format_seconds_ago(seconds) when seconds < 86_400 do
+    hours = div(seconds, 3600)
+    "#{hours} hour#{if hours > 1, do: "s"} ago"
+  end
+
+  def format_seconds_ago(seconds) do
+    days = div(seconds, 86_400)
+    "#{days} day#{if days > 1, do: "s"} ago"
+  end
+
+  def format_number(number) when is_integer(number) do
+    number
+    |> Integer.to_string()
+    |> insert_commas()
+  end
+
+  defp insert_commas(number_str) do
+    number_str
+    |> String.reverse()
+    |> String.graphemes()
+    |> Enum.chunk_every(3)
+    |> Enum.join(",")
+    |> String.reverse()
   end
 end

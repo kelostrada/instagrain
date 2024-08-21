@@ -21,6 +21,10 @@ defmodule InstagrainWeb.PostLive.Index do
     {:noreply, put_flash(socket, :error, message)}
   end
 
+  def handle_info({_, {:post_updated, post}}, socket) do
+    {:noreply, stream_insert(socket, :posts, post)}
+  end
+
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     post = Feed.get_post!(id, socket.assigns.current_user.id)

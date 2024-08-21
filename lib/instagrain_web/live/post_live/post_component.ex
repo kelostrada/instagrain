@@ -44,56 +44,19 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         />
       </div>
 
-      <div class="grid grid-cols-2 max-sm:px-3">
-        <div class="flex gap-4 py-3">
-          <%= if @post.liked_by_current_user? do %>
-            <span phx-click="unlike" phx-target={@myself}>
-              <.icon
-                name="hero-heart-solid"
-                class="w-7 h-7 cursor-pointer hover:text-neutral-400 bg-red-500"
-              />
-            </span>
-          <% else %>
-            <span phx-click="like" phx-target={@myself}>
-              <.icon name="hero-heart" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
-            </span>
-          <% end %>
-
-          <%= unless @post.disable_comments do %>
-            <span phx-click={show_modal("post-details-modal-#{@post.id}")}>
-              <.icon
-                name="hero-chat-bubble-oval-left"
-                class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
-              />
-            </span>
-          <% end %>
-
-          <.icon
-            name="hero-paper-airplane"
-            class="w-7 h-7 ml-1 rotate-[-27deg] translate-y-[-0.1875rem] cursor-pointer hover:text-neutral-400 "
-          />
-        </div>
-        <div class="flex py-3 flex-row-reverse">
-          <%= if @post.saved_by_current_user? do %>
-            <span phx-click="remove-save" phx-target={@myself}>
-              <.icon
-                name="hero-bookmark-solid"
-                class="w-7 h-7 cursor-pointer hover:text-neutral-400 bg-black"
-              />
-            </span>
-          <% else %>
-            <span phx-click="save" phx-target={@myself}>
-              <.icon name="hero-bookmark" class="w-7 h-7 cursor-pointer hover:text-neutral-400" />
-            </span>
-          <% end %>
-        </div>
+      <div class="max-sm:px-3">
+        <.live_component
+          id={"post-icons-#{@post.id}"}
+          module={InstagrainWeb.PostLive.IconsComponent}
+          current_user={@current_user}
+          post={@post}
+          comment_input_id={"post-details-comment-input-#{@post.id}"}
+        />
       </div>
 
-      <%= if !@post.hide_likes || @post.user.id == @current_user.id  do %>
-        <div class="font-semibold	text-sm max-sm:px-3">
-          <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
-        </div>
-      <% end %>
+      <div class="max-sm:px-3">
+        <.likes post={@post} current_user={@current_user} />
+      </div>
 
       <div class="my-1 text-sm max-sm:px-3">
         <span class="font-semibold">
@@ -151,33 +114,15 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           </div>
         </div>
 
-        <form
-          id={"post-comment-form-#{@post.id}"}
-          phx-target={@myself}
-          phx-change="comment-edit"
-          phx-submit="save-comment"
-          class="max-sm:px-3"
-        >
-          <div class="flex justify-between">
-            <textarea
-              id={"comment-#{@post.id}"}
-              name="comment"
-              phx-hook="Resizable"
-              class={[
-                "block w-full p-0 border-0 outline-none outline-clear",
-                "resize-none overflow-hidden placeholder:font-medium placeholder:text-neutral-500 text-black font-medium text-sm"
-              ]}
-              placeholder="Add a comment..."
-            ><%= Phoenix.HTML.Form.normalize_value("textarea", @comment) %></textarea>
-            <div class="">
-              <%= if String.length(@comment) > 0 do %>
-                <button class="cursor-pointer font-bold text-sm text-sky-500 hover:text-sky-900">
-                  Post
-                </button>
-              <% end %>
-            </div>
-          </div>
-        </form>
+        <div class="max-sm:px-3">
+          <.live_component
+            id={"post-comment-form-#{@post.id}"}
+            module={InstagrainWeb.PostLive.CommentComponent}
+            current_user={@current_user}
+            post={@post}
+            comment_input_id={"post-comment-input-#{@post.id}"}
+          />
+        </div>
       <% end %>
     </div>
     """
@@ -185,7 +130,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, show_more: false, comment: "")}
+    {:ok, assign(socket, show_more: false)}
   end
 
   @impl true
@@ -209,64 +154,6 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   @impl true
   def handle_event("show-more", _, socket) do
     {:noreply, assign(socket, show_more: true)}
-  end
-
-  def handle_event("like", _, socket) do
-    case Instagrain.Feed.like(socket.assigns.post.id, socket.assigns.current_user.id) do
-      {:ok, post} ->
-        {:noreply,
-         assign(socket,
-           post: %{
-             socket.assigns.post
-             | liked_by_current_user?: post.liked_by_current_user?,
-               likes: post.likes
-           }
-         )}
-
-      _ ->
-        notify_parent({:error, "Like failed"})
-        {:noreply, socket}
-    end
-  end
-
-  def handle_event("unlike", _, socket) do
-    case Instagrain.Feed.unlike(socket.assigns.post.id, socket.assigns.current_user.id) do
-      {:ok, post} ->
-        {:noreply,
-         assign(socket,
-           post: %{
-             socket.assigns.post
-             | liked_by_current_user?: post.liked_by_current_user?,
-               likes: post.likes
-           }
-         )}
-
-      _ ->
-        notify_parent({:error, "Unlike failed"})
-        {:noreply, socket}
-    end
-  end
-
-  def handle_event("save", _, socket) do
-    case Instagrain.Feed.save_post(socket.assigns.post.id, socket.assigns.current_user.id) do
-      {:ok, _} ->
-        {:noreply, assign(socket, post: %{socket.assigns.post | saved_by_current_user?: true})}
-
-      _ ->
-        notify_parent({:error, "Save failed"})
-        {:noreply, socket}
-    end
-  end
-
-  def handle_event("remove-save", _, socket) do
-    case Instagrain.Feed.remove_save_post(socket.assigns.post.id, socket.assigns.current_user.id) do
-      :ok ->
-        {:noreply, assign(socket, post: %{socket.assigns.post | saved_by_current_user?: false})}
-
-      _ ->
-        notify_parent({:error, "Remove Save failed"})
-        {:noreply, socket}
-    end
   end
 
   def handle_event("like-comment", %{"comment_id" => comment_id}, socket) do
@@ -337,41 +224,6 @@ defmodule InstagrainWeb.PostLive.PostComponent do
         notify_parent({:error, "Unlike failed"})
         {:noreply, socket}
     end
-  end
-
-  def handle_event("comment-edit", params, socket) do
-    {:noreply, assign(socket, comment: params["comment"])}
-  end
-
-  def handle_event("save-comment", %{"comment" => comment}, socket) do
-    case Feed.create_comment(%{
-           comment: comment,
-           post_id: socket.assigns.post.id,
-           user_id: socket.assigns.current_user.id
-         }) do
-      {:ok, comment} ->
-        post = Map.update!(socket.assigns.post, :comments, &(&1 ++ [comment]))
-        {:noreply, assign(socket, comment: "", post: post)}
-
-      {:error, _error} ->
-        notify_parent({:error, "Saving comment failed"})
-        {:noreply, assign(socket, comment: "")}
-    end
-  end
-
-  def format_number(number) when is_integer(number) do
-    number
-    |> Integer.to_string()
-    |> insert_commas()
-  end
-
-  defp insert_commas(number_str) do
-    number_str
-    |> String.reverse()
-    |> String.graphemes()
-    |> Enum.chunk_every(3)
-    |> Enum.join(",")
-    |> String.reverse()
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

@@ -9,7 +9,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="flex max-md:flex-col min-h-[400px] max-h-[80vh]">
+    <div class="flex max-md:flex-col min-h-[400px] md:max-h-[80vh]">
       <div class="flex-1 md:max-w-[600px] md:shrink max-md:w-full border-r flex items-center justify-center bg-black">
         <.live_component
           id={"post-details-slider-#{@post.id}"}
@@ -50,17 +50,34 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           </div>
         </div>
 
-        <div>
-          Icons, likes etc
+        <div class="px-3">
+          <.live_component
+            id={"post-details-icons-#{@post.id}"}
+            module={InstagrainWeb.PostLive.IconsComponent}
+            current_user={@current_user}
+            post={@post}
+            comment_input_id={"post-details-comment-input-#{@post.id}"}
+          />
         </div>
 
-        <div>
-          123 likes <br />
-          <%= @post.id %>
+        <div class="px-3">
+          <.likes post={@post} current_user={@current_user} />
+          <.time_ago datetime={@post.inserted_at} />
         </div>
 
-        <div>
-          Comment from user
+        <div class="p-3 flex gap-2 items-center">
+          <div>
+            <.avatar user={@post.user} size={:sm} />
+          </div>
+          <div class="pt-4 flex-1">
+            <.live_component
+              id={"post-details-comment-form-#{@post.id}"}
+              module={InstagrainWeb.PostLive.CommentComponent}
+              current_user={@current_user}
+              post={@post}
+              comment_input_id={"post-details-comment-input-#{@post.id}"}
+            />
+          </div>
         </div>
       </div>
     </div>

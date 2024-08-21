@@ -13,7 +13,7 @@ defmodule InstagrainWeb.PostLive.SliderComponent do
           <img
             src={~p"/uploads/#{resource.file}"}
             alt={resource.alt}
-            class="w-full h-auto max-h-[80vh]"
+            class="w-full h-auto md:max-h-[80vh]"
           />
         </div>
       </div>

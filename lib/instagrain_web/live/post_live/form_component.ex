@@ -1,6 +1,7 @@
 defmodule InstagrainWeb.PostLive.FormComponent do
   use InstagrainWeb, :live_component
 
+  import InstagrainWeb.PostComponents
   import InstagrainWeb.UserComponents
 
   alias Instagrain.Feed
@@ -143,7 +144,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                     <span class={"text-xs #{if @form[:caption].errors != [], do: "text-rose-600", else: "text-neutral-350"}"}>
                       <%= (@form[:caption].value || "")
                       |> String.length()
-                      |> InstagrainWeb.PostLive.PostComponent.format_number() %> / 2,200
+                      |> format_number() %> / 2,200
                     </span>
                   </div>
                 </div>
