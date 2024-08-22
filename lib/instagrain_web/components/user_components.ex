@@ -31,11 +31,7 @@ defmodule InstagrainWeb.UserComponents do
 
   def user_post_header(assigns) do
     ~H"""
-    <div class={[
-      "flex px-4 items-center",
-      @size == :xs && "pt-4.5 pb-3.5",
-      @size == :sm && "pt-3.5 pb-2.5"
-    ]}>
+    <div class={["flex px-4 items-center"]}>
       <div class="pr-3">
         <.avatar user={@user} size={@size} />
       </div>

@@ -1,5 +1,7 @@
+<.mobile_nav_header navigate={~p"/"} title="Post" />
+
 <div class="flex justify-center">
-  <div class="border">
+  <div class="md:border">
     <.live_component
       current_user={@current_user}
       module={InstagrainWeb.PostLive.PostDetailsComponent}
@@ -8,4 +10,3 @@
     />
   </div>
 </div>
-<.back navigate={~p"/"}>Back to posts</.back>

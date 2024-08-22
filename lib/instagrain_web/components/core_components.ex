@@ -670,6 +670,25 @@ defmodule InstagrainWeb.CoreComponents do
     """
   end
 
+  attr :navigate, :any, required: true
+  attr :title, :string, default: ""
+
+  def mobile_nav_header(assigns) do
+    ~H"""
+    <div class="border-b md:hidden flex items-center">
+      <div class="cursor-pointer text-left px-4">
+        <.link navigate={@navigate}>
+          <.icon name="hero-chevron-left" class="h-7 w-7" />
+        </.link>
+      </div>
+      <div class="grow text-center font-bold text-base leading-10 py-px">
+        <%= @title %>
+      </div>
+      <div class="w-14"></div>
+    </div>
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

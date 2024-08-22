@@ -132,7 +132,9 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
             <%= if @step == :final do %>
               <div class="flex-none max-sm:w-full md:w-85 overflow-auto">
-                <.user_post_header user={@current_user} current_user={@current_user} />
+                <div class="pt-4.5 pb-3.5">
+                  <.user_post_header user={@current_user} current_user={@current_user} />
+                </div>
                 <div class="px-4">
                   <.input type="textarea" field={@form[:caption]} placeholder="Write a caption..." />
                 </div>
