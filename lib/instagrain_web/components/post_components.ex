@@ -5,6 +5,7 @@ defmodule InstagrainWeb.PostComponents do
   use InstagrainWeb, :component
   alias Instagrain.Accounts.User
   alias Instagrain.Feed.Post
+  alias Instagrain.Feed.Post.Comment
 
   attr :modal_id, :string, required: true
   attr :post, Post, required: true
@@ -104,6 +105,17 @@ defmodule InstagrainWeb.PostComponents do
         <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
       </div>
     <% end %>
+    """
+  end
+
+  attr :comment, Comment, required: true
+  attr :class, :string, default: nil
+
+  def comment_likes(assigns) do
+    ~H"""
+    <div :if={@comment.likes > 0} class={[!@class && "font-semibold text-sm", @class]}>
+      <%= format_number(@comment.likes) %> like<%= if @comment.likes != 1, do: "s" %>
+    </div>
     """
   end
 

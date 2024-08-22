@@ -46,9 +46,10 @@ defmodule InstagrainWeb.PostLive.CommentsComponent do
               <% end %>
             </div>
           </div>
-          <div class="pt-2 px-11 ">
+          <div class="pt-2 px-11 flex gap-3">
+            <.comment_likes comment={comment} class="font-extrabold text-xs text-neutral-500" />
             <.link
-              class="text-xs font-semibold text-neutral-600"
+              class="text-xs font-bold text-neutral-500"
               phx-click="replyto"
               phx-value-username={comment.user.username}
               phx-value-comment_id={comment.id}
