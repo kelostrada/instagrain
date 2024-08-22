@@ -66,6 +66,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
             module={InstagrainWeb.PostLive.CommentsComponent}
             current_user={@current_user}
             post={@post}
+            comment_input_id={"post-details-comment-input-#{@post.id}"}
           />
         </div>
 

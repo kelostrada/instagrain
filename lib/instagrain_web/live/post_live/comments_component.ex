@@ -6,38 +6,56 @@ defmodule InstagrainWeb.PostLive.CommentsComponent do
 
   attr :current_user, Instagrain.Accounts.User, required: true
   attr :post, Instagrain.Feed.Post, required: true
+  attr :comment_input_id, :string, required: true
 
   @impl true
   def render(assigns) do
     ~H"""
     <div class="text-sm">
       <%= unless @post.disable_comments do %>
-        <div :for={comment <- @post.comments} class="flex gap-3 my-4">
-          <div>
-            <.avatar user={comment.user} size={:sm} />
-          </div>
-          <div class="grow">
-            <span class="font-bold">
-              <%= comment.user.username %>
-            </span>
-            <.time datetime={comment.inserted_at} />
+        <div :for={comment <- @post.comments} class="my-4">
+          <div class="flex gap-3">
             <div>
-              <.user_content text={comment.comment} />
+              <.avatar user={comment.user} size={:sm} />
+            </div>
+            <div class="grow">
+              <span class="font-bold">
+                <%= comment.user.username %>
+              </span>
+              <.time datetime={comment.inserted_at} />
+              <div>
+                <.user_content text={comment.comment} />
+              </div>
+            </div>
+            <div class="flex items-center">
+              <%= if comment.liked_by_current_user? do %>
+                <span
+                  phx-click="unlike-comment"
+                  phx-value-comment_id={comment.id}
+                  phx-target={@myself}
+                >
+                  <.icon
+                    name="hero-heart-solid"
+                    class="w-5 h-5 cursor-pointer hover:text-neutral-400 bg-red-500"
+                  />
+                </span>
+              <% else %>
+                <span phx-click="like-comment" phx-value-comment_id={comment.id} phx-target={@myself}>
+                  <.icon name="hero-heart" class="w-5 h-5 cursor-pointer hover:text-neutral-400" />
+                </span>
+              <% end %>
             </div>
           </div>
-          <div>
-            <%= if comment.liked_by_current_user? do %>
-              <span phx-click="unlike-comment" phx-value-comment_id={comment.id} phx-target={@myself}>
-                <.icon
-                  name="hero-heart-solid"
-                  class="w-3 h-3 cursor-pointer hover:text-neutral-400 bg-red-500"
-                />
-              </span>
-            <% else %>
-              <span phx-click="like-comment" phx-value-comment_id={comment.id} phx-target={@myself}>
-                <.icon name="hero-heart" class="w-3 h-3 cursor-pointer hover:text-neutral-400" />
-              </span>
-            <% end %>
+          <div class="pt-2 px-11 ">
+            <.link
+              class="text-xs font-semibold text-neutral-600"
+              phx-click="replyto"
+              phx-value-username={comment.user.username}
+              phx-value-comment_id={comment.id}
+              phx-target={"##{@comment_input_id}-container"}
+            >
+              Reply
+            </.link>
           </div>
         </div>
       <% end %>

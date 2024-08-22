@@ -67,3 +67,9 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+window.addEventListener("phx:focus", (e) => {
+  let el = document.getElementById(e.detail.id)
+  if (el) {
+    el.focus();
+  }
+})

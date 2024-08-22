@@ -11,7 +11,7 @@ defmodule InstagrainWeb.PostLive.CommentComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
+    <div id={"#{@comment_input_id}-container"}>
       <form
         :if={!@post.disable_comments}
         phx-target={@myself}
@@ -44,7 +44,7 @@ defmodule InstagrainWeb.PostLive.CommentComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, comment: "")}
+    {:ok, assign(socket, comment: "", reply_to: nil)}
   end
 
   @impl true
@@ -56,18 +56,27 @@ defmodule InstagrainWeb.PostLive.CommentComponent do
     case Feed.create_comment(%{
            comment: comment,
            post_id: socket.assigns.post.id,
-           user_id: socket.assigns.current_user.id
+           user_id: socket.assigns.current_user.id,
+           reply_to_id: socket.assigns.reply_to
          }) do
       {:ok, comment} ->
         comment = Repo.preload(comment, [:user, :comment_likes])
         post = Map.update!(socket.assigns.post, :comments, &(&1 ++ [comment]))
         notify_parent({:post_updated, post})
-        {:noreply, assign(socket, comment: "")}
+        {:noreply, assign(socket, comment: "", reply_to: nil)}
 
       {:error, _error} ->
         notify_parent({:error, "Saving comment failed"})
-        {:noreply, assign(socket, comment: "")}
+        {:noreply, assign(socket, comment: "", reply_to: nil)}
     end
+  end
+
+  def handle_event("replyto", %{"username" => username, "comment_id" => comment_id}, socket) do
+    {:noreply,
+     socket
+     |> assign(comment: "@#{username} ")
+     |> assign(reply_to: comment_id)
+     |> push_event("focus", %{id: socket.assigns.comment_input_id})}
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
