@@ -59,18 +59,12 @@ defmodule InstagrainWeb.PostLive.PostComponent do
       </div>
 
       <div class="my-1 text-sm max-sm:px-3">
-        <span class="font-semibold">
-          <%= @post.user.username %>
-        </span>
-
-        <%= if @show_more || !@post.caption || String.length(@post.caption) <= 125 do %>
-          <span class="font-medium"><%= @post.caption %></span>
-        <% else %>
-          <span class="font-medium"><%= String.slice(@post.caption, 0, 125) %>...</span>
-          <span class="text-neutral-500 cursor-pointer" phx-click="show-more" phx-target={@myself}>
-            more
-          </span>
-        <% end %>
+        <.live_component
+          id={"post-caption-#{@post.id}"}
+          module={InstagrainWeb.PostLive.CaptionComponent}
+          current_user={@current_user}
+          post={@post}
+        />
       </div>
 
       <%= unless @post.disable_comments do %>
@@ -129,11 +123,6 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   @impl true
-  def mount(socket) do
-    {:ok, assign(socket, show_more: false)}
-  end
-
-  @impl true
   def update(assigns, socket) do
     amount =
       case length(assigns.post.comments) do
@@ -152,10 +141,6 @@ defmodule InstagrainWeb.PostLive.PostComponent do
   end
 
   @impl true
-  def handle_event("show-more", _, socket) do
-    {:noreply, assign(socket, show_more: true)}
-  end
-
   def handle_event("like-comment", %{"comment_id" => comment_id}, socket) do
     comment_id = String.to_integer(comment_id)
 

@@ -44,11 +44,11 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
         </div>
 
         <div class="flex-1 border-b overflow-y-auto max-md:hidden">
-          <div class="flex">
-            <div class="pl-4 pr-3 py-4">
+          <div class="flex gap-3 p-4">
+            <div>
               <.avatar user={@post.user} size={:sm} />
             </div>
-            <div class="flex-1 py-4">
+            <div class="flex-1">
               <div>
                 <span class="text-black font-bold text-sm">
                   <%= @post.user.username %>
@@ -56,7 +56,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
                 <.time datetime={@post.inserted_at} />
               </div>
               <div>
-                <.caption post={@post} />
+                <.caption text={@post.caption} />
               </div>
             </div>
           </div>
@@ -74,7 +74,15 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
 
         <div class="px-3">
           <.likes post={@post} current_user={@current_user} />
-          <.time_ago datetime={@post.inserted_at} />
+          <div class="md:hidden">
+            <.live_component
+              id={"post-details-caption-#{@post.id}"}
+              module={InstagrainWeb.PostLive.CaptionComponent}
+              current_user={@current_user}
+              post={@post}
+            />
+          </div>
+          <.time_ago datetime={@post.inserted_at} class="text-xs text-neutral-500" />
         </div>
 
         <div class="p-3 flex gap-2 items-center">

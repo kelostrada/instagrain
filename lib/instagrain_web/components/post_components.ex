@@ -46,25 +46,31 @@ defmodule InstagrainWeb.PostComponents do
     """
   end
 
-  attr :post, Post, required: true
+  attr :text, :string, required: true
 
   def caption(assigns) do
+    parts = String.split(assigns.text || "", "\n")
+    parts_length = length(parts)
+
+    assigns = assign(assigns, parts: parts, parts_length: parts_length)
+
     ~H"""
     <span class="font-medium text-sm">
-      <%= for part <- String.split(@post.caption || "", "\n") do %>
+      <%= for {part, i} <- Enum.with_index(@parts) do %>
         <%= part %>
-        <br />
+        <br :if={i < @parts_length - 1} />
       <% end %>
     </span>
     """
   end
 
   attr :datetime, DateTime, required: true
+  attr :class, :string, default: ""
 
   def time(assigns) do
     ~H"""
     <time
-      class="text-neutral-500 font-normal text-sm"
+      class={[@class == "" && "text-neutral-500 text-sm", @class]}
       datetime={@datetime}
       title={DateTime.to_date(@datetime)}
     >
@@ -74,11 +80,12 @@ defmodule InstagrainWeb.PostComponents do
   end
 
   attr :datetime, DateTime, required: true
+  attr :class, :string, default: ""
 
   def time_ago(assigns) do
     ~H"""
     <time
-      class="text-neutral-500 font-normal text-sm"
+      class={[@class == "" && "text-neutral-500 text-sm", @class]}
       datetime={@datetime}
       title={DateTime.to_date(@datetime)}
     >
