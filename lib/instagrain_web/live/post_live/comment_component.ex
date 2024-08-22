@@ -10,27 +10,34 @@ defmodule InstagrainWeb.PostLive.CommentComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <form phx-target={@myself} phx-change="comment-edit" phx-submit="save-comment">
-      <div class="flex justify-between">
-        <textarea
-          id={@comment_input_id}
-          name="comment"
-          phx-hook="Resizable"
-          class={[
-            "block w-full p-0 border-0 outline-none outline-clear",
-            "resize-none overflow-hidden placeholder:font-medium placeholder:text-neutral-500 text-black font-medium text-sm"
-          ]}
-          placeholder="Add a comment..."
-        ><%= Phoenix.HTML.Form.normalize_value("textarea", @comment) %></textarea>
-        <div class="">
-          <%= if String.length(@comment) > 0 do %>
-            <button class="cursor-pointer font-bold text-sm text-sky-500 hover:text-sky-900">
-              Post
-            </button>
-          <% end %>
+    <div>
+      <form
+        :if={!@post.disable_comments}
+        phx-target={@myself}
+        phx-change="comment-edit"
+        phx-submit="save-comment"
+      >
+        <div class="flex justify-between">
+          <textarea
+            id={@comment_input_id}
+            name="comment"
+            phx-hook="Resizable"
+            class={[
+              "block w-full p-0 border-0 outline-none outline-clear",
+              "resize-none overflow-hidden placeholder:font-medium placeholder:text-neutral-500 text-black font-medium text-sm"
+            ]}
+            placeholder="Add a comment..."
+          ><%= Phoenix.HTML.Form.normalize_value("textarea", @comment) %></textarea>
+          <div class="">
+            <%= if String.length(@comment) > 0 do %>
+              <button class="cursor-pointer font-bold text-sm text-sky-500 hover:text-sky-900">
+                Post
+              </button>
+            <% end %>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
     """
   end
 

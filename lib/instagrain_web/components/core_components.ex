@@ -675,7 +675,7 @@ defmodule InstagrainWeb.CoreComponents do
 
   def mobile_nav_header(assigns) do
     ~H"""
-    <div class="border-b md:hidden flex items-center">
+    <div class="md:hidden flex items-center">
       <div class="cursor-pointer text-left px-4">
         <.link navigate={@navigate}>
           <.icon name="hero-chevron-left" class="h-7 w-7" />
