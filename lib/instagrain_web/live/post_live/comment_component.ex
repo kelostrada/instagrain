@@ -2,6 +2,7 @@ defmodule InstagrainWeb.PostLive.CommentComponent do
   use InstagrainWeb, :live_component
 
   alias Instagrain.Feed
+  alias Instagrain.Repo
 
   attr :current_user, Instagrain.Accounts.User, required: true
   attr :post, Instagrain.Feed.Post, required: true
@@ -58,6 +59,7 @@ defmodule InstagrainWeb.PostLive.CommentComponent do
            user_id: socket.assigns.current_user.id
          }) do
       {:ok, comment} ->
+        comment = Repo.preload(comment, [:user, :comment_likes])
         post = Map.update!(socket.assigns.post, :comments, &(&1 ++ [comment]))
         notify_parent({:post_updated, post})
         {:noreply, assign(socket, comment: "")}

@@ -22,7 +22,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           />
         </div>
       </div>
-      <div class="flex-1 md:max-w-[600px] md:shrink max-md:w-full md:border-r flex items-center justify-center bg-black">
+      <div class="flex-1 md:max-w-[700px] md:shrink max-md:w-full md:border-r flex items-center justify-center bg-black">
         <.live_component
           id={"post-details-slider-#{@post.id}"}
           module={InstagrainWeb.PostLive.SliderComponent}
@@ -43,8 +43,8 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           </div>
         </div>
 
-        <div class="flex-1 border-b overflow-y-auto max-md:hidden">
-          <div class="flex gap-3 p-4">
+        <div class="flex-1 border-b overflow-y-auto max-md:hidden p-4">
+          <div class="flex gap-3">
             <div>
               <.avatar user={@post.user} size={:sm} />
             </div>
@@ -56,10 +56,17 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
                 <.time datetime={@post.inserted_at} />
               </div>
               <div>
-                <.caption text={@post.caption} />
+                <.user_content text={@post.caption} />
               </div>
             </div>
           </div>
+
+          <.live_component
+            id={"post-details-comments-#{@post.id}"}
+            module={InstagrainWeb.PostLive.CommentsComponent}
+            current_user={@current_user}
+            post={@post}
+          />
         </div>
 
         <div class="px-3">
@@ -85,8 +92,17 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           <.time_ago datetime={@post.inserted_at} class="text-xs text-neutral-500" />
         </div>
 
+        <div class="px-3 md:hidden">
+          <.live_component
+            id={"post-details-highlighted-comments-#{@post.id}"}
+            module={InstagrainWeb.PostLive.HighlightedCommentsComponent}
+            current_user={@current_user}
+            post={@post}
+          />
+        </div>
+
         <div class="p-3 flex gap-2 items-center">
-          <div>
+          <div class="max-md:hidden">
             <.avatar user={@post.user} size={:sm} />
           </div>
           <div class="pt-4 flex-1">

@@ -15,9 +15,9 @@ defmodule InstagrainWeb.PostLive.CaptionComponent do
       </span>
 
       <%= if @show_more? || !@post.caption || (String.length(@post.caption) <= 125 && @post.caption |> String.split("\n") |> length() < 3) do %>
-        <.caption text={@post.caption} />
+        <.user_content text={@post.caption} />
       <% else %>
-        <.caption text={(@post.caption |> String.split("\n") |> Enum.take(3) |> Enum.join("\n") |> String.slice(0, 125)) <> "..."} />
+        <.user_content text={(@post.caption |> String.split("\n") |> Enum.take(3) |> Enum.join("\n") |> String.slice(0, 125)) <> "..."} />
         <span
           class="text-sm text-neutral-500 cursor-pointer"
           phx-click="show-more"

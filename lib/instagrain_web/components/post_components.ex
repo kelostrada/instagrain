@@ -48,7 +48,7 @@ defmodule InstagrainWeb.PostComponents do
 
   attr :text, :string, required: true
 
-  def caption(assigns) do
+  def user_content(assigns) do
     parts = String.split(assigns.text || "", "\n")
     parts_length = length(parts)
 
