@@ -4,8 +4,6 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
   import InstagrainWeb.PostComponents
   import InstagrainWeb.UserComponents
 
-  alias Instagrain.Feed
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -119,10 +117,5 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
       </div>
     </div>
     """
-  end
-
-  @impl true
-  def mount(socket) do
-    {:ok, assign(socket, show_more: false, comment: "")}
   end
 end

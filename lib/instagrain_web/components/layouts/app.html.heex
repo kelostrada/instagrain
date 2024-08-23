@@ -1,7 +1,8 @@
 <div class="flex sm:flex-row-reverse max-sm:flex-col h-screen max-sm:divide-y-[1px]">
   <%= if Map.has_key?(assigns, :top_nav), do: @top_nav %>
 
-  <main class="sm:py-10 sm:px-6 lg:px-8 grow overflow-y-scroll">
+  <%!-- pb-1 is a hack to make infinite scroll work on mobile --%>
+  <main class="sm:py-10 sm:px-6 lg:px-8 grow overflow-y-scroll pb-1">
     <.flash_group flash={@flash} />
     <%= @inner_content %>
   </main>
