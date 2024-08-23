@@ -13,6 +13,14 @@ defmodule Instagrain.Accounts.User do
 
     has_many :posts, Instagrain.Feed.Post
 
+    many_to_many :followings, Instagrain.Accounts.User,
+      join_through: "follows",
+      join_keys: [user_id: :id, follow_id: :id]
+
+    many_to_many :followers, Instagrain.Accounts.User,
+      join_through: "follows",
+      join_keys: [follow_id: :id, user_id: :id]
+
     timestamps(type: :utc_datetime)
   end
 

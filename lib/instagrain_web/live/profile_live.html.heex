@@ -1,12 +1,69 @@
-<div>
-  <div class="rounded-full border h-40 w-40">
-    <.icon :if={is_nil(@profile.avatar)} name="hero-user" class="" />
+<div class="flex gap-4 max-w-[935px] mx-auto">
+  <div class="rounded-full border h-40 w-40 mx-16">
+    <.icon :if={is_nil(@profile.avatar)} name="hero-user" class="w-40 h-40" />
     <img
       :if={!is_nil(@profile.avatar)}
       src={~p"/uploads/avatars/#{@profile.avatar}"}
       class="object-cover rounded-full"
     />
   </div>
-  <span class="font-extrabold"><%= @profile.username %></span>
-  <span>Posts: <%= format_number(length(@profile.posts)) %></span>
+  <div class="flex flex-col gap-6">
+    <div class="flex gap-8 items-center">
+      <div>
+        <span class="font-medium text-xl"><%= @profile.username %></span>
+      </div>
+      <div>
+        <%= if(
+          @profile.id != @current_user.id &&
+            @profile.id not in Enum.map(@current_user.followings, & &1.id)
+        ) do %>
+          <.button phx-click="follow">
+            Follow
+          </.button>
+        <% end %>
+
+        <%= if(
+          @profile.id != @current_user.id &&
+            @profile.id in Enum.map(@current_user.followings, & &1.id)
+        ) do %>
+          <.button phx-click="unfollow">
+            Unfollow
+          </.button>
+        <% end %>
+
+        <.link :if={@profile.id == @current_user.id} navigate={~p"/users/settings"}>
+          <.button>
+            Edit Profile
+          </.button>
+        </.link>
+      </div>
+    </div>
+
+    <div class="flex gap-8 items-center">
+      <div>
+        <span class="font-extrabold text-base"><%= format_number(length(@profile.posts)) %></span>
+        posts
+      </div>
+      <div>
+        <span class="font-extrabold text-base">
+          <%= format_number(length(@profile.followers)) %>
+        </span>
+        followers
+      </div>
+      <div>
+        <span class="font-extrabold text-base">
+          <%= format_number(length(@profile.followings)) %>
+        </span>
+        following
+      </div>
+    </div>
+
+    <div class="font-bold text-sm">
+      Fullname placeholder
+    </div>
+
+    <div>
+      <.user_content text="Description placeholder" />
+    </div>
+  </div>
 </div>

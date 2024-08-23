@@ -13,7 +13,7 @@ defmodule Instagrain.Profiles do
   def get_profile(username) do
     from(u in User, where: u.username == ^username)
     |> Repo.one()
-    |> Repo.preload([:posts])
+    |> Repo.preload([:posts, :followers, :followings])
   end
 
   @doc """
@@ -39,14 +39,18 @@ defmodule Instagrain.Profiles do
 
   ## Examples
 
-      iex> delete_follow(follow)
+      iex> unfollow_user(user_id, follow_id)
       {:ok, %Follow{}}
 
       iex> delete_follow(follow)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_follow(%Follow{} = follow) do
-    Repo.delete(follow)
+  def unfollow_user(user_id, follow_id) do
+    case from(f in Follow, where: f.user_id == ^user_id and f.follow_id == ^follow_id)
+         |> Repo.delete_all() do
+      {1, _} -> :ok
+      _ -> {:error, :not_found}
+    end
   end
 end
