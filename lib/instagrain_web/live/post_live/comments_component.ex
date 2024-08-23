@@ -33,9 +33,7 @@ defmodule InstagrainWeb.PostLive.CommentsComponent do
         <.avatar user={@comment.user} size={:sm} />
       </div>
       <div class="grow">
-        <span class="font-bold">
-          <%= @comment.user.username %>
-        </span>
+        <.username user={@comment.user} />
         <.time prefix="• " datetime={@comment.inserted_at} class="max-md:hidden" />
         <div>
           <.user_content text={@comment.comment} />

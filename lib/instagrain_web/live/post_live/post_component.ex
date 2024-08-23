@@ -22,10 +22,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           <.avatar user={@post.user} />
 
           <div>
-            <span class="text-black font-bold text-sm">
-              <%= @post.user.username %>
-            </span>
-
+            <.username user={@post.user} />
             <.time prefix="• " datetime={@post.inserted_at} />
           </div>
         </div>

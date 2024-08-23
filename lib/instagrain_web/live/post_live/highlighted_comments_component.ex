@@ -2,6 +2,7 @@ defmodule InstagrainWeb.PostLive.HighlightedCommentsComponent do
   use InstagrainWeb, :live_component
 
   import InstagrainWeb.PostComponents
+  import InstagrainWeb.UserComponents
 
   attr :current_user, Instagrain.Accounts.User, required: true
   attr :post, Instagrain.Feed.Post, required: true
@@ -42,9 +43,7 @@ defmodule InstagrainWeb.PostLive.HighlightedCommentsComponent do
 
         <div :for={comment <- @highlighted_comments} class="my-1 text-sm flex gap-2">
           <div class="grow">
-            <span class="font-bold">
-              <%= comment.user.username %>
-            </span>
+            <.username user={comment.user} />
             <.user_content text={comment.comment} />
           </div>
           <div>

@@ -1,0 +1,12 @@
+<div>
+  <div class="rounded-full border h-40 w-40">
+    <.icon :if={is_nil(@profile.avatar)} name="hero-user" class="" />
+    <img
+      :if={!is_nil(@profile.avatar)}
+      src={~p"/uploads/avatars/#{@profile.avatar}"}
+      class="object-cover rounded-full"
+    />
+  </div>
+  <span class="font-extrabold"><%= @profile.username %></span>
+  <span>Posts: <%= format_number(length(@profile.posts)) %></span>
+</div>

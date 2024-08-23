@@ -48,9 +48,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
             </div>
             <div class="flex-1">
               <div>
-                <span class="text-black font-bold text-sm">
-                  <%= @post.user.username %>
-                </span>
+                <.username user={@post.user} />
                 <.time prefix="• " datetime={@post.inserted_at} />
               </div>
               <div>

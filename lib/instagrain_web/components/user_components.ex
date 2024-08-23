@@ -10,9 +10,11 @@ defmodule InstagrainWeb.UserComponents do
 
   def username(assigns) do
     ~H"""
-    <span class={[!@class && "text-black font-bold text-sm", @class]}>
-      <%= @user.username %>
-    </span>
+    <.link navigate={~p"/#{@user.username}"}>
+      <span class={[!@class && "text-black font-bold text-sm", @class]}>
+        <%= @user.username %>
+      </span>
+    </.link>
     """
   end
 

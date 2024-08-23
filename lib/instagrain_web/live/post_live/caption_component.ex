@@ -2,6 +2,7 @@ defmodule InstagrainWeb.PostLive.CaptionComponent do
   use InstagrainWeb, :live_component
 
   import InstagrainWeb.PostComponents
+  import InstagrainWeb.UserComponents
 
   attr :current_user, Instagrain.Accounts.User, required: true
   attr :post, Instagrain.Feed.Post, required: true
@@ -10,9 +11,7 @@ defmodule InstagrainWeb.PostLive.CaptionComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <span class="text-sm font-semibold">
-        <%= @post.user.username %>
-      </span>
+      <.username user={@post.user} class="text-sm font-semibold" />
 
       <%= if @show_more? || !@post.caption || (String.length(@post.caption) <= 125 && @post.caption |> String.split("\n") |> length() < 3) do %>
         <.user_content text={@post.caption} />

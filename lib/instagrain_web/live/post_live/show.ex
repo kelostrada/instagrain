@@ -1,6 +1,7 @@
 defmodule InstagrainWeb.PostLive.Show do
   use InstagrainWeb, :live_view
 
+  import InstagrainWeb.PostComponents
   import InstagrainWeb.UserComponents
 
   alias Instagrain.Feed
