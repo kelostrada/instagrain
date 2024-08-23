@@ -1,6 +1,8 @@
 defmodule InstagrainWeb.PostLive.Show do
   use InstagrainWeb, :live_view
 
+  import InstagrainWeb.UserComponents
+
   alias Instagrain.Feed
 
   @impl true
@@ -10,10 +12,13 @@ defmodule InstagrainWeb.PostLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
+    post = Feed.get_post!(id, socket.assigns.current_user.id)
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:post, Feed.get_post!(id, socket.assigns.current_user.id))}
+     |> assign(:post, post)
+     |> assign(:other_posts, Feed.list_other_posts(post))}
   end
 
   @impl true

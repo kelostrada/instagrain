@@ -6,6 +6,17 @@ defmodule InstagrainWeb.UserComponents do
   alias Instagrain.Accounts.User
 
   attr :user, User, required: true
+  attr :class, :string, default: nil
+
+  def username(assigns) do
+    ~H"""
+    <span class={[!@class && "text-black font-bold text-sm", @class]}>
+      <%= @user.username %>
+    </span>
+    """
+  end
+
+  attr :user, User, required: true
   attr :size, :atom, values: [:xs, :sm], default: :xs
 
   def avatar(assigns) do
@@ -36,9 +47,7 @@ defmodule InstagrainWeb.UserComponents do
         <.avatar user={@user} size={@size} />
       </div>
       <div>
-        <span class="text-black font-bold text-sm">
-          <%= @user.username %>
-        </span>
+        <.username user={@user} />
       </div>
     </div>
     """

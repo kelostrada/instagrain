@@ -27,7 +27,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           resources={@post.resources}
         />
       </div>
-      <div class="md:w-96 max-md:w-full flex flex-col">
+      <div class="md:w-85 max-md:w-full flex flex-col">
         <div class="flex items-center border-b max-md:hidden">
           <div class="flex-1 pt-3.5 pb-2.5">
             <.user_post_header user={@post.user} current_user={@current_user} size={:sm} />

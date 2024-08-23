@@ -1,10 +1,42 @@
 <div class="flex justify-center">
-  <div class="md:border max-md:w-full">
+  <div class="md:border max-md:w-full max-w-[935px]">
     <.live_component
       current_user={@current_user}
       module={InstagrainWeb.PostLive.PostDetailsComponent}
       id={"#post-details-content-#{@post.id}"}
       post={@post}
     />
+  </div>
+</div>
+
+<hr class="my-8 max-w-[935px] mx-auto" />
+
+<div class="p-1 my-4 max-w-[935px] mx-auto">
+  <span class="text-neutral-500 font-bold text-sm">More posts from</span>
+  <.username user={@post.user} class="text-neutral-800 font-bold text-sm" />
+</div>
+
+<div class="max-w-[935px] mx-auto">
+  <div class="grid grid-cols-3 gap-1 p-1 ">
+    <div :for={%{resources: [resource | _]} = post <- @other_posts} class="relative group">
+      <.link navigate={~p"/p/#{post.id}"}>
+        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" />
+        <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+          <div class="flex max-sm:gap-3 gap-6">
+            <div :if={!post.hide_likes} class="text-white">
+              <.icon name="hero-heart-solid" class="max-sm:w-5 max-sm:h-5 w-7 h-7" />
+              <span class="font-extrabold max-sm:text-sm"><%= post.likes %></span>
+            </div>
+            <div :if={!post.disable_comments} class="text-white">
+              <.icon
+                name="hero-chat-bubble-oval-left-solid"
+                class="-scale-x-100 max-sm:w-5 max-sm:h-5 w-7 h-7"
+              />
+              <span class="font-extrabold max-sm:text-sm"><%= length(post.comments) %></span>
+            </div>
+          </div>
+        </div>
+      </.link>
+    </div>
   </div>
 </div>

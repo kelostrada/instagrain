@@ -105,6 +105,25 @@ defmodule Instagrain.Feed do
   end
 
   @doc """
+  Returns the list of other posts from the same poster
+
+  ## Examples
+
+      iex> list_other_posts(post)
+      [%Post{}, ...]
+
+  """
+  def list_other_posts(%Post{id: id, user_id: user_id}, limit \\ 6) do
+    from(p in Post,
+      where: p.user_id == ^user_id and p.id != ^id,
+      order_by: {:desc, p.inserted_at},
+      limit: ^limit
+    )
+    |> Repo.all()
+    |> Repo.preload([:resources, :comments])
+  end
+
+  @doc """
   Creates a post.
 
   ## Examples
