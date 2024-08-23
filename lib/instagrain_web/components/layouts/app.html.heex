@@ -5,6 +5,12 @@
   <main class="sm:py-10 sm:px-6 lg:px-8 grow overflow-y-scroll pb-1">
     <.flash_group flash={@flash} />
     <%= @inner_content %>
+
+    <div class="flex justify-center max-md:hidden my-12">
+      <span class="font-medium text-xs text-neutral-500">
+        © 2024 Instagrain from Kelostrada
+      </span>
+    </div>
   </main>
 
   <%= if @current_user do %>
