@@ -24,14 +24,8 @@ defmodule InstagrainWeb.PostComponents do
             Follow
           </div>
           <div
-            class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer sm:hidden"
+            class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer"
             phx-click={JS.patch(~p"/p/#{@post.id}")}
-          >
-            Go to post
-          </div>
-          <div
-            class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer max-sm:hidden"
-            phx-click={hide_modal(@modal_id) |> show_modal("post-details-modal-#{@post.id}")}
           >
             Go to post
           </div>
@@ -66,6 +60,7 @@ defmodule InstagrainWeb.PostComponents do
   end
 
   attr :datetime, DateTime, required: true
+  attr :prefix, :string, default: ""
   attr :class, :string, default: ""
 
   def time(assigns) do
@@ -75,7 +70,7 @@ defmodule InstagrainWeb.PostComponents do
       datetime={@datetime}
       title={DateTime.to_date(@datetime)}
     >
-      • <%= DateTime.utc_now() |> DateTime.diff(@datetime) |> format_seconds() %>
+      <%= @prefix %><%= DateTime.utc_now() |> DateTime.diff(@datetime) |> format_seconds() %>
     </time>
     """
   end

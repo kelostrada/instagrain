@@ -20,15 +20,25 @@ defmodule InstagrainWeb.PostLive.IconsComponent do
         <% end %>
 
         <%= unless @post.disable_comments do %>
-          <span phx-click={
-            show_modal("post-details-modal-#{@post.id}")
-            |> JS.focus(to: "##{@comment_input_id}")
-          }>
+          <span
+            class="max-md:hidden"
+            phx-click={
+              show_modal("post-details-modal-#{@post.id}")
+              |> JS.focus(to: "##{@comment_input_id}")
+            }
+          >
             <.icon
               name="hero-chat-bubble-oval-left"
               class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
             />
           </span>
+
+          <.link class="md:hidden" navigate={~p"/p/#{@post.id}/comments"}>
+            <.icon
+              name="hero-chat-bubble-oval-left"
+              class="w-7 h-7 -scale-x-100 cursor-pointer hover:text-neutral-400"
+            />
+          </.link>
         <% end %>
 
         <.icon

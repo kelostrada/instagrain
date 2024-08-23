@@ -36,7 +36,7 @@ defmodule InstagrainWeb.PostLive.CommentsComponent do
         <span class="font-bold">
           <%= @comment.user.username %>
         </span>
-        <.time datetime={@comment.inserted_at} />
+        <.time prefix="• " datetime={@comment.inserted_at} class="max-md:hidden" />
         <div>
           <.user_content text={@comment.comment} />
         </div>
@@ -46,17 +46,21 @@ defmodule InstagrainWeb.PostLive.CommentsComponent do
           <span phx-click="unlike-comment" phx-value-comment_id={@comment.id} phx-target={@myself}>
             <.icon
               name="hero-heart-solid"
-              class="w-5 h-5 cursor-pointer hover:text-neutral-400 bg-red-500"
+              class="md:w-5 md:h-5 max-md:w-3 max-md:h-3 cursor-pointer hover:text-neutral-400 bg-red-500"
             />
           </span>
         <% else %>
           <span phx-click="like-comment" phx-value-comment_id={@comment.id} phx-target={@myself}>
-            <.icon name="hero-heart" class="w-5 h-5 cursor-pointer hover:text-neutral-400" />
+            <.icon
+              name="hero-heart"
+              class="md:w-5 md:h-5 max-md:w-3 max-md:h-3 cursor-pointer hover:text-neutral-400"
+            />
           </span>
         <% end %>
       </div>
     </div>
     <div class="pt-2 pl-11 flex gap-3">
+      <.time datetime={@comment.inserted_at} class="md:hidden font-medium text-xs text-neutral-500" />
       <.comment_likes comment={@comment} class="font-extrabold text-xs text-neutral-500" />
       <.link
         class="text-xs font-bold text-neutral-500"

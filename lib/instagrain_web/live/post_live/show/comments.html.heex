@@ -1,0 +1,45 @@
+<div>
+  <div class="p-2 mb-10">
+    <div class="flex gap-3 py-2">
+      <div><.avatar user={@post.user} size={:sm} /></div>
+      <div class="grow">
+        <.live_component
+          id={"post-details-comments-page-caption-#{@post.id}"}
+          module={InstagrainWeb.PostLive.CaptionComponent}
+          current_user={@current_user}
+          post={@post}
+        />
+        <.time
+          datetime={@post.inserted_at}
+          class="md:hidden font-medium text-xs text-neutral-500"
+        />
+      </div>
+    </div>
+
+    <hr class="mt-2 mx-2" />
+
+    <.live_component
+      id={"post-details-comments-page-#{@post.id}"}
+      module={InstagrainWeb.PostLive.CommentsComponent}
+      current_user={@current_user}
+      post={@post}
+      comment_input_id={"post-details-comments-page-comment-input-#{@post.id}"}
+    />
+  </div>
+  <div class="fixed bottom-12 w-full border-t border-b bg-white max-h-36 overflow-y-auto">
+    <div class="flex gap-4 p-3 items-center">
+      <div>
+        <.avatar user={@current_user} size={:sm} />
+      </div>
+      <div class="grow pt-4">
+        <.live_component
+          id={"post-details-comments-comment-form-#{@post.id}"}
+          module={InstagrainWeb.PostLive.CommentComponent}
+          current_user={@current_user}
+          post={@post}
+          comment_input_id={"post-details-comments-comment-input-#{@post.id}"}
+        />
+      </div>
+    </div>
+  </div>
+</div>

@@ -26,7 +26,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
               <%= @post.user.username %>
             </span>
 
-            <.time datetime={@post.inserted_at} />
+            <.time prefix="• " datetime={@post.inserted_at} />
           </div>
         </div>
         <div>

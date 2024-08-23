@@ -17,8 +17,19 @@ defmodule InstagrainWeb.PostLive.HighlightedCommentsComponent do
         <%= if @comments_length > 0 do %>
           <div class="my-1 text-sm">
             <.link
-              class="text-neutral-500 text-sm font-medium"
+              class="max-md:hidden text-neutral-500 text-sm font-medium"
               phx-click={show_modal("post-details-modal-#{@post.id}")}
+            >
+              <%= if @comments_length == 1 do %>
+                View 1 comment
+              <% else %>
+                View all <%= @comments_length %> comments
+              <% end %>
+            </.link>
+
+            <.link
+              class="md:hidden text-neutral-500 text-sm font-medium"
+              navigate={~p"/p/#{@post.id}/comments"}
             >
               <%= if @comments_length == 1 do %>
                 View 1 comment

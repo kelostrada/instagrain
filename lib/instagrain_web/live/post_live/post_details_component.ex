@@ -51,7 +51,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
                 <span class="text-black font-bold text-sm">
                   <%= @post.user.username %>
                 </span>
-                <.time datetime={@post.inserted_at} />
+                <.time prefix="• " datetime={@post.inserted_at} />
               </div>
               <div>
                 <.user_content text={@post.caption} />
@@ -100,8 +100,8 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           />
         </div>
 
-        <div class="p-3 flex gap-2 items-center">
-          <div class="max-md:hidden">
+        <div class="p-3 flex gap-2 items-center max-md:hidden">
+          <div class="">
             <.avatar user={@post.user} size={:sm} />
           </div>
           <div class="pt-4 flex-1">
