@@ -1,5 +1,7 @@
 defmodule InstagrainWeb.ProfileLive do
   use InstagrainWeb, :live_view
+
+  alias Instagrain.Feed
   alias Instagrain.Profiles
   alias Instagrain.Repo
 
@@ -8,8 +10,13 @@ defmodule InstagrainWeb.ProfileLive do
   @impl true
   def mount(%{"username" => username}, _session, socket) do
     profile = Profiles.get_profile(username)
+    posts = Feed.list_user_posts(profile.id, socket.assigns.current_user.id)
     current_user = Repo.preload(socket.assigns.current_user, [:followers, :followings])
-    {:ok, socket |> assign(profile: profile, current_user: current_user)}
+
+    {:ok,
+     socket
+     |> assign(profile: profile, current_user: current_user, page: 0, end_reached?: false)
+     |> stream(:posts, posts)}
   end
 
   @impl true
@@ -20,6 +27,10 @@ defmodule InstagrainWeb.ProfileLive do
   @impl true
   def handle_info({_, {:error, message}}, socket) do
     {:noreply, put_flash(socket, :error, message)}
+  end
+
+  def handle_info({_, {:post_updated, post}}, socket) do
+    {:noreply, stream_insert(socket, :posts, post)}
   end
 
   @impl true
@@ -46,6 +57,21 @@ defmodule InstagrainWeb.ProfileLive do
 
       _ ->
         {:noreply, put_flash(socket, :error, "Unfollow failed")}
+    end
+  end
+
+  def handle_event("load-more", _, socket) do
+    posts =
+      Feed.list_user_posts(
+        socket.assigns.profile.id,
+        socket.assigns.current_user.id,
+        socket.assigns.page + 1
+      )
+
+    if posts == [] do
+      {:noreply, assign(socket, end_reached?: true)}
+    else
+      {:noreply, socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)}
     end
   end
 end

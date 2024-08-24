@@ -105,6 +105,42 @@ defmodule Instagrain.Feed do
   end
 
   @doc """
+  Returns the list of user posts paginated
+
+  ## Examples
+
+      iex> list_user_posts(1, 2)
+      [%Post{}, ...]
+
+  """
+  def list_user_posts(user_id, current_user_id, page \\ 0, limit \\ 9) do
+    offset = limit * page
+
+    from(p in Post,
+      where: p.user_id == ^user_id,
+      order_by: {:desc, p.inserted_at},
+      offset: ^offset,
+      limit: ^limit
+    )
+    |> Repo.all()
+    |> Repo.preload([:resources, :user, comments: [:user, :comment_likes]])
+    |> Enum.map(fn post ->
+      comments =
+        Enum.map(post.comments, fn comment ->
+          %{
+            comment
+            | liked_by_current_user?:
+                Enum.any?(comment.comment_likes, fn like ->
+                  like.user_id == current_user_id
+                end)
+          }
+        end)
+
+      %{post | comments: comments}
+    end)
+  end
+
+  @doc """
   Returns the list of other posts from the same poster
 
   ## Examples

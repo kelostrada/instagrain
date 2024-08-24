@@ -13,7 +13,7 @@ defmodule Instagrain.Profiles do
   def get_profile(username) do
     from(u in User, where: u.username == ^username)
     |> Repo.one()
-    |> Repo.preload([:posts, :followers, :followings])
+    |> Repo.preload([:followers, :followings, :posts])
   end
 
   @doc """

@@ -67,3 +67,50 @@
     </div>
   </div>
 </div>
+
+<hr class="my-8 max-w-[935px] mx-auto" />
+
+<div class="max-w-[935px] mx-auto">
+  <div
+    class="grid grid-cols-3 gap-1 p-1"
+    id="profile-posts"
+    phx-update={match?(%Phoenix.LiveView.LiveStream{}, @streams.posts) && "stream"}
+    phx-viewport-bottom={!@end_reached? && "load-more"}
+  >
+    <div
+      :for={{id, %{resources: [resource | _]} = post} <- @streams.posts}
+      id={id}
+      class="relative group"
+    >
+      <.modal id={"post-details-modal-#{post.id}"} corner_style={:md}>
+        <.live_component
+          current_user={@current_user}
+          module={InstagrainWeb.PostLive.PostDetailsComponent}
+          id={"#post-details-modal-content-#{post.id}"}
+          post={post}
+        />
+      </.modal>
+
+      <.link phx-click={show_modal("post-details-modal-#{post.id}")}>
+        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" />
+        <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+          <div class="flex max-sm:gap-3 gap-6">
+            <div :if={!post.hide_likes} class="text-white">
+              <.icon name="hero-heart-solid" class="max-sm:w-5 max-sm:h-5 w-7 h-7" />
+              <span class="font-extrabold max-sm:text-sm"><%= format_number(post.likes) %></span>
+            </div>
+            <div :if={!post.disable_comments} class="text-white">
+              <.icon
+                name="hero-chat-bubble-oval-left-solid"
+                class="-scale-x-100 max-sm:w-5 max-sm:h-5 w-7 h-7"
+              />
+              <span class="font-extrabold max-sm:text-sm">
+                <%= format_number(length(post.comments)) %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </.link>
+    </div>
+  </div>
+</div>

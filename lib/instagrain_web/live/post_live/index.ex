@@ -39,12 +39,7 @@ defmodule InstagrainWeb.PostLive.Index do
     if posts == [] do
       {:noreply, assign(socket, end_reached?: true)}
     else
-      socket =
-        Enum.reduce(posts, socket, fn post, socket ->
-          stream_insert(socket, :posts, post)
-        end)
-
-      {:noreply, assign(socket, page: socket.assigns.page + 1)}
+      {:noreply, socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)}
     end
   end
 end
