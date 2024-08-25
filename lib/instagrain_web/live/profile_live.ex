@@ -15,6 +15,7 @@ defmodule InstagrainWeb.ProfileLive do
     {:ok,
      socket
      |> assign(profile: profile, current_user: current_user, page: 0, end_reached?: false)
+     |> stream(:posts, [])
      |> fetch_posts()}
   end
 
@@ -75,7 +76,7 @@ defmodule InstagrainWeb.ProfileLive do
 
         :saved ->
           Feed.list_saved_posts(
-            socket.assigns.profile.id,
+            socket.assigns.current_user.id,
             socket.assigns.page
           )
       end
