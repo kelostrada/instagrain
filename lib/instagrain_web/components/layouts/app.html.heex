@@ -34,7 +34,7 @@
         patch={~p"/"}
         icon_name="hero-home"
         icon_name_solid="hero-home-solid"
-        solid?={@socket.view == InstagrainWeb.PostLive.Index}
+        selected?={@socket.view == InstagrainWeb.PostLive.Index}
         label="Home"
       />
 
@@ -48,8 +48,17 @@
         patch={~p"/users/settings"}
         icon_name="hero-cog-8-tooth"
         icon_name_solid="hero-cog-8-tooth-solid"
-        solid?={@socket.view == InstagrainWeb.UserSettingsLive}
+        selected?={@socket.view == InstagrainWeb.UserSettingsLive}
         label="Settings"
+      />
+
+      <.nav_button
+        patch={~p"/#{@current_user.username}"}
+        icon_name="hero-user"
+        icon_name_solid="hero-user-solid"
+        icon_image={@current_user.avatar && ~p"/uploads/avatars/#{@current_user.avatar}"}
+        selected?={@socket.view == InstagrainWeb.ProfileLive}
+        label="Profile"
       />
     </nav>
 

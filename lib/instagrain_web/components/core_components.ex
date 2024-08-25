@@ -637,7 +637,8 @@ defmodule InstagrainWeb.CoreComponents do
 
   attr :icon_name, :string, required: true
   attr :icon_name_solid, :string, default: ""
-  attr :solid?, :boolean, default: false
+  attr :icon_image, :string, default: nil
+  attr :selected?, :boolean, default: false
   attr :size, :atom, values: [:small, :regular], default: :regular
   attr :label, :string, required: true
 
@@ -655,15 +656,36 @@ defmodule InstagrainWeb.CoreComponents do
       ]}
       {@rest}
     >
-      <.icon
-        name={if @solid?, do: @icon_name_solid, else: @icon_name}
-        class={[
+      <%= if @icon_image do %>
+        <div class={[
+          "rounded-full",
           "group-hover:scale-110 transition-transform",
-          @size == :small && "w-6 h-6",
-          @size == :regular && "w-7 h-7"
-        ]}
-      />
-      <span class={["max-lg:hidden pl-4", @solid? && "font-bold", !@solid? && "font-medium"]}>
+          @selected? && "border-2 border-black",
+          @selected? && @size == :small && "w-6 h-6",
+          @selected? && @size == :regular && "w-7 h-7"
+        ]}>
+          <img
+            src={@icon_image}
+            class={[
+              "object-cover rounded-full",
+              @selected? && @size == :small && "w-5 h-5",
+              @selected? && @size == :regular && "w-6 h-6",
+              !@selected? && @size == :small && "w-6 h-6",
+              !@selected? && @size == :regular && "w-7 h-7"
+            ]}
+          />
+        </div>
+      <% else %>
+        <.icon
+          name={if @selected?, do: @icon_name_solid, else: @icon_name}
+          class={[
+            "group-hover:scale-110 transition-transform",
+            @size == :small && "w-6 h-6",
+            @size == :regular && "w-7 h-7"
+          ]}
+        />
+      <% end %>
+      <span class={["max-lg:hidden pl-4", @selected? && "font-bold", !@selected? && "font-medium"]}>
         <%= @label %>
       </span>
     </.link>
