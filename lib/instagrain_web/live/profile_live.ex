@@ -10,13 +10,12 @@ defmodule InstagrainWeb.ProfileLive do
   @impl true
   def mount(%{"username" => username}, _session, socket) do
     profile = Profiles.get_profile(username)
-    posts = Feed.list_user_posts(profile.id, socket.assigns.current_user.id)
     current_user = Repo.preload(socket.assigns.current_user, [:followers, :followings])
 
     {:ok,
      socket
      |> assign(profile: profile, current_user: current_user, page: 0, end_reached?: false)
-     |> stream(:posts, posts)}
+     |> fetch_posts()}
   end
 
   @impl true
@@ -61,17 +60,30 @@ defmodule InstagrainWeb.ProfileLive do
   end
 
   def handle_event("load-more", _, socket) do
+    {:noreply, fetch_posts(socket)}
+  end
+
+  defp fetch_posts(socket) do
     posts =
-      Feed.list_user_posts(
-        socket.assigns.profile.id,
-        socket.assigns.current_user.id,
-        socket.assigns.page + 1
-      )
+      case socket.assigns.live_action do
+        :posts ->
+          Feed.list_user_posts(
+            socket.assigns.profile.id,
+            socket.assigns.current_user.id,
+            socket.assigns.page
+          )
+
+        :saved ->
+          Feed.list_saved_posts(
+            socket.assigns.profile.id,
+            socket.assigns.page
+          )
+      end
 
     if posts == [] do
-      {:noreply, assign(socket, end_reached?: true)}
+      assign(socket, end_reached?: true)
     else
-      {:noreply, socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)}
+      socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)
     end
   end
 end

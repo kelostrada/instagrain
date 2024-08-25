@@ -68,7 +68,32 @@
   </div>
 </div>
 
-<hr class="my-8 max-w-[935px] mx-auto" />
+<div class="my-8 max-w-[935px] max-auto border-t flex justify-center gap-16">
+  <.link
+    navigate={~p"/#{@profile.username}"}
+    class={[
+      "text-xs font-bold py-4",
+      "flex items-center gap-2",
+      @live_action == :posts && "text-black border-t border-t-black",
+      @live_action != :posts && "text-neutral-500"
+    ]}
+  >
+    <.icon name="hero-squares-2x2" class="w-3 h-3" /> POSTS
+  </.link>
+
+  <.link
+    :if={@current_user.id == @profile.id}
+    navigate={~p"/#{@profile.username}/saved"}
+    class={[
+      "text-xs font-bold py-4",
+      "flex items-center gap-2",
+      @live_action == :saved && "text-black  border-t border-t-black",
+      @live_action != :saved && "text-neutral-500"
+    ]}
+  >
+    <.icon name="hero-bookmark" class="w-3 h-3" /> SAVED
+  </.link>
+</div>
 
 <div class="max-w-[935px] mx-auto">
   <div

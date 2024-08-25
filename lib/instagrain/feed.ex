@@ -117,8 +117,61 @@ defmodule Instagrain.Feed do
     offset = limit * page
 
     from(p in Post,
+      left_join: l in Like,
+      on: l.post_id == p.id and l.user_id == ^current_user_id,
+      left_join: s in Save,
+      on: s.post_id == p.id and s.user_id == ^current_user_id,
       where: p.user_id == ^user_id,
+      select: %{
+        p
+        | liked_by_current_user?: not is_nil(l.post_id),
+          saved_by_current_user?: not is_nil(s.post_id)
+      },
       order_by: {:desc, p.inserted_at},
+      offset: ^offset,
+      limit: ^limit
+    )
+    |> Repo.all()
+    |> Repo.preload([:resources, :user, comments: [:user, :comment_likes]])
+    |> Enum.map(fn post ->
+      comments =
+        Enum.map(post.comments, fn comment ->
+          %{
+            comment
+            | liked_by_current_user?:
+                Enum.any?(comment.comment_likes, fn like ->
+                  like.user_id == current_user_id
+                end)
+          }
+        end)
+
+      %{post | comments: comments}
+    end)
+  end
+
+  @doc """
+  Returns the list of saved posts by user paginated
+
+  ## Examples
+
+      iex> list_saved_posts(1, 2)
+      [%Post{}, ...]
+
+  """
+  def list_saved_posts(current_user_id, page \\ 0, limit \\ 9) do
+    offset = limit * page
+
+    from(p in Post,
+      left_join: l in Like,
+      on: l.post_id == p.id and l.user_id == ^current_user_id,
+      join: s in Save,
+      on: s.post_id == p.id and s.user_id == ^current_user_id,
+      select: %{
+        p
+        | liked_by_current_user?: not is_nil(l.post_id),
+          saved_by_current_user?: not is_nil(s.post_id)
+      },
+      order_by: {:desc, s.inserted_at},
       offset: ^offset,
       limit: ^limit
     )
