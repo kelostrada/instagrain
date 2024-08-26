@@ -44,19 +44,44 @@ defmodule InstagrainWeb.PostComponents do
   attr :text, :string, required: true
 
   def user_content(assigns) do
+    # Split the text by lines
     parts = String.split(assigns.text || "", "\n")
     parts_length = length(parts)
+
+    # Apply the replacement function to each part
+    parts = Enum.map(parts, &replace_user_tags/1)
 
     assigns = assign(assigns, parts: parts, parts_length: parts_length)
 
     ~H"""
     <span class="font-medium text-sm">
       <%= for {part, i} <- Enum.with_index(@parts) do %>
-        <%= part %>
+        <%= for segment <- part do %>
+          <%= segment %>
+        <% end %>
         <br :if={i < @parts_length - 1} />
       <% end %>
     </span>
     """
+  end
+
+  # Function to replace user tags with safe HTML links
+  defp replace_user_tags(text) do
+    # Use a regex to find user tags (e.g., @username)
+    Regex.split(~r/(?<!\S)@\w+(?:\.\w+)*/, text, include_captures: true, trim: true)
+    |> Enum.map(&convert_to_safe_html/1)
+  end
+
+  # Function to convert user tags to safe HTML link or plain text
+  defp convert_to_safe_html("@" <> username) do
+    assigns = %{username: username}
+    # Generate the HTML link structure safely
+    ~H(<.link navigate={~p"/#{@username}"} class="text-sky-800">@<%= @username %></.link>)
+  end
+
+  defp convert_to_safe_html(text) do
+    # Ensure other text is safe
+    Phoenix.HTML.html_escape(text)
   end
 
   attr :datetime, DateTime, required: true
