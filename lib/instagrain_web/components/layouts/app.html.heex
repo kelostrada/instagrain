@@ -53,11 +53,11 @@
       />
 
       <.nav_button
-        patch={~p"/#{@current_user.username}"}
+        navigate={~p"/#{@current_user.username}"}
         icon_name="hero-user"
         icon_name_solid="hero-user-solid"
         icon_image={@current_user.avatar && ~p"/uploads/avatars/#{@current_user.avatar}"}
-        selected?={@socket.view == InstagrainWeb.ProfileLive}
+        selected?={Map.has_key?(assigns, :current_user_profile?) && assigns.current_user_profile?}
         label="Profile"
       />
     </nav>

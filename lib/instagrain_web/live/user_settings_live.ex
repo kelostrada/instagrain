@@ -73,6 +73,20 @@ defmodule InstagrainWeb.UserSettingsLive do
       </div>
       <div>
         <.simple_form
+          for={@profile_form}
+          id="profile_form"
+          phx-submit="update_profile"
+          phx-change="validate_profile"
+        >
+          <.input field={@profile_form[:full_name]} type="text" label="Full name" required />
+          <.input field={@profile_form[:description]} type="textarea" label="Description" required />
+          <:actions>
+            <.button phx-disable-with="Changing...">Change profile data</.button>
+          </:actions>
+        </.simple_form>
+      </div>
+      <div>
+        <.simple_form
           for={@email_form}
           id="email_form"
           phx-submit="update_email"
@@ -152,6 +166,7 @@ defmodule InstagrainWeb.UserSettingsLive do
     email_changeset = Accounts.change_user_email(user)
     password_changeset = Accounts.change_user_password(user)
     username_changeset = Accounts.change_user_username(user)
+    profile_changeset = Accounts.change_user_profile(user)
 
     socket =
       socket
@@ -162,6 +177,7 @@ defmodule InstagrainWeb.UserSettingsLive do
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:username_form, to_form(username_changeset))
+      |> assign(:profile_form, to_form(profile_changeset))
       |> assign(:trigger_submit, false)
       |> allow_upload(:avatar, accept: ~w(.jpg .jpeg .png), max_entries: 1)
 
@@ -281,6 +297,32 @@ defmodule InstagrainWeb.UserSettingsLive do
 
       {:error, _changeset} ->
         {:noreply, socket |> put_flash(:error, "Error uploading avatar")}
+    end
+  end
+
+  def handle_event("validate_profile", params, socket) do
+    %{"user" => user_params} = params
+
+    profile_form =
+      socket.assigns.current_user
+      |> Accounts.change_user_profile(user_params)
+      |> Map.put(:action, :validate)
+      |> to_form()
+
+    {:noreply, assign(socket, profile_form: profile_form)}
+  end
+
+  def handle_event("update_profile", params, socket) do
+    %{"user" => user_params} = params
+    user = socket.assigns.current_user
+
+    case Accounts.update_user_profile(user, user_params) do
+      {:ok, updated_user} ->
+        info = "Profile updated successfully."
+        {:noreply, socket |> put_flash(:info, info) |> assign(:current_user, updated_user)}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :profile_form, to_form(Map.put(changeset, :action, :insert)))}
     end
   end
 

@@ -8,20 +8,22 @@ defmodule InstagrainWeb.ProfileLive do
   import InstagrainWeb.PostComponents
 
   @impl true
-  def mount(%{"username" => username}, _session, socket) do
+  def handle_params(%{"username" => username}, _url, socket) do
     profile = Profiles.get_profile(username)
     current_user = Repo.preload(socket.assigns.current_user, [:followers, :followings])
+    current_user_profile? = profile.id == current_user.id
 
-    {:ok,
+    {:noreply,
      socket
-     |> assign(profile: profile, current_user: current_user, page: 0, end_reached?: false)
-     |> stream(:posts, [])
+     |> assign(
+       profile: profile,
+       current_user: current_user,
+       page: 0,
+       end_reached?: false,
+       current_user_profile?: current_user_profile?
+     )
+     |> stream(:posts, [], reset: true)
      |> fetch_posts()}
-  end
-
-  @impl true
-  def handle_params(_params, _url, socket) do
-    {:noreply, socket}
   end
 
   @impl true

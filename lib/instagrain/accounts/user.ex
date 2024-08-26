@@ -5,6 +5,8 @@ defmodule Instagrain.Accounts.User do
   schema "users" do
     field :email, :string
     field :username, :string
+    field :full_name, :string
+    field :description, :string
     field :avatar, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
@@ -211,5 +213,13 @@ defmodule Instagrain.Accounts.User do
     user
     |> cast(attrs, [:avatar])
     |> validate_required([:avatar])
+  end
+
+  @doc """
+  A user changeset for changing the profile data.
+  """
+  def profile_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:full_name, :description])
   end
 end

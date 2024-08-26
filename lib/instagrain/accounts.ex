@@ -389,4 +389,14 @@ defmodule Instagrain.Accounts do
     |> User.avatar_changeset(attrs)
     |> Repo.update()
   end
+
+  def change_user_profile(user, attrs \\ %{}) do
+    User.profile_changeset(user, attrs)
+  end
+
+  def update_user_profile(user, attrs) do
+    user
+    |> User.profile_changeset(attrs)
+    |> Repo.update()
+  end
 end

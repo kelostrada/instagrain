@@ -643,7 +643,7 @@ defmodule InstagrainWeb.CoreComponents do
   attr :label, :string, required: true
 
   attr :rest, :global,
-    include: ~w(patch),
+    include: ~w(patch navigate),
     doc: "the arbitrary HTML attributes to add to the nav button container"
 
   def nav_button(assigns) do

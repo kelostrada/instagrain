@@ -1,3 +1,5 @@
+<%= inspect(@end_reached?) %>
+
 <div class="flex gap-4 max-w-[935px] mx-auto">
   <div class="rounded-full border h-40 w-40 mx-16">
     <.icon :if={is_nil(@profile.avatar)} name="hero-user" class="w-40 h-40" />
@@ -59,18 +61,18 @@
     </div>
 
     <div class="font-bold text-sm">
-      Fullname placeholder
+      <%= @profile.full_name %>
     </div>
 
     <div>
-      <.user_content text="Description placeholder" />
+      <.user_content text={@profile.description} />
     </div>
   </div>
 </div>
 
-<div class="my-8 max-w-[935px] max-auto border-t flex justify-center gap-16">
+<div class="mt-8 max-w-[935px] mx-auto border-t flex justify-center gap-16">
   <.link
-    navigate={~p"/#{@profile.username}"}
+    patch={~p"/#{@profile.username}"}
     class={[
       "text-xs font-bold py-4",
       "flex items-center gap-2",
@@ -83,7 +85,7 @@
 
   <.link
     :if={@current_user.id == @profile.id}
-    navigate={~p"/#{@profile.username}/saved"}
+    patch={~p"/#{@profile.username}/saved"}
     class={[
       "text-xs font-bold py-4",
       "flex items-center gap-2",
