@@ -239,7 +239,7 @@ defmodule InstagrainWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
+        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 max-sm:py-1 sm:py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
         @class
       ]}
@@ -692,14 +692,17 @@ defmodule InstagrainWeb.CoreComponents do
     """
   end
 
-  attr :navigate, :any, required: true
+  attr :navigate, :any, default: nil
   attr :title, :string, default: ""
 
   def mobile_nav_header(assigns) do
     ~H"""
     <div class="sm:hidden flex items-center">
       <div class="cursor-pointer text-left px-4">
-        <.link navigate={@navigate}>
+        <.link :if={@navigate} navigate={@navigate}>
+          <.icon name="hero-chevron-left" class="h-7 w-7" />
+        </.link>
+        <.link :if={!@navigate} onclick="history.back()">
           <.icon name="hero-chevron-left" class="h-7 w-7" />
         </.link>
       </div>

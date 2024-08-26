@@ -1,16 +1,18 @@
-<%= inspect(@end_reached?) %>
-
-<div class="flex gap-4 max-w-[935px] mx-auto">
-  <div class="rounded-full border h-40 w-40 mx-16">
-    <.icon :if={is_nil(@profile.avatar)} name="hero-user" class="w-40 h-40" />
+<div class="flex gap-4 max-w-[935px] mx-auto max-sm:mt-6">
+  <div class="rounded-full border m-auto max-sm:max-w-32 max-sm:max-h-32 max-sm:mx-4 sm:w-32 sm:h-32 sm:mx-8 md:h-40 md:w-40 md:mx-16">
+    <.icon
+      :if={is_nil(@profile.avatar)}
+      name="hero-user"
+      class="max-sm:max-w-32 max-sm:max-h-32 sm:w-32 sm:h-32 md:w-40 md:h-40"
+    />
     <img
       :if={!is_nil(@profile.avatar)}
       src={~p"/uploads/avatars/#{@profile.avatar}"}
       class="object-cover rounded-full"
     />
   </div>
-  <div class="flex flex-col gap-6">
-    <div class="flex gap-8 items-center">
+  <div class="flex flex-col gap-6 h-full">
+    <div class="flex max-sm:flex-col max-sm:gap-4 sm:gap-8 sm:items-center">
       <div>
         <span class="font-medium text-xl"><%= @profile.username %></span>
       </div>
@@ -41,7 +43,7 @@
       </div>
     </div>
 
-    <div class="flex gap-8 items-center">
+    <div class="flex gap-8 items-center max-sm:hidden">
       <div>
         <span class="font-extrabold text-base"><%= format_number(length(@profile.posts)) %></span>
         posts
@@ -60,17 +62,36 @@
       </div>
     </div>
 
-    <div class="font-bold text-sm">
+    <div class="font-bold text-sm max-sm:hidden">
       <%= @profile.full_name %>
     </div>
 
-    <div>
+    <div class="max-sm:hidden">
       <.user_content text={@profile.description} />
     </div>
   </div>
 </div>
 
-<div class="mt-8 max-w-[935px] mx-auto border-t flex justify-center gap-16">
+<div class="mt-4 max-w-[935px] mx-auto border-t sm:hidden flex justify-around p-2">
+  <div class="flex flex-col items-center">
+    <span class="font-extrabold text-sm"><%= format_number(length(@profile.posts)) %></span>
+    <span class="text-neutral-500 font-medium text-sm">posts</span>
+  </div>
+  <div class="flex flex-col items-center">
+    <span class="font-extrabold text-sm">
+      <%= format_number(length(@profile.followers)) %>
+    </span>
+    <span class="text-neutral-500 font-medium text-sm">followers</span>
+  </div>
+  <div class="flex flex-col items-center">
+    <span class="font-extrabold text-sm">
+      <%= format_number(length(@profile.followings)) %>
+    </span>
+    <span class="text-neutral-500 font-medium text-sm">following</span>
+  </div>
+</div>
+
+<div class="sm:mt-8 max-w-[935px] mx-auto border-t flex justify-center gap-16">
   <.link
     patch={~p"/#{@profile.username}"}
     class={[
@@ -99,7 +120,7 @@
 
 <div class="max-w-[935px] mx-auto">
   <div
-    class="grid grid-cols-3 gap-1 p-1"
+    class="grid grid-cols-3 gap-1 sm:p-1"
     id="profile-posts"
     phx-update={match?(%Phoenix.LiveView.LiveStream{}, @streams.posts) && "stream"}
     phx-viewport-bottom={!@end_reached? && "load-more"}
@@ -118,7 +139,28 @@
         />
       </.modal>
 
-      <.link phx-click={show_modal("post-details-modal-#{post.id}")}>
+      <.link phx-click={show_modal("post-details-modal-#{post.id}")} class="max-sm:hidden">
+        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" />
+        <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+          <div class="flex max-sm:gap-3 gap-6">
+            <div :if={!post.hide_likes} class="text-white">
+              <.icon name="hero-heart-solid" class="max-sm:w-5 max-sm:h-5 w-7 h-7" />
+              <span class="font-extrabold max-sm:text-sm"><%= format_number(post.likes) %></span>
+            </div>
+            <div :if={!post.disable_comments} class="text-white">
+              <.icon
+                name="hero-chat-bubble-oval-left-solid"
+                class="-scale-x-100 max-sm:w-5 max-sm:h-5 w-7 h-7"
+              />
+              <span class="font-extrabold max-sm:text-sm">
+                <%= format_number(length(post.comments)) %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </.link>
+
+      <.link navigate={~p"/p/#{post.id}"} class="sm:hidden">
         <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">

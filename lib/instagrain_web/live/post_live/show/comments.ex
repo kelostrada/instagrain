@@ -8,7 +8,7 @@ defmodule InstagrainWeb.PostLive.Show.Comments do
 
   @impl true
   def mount(%{"id" => post_id}, _session, socket) do
-    top_nav = mobile_nav_header(%{navigate: ~p"/p/#{post_id}", title: "Comments"})
+    top_nav = mobile_nav_header(%{title: "Comments"})
     {:ok, assign(socket, top_nav: top_nav)}
   end
 

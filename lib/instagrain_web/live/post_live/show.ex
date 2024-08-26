@@ -8,7 +8,7 @@ defmodule InstagrainWeb.PostLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, top_nav: mobile_nav_header(%{navigate: ~p"/", title: "Post"}))}
+    {:ok, assign(socket, top_nav: mobile_nav_header(%{title: "Post"}))}
   end
 
   @impl true
