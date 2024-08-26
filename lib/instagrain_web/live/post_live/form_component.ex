@@ -136,7 +136,15 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                   <.user_post_header user={@current_user} current_user={@current_user} />
                 </div>
                 <div class="px-4">
-                  <.input type="textarea" field={@form[:caption]} placeholder="Write a caption..." />
+                  <.input
+                    type="textarea"
+                    field={@form[:caption]}
+                    placeholder="Write a caption..."
+                    class={[
+                      "block w-full h-40 p-0 border-0 outline-none outline-clear",
+                      "resize-none placeholder:font-medium placeholder:text-neutral-350 text-black font-medium"
+                    ]}
+                  />
                 </div>
                 <div class="flex items-center justify-between border-b border-neutral-300">
                   <div class="p-2.5">
