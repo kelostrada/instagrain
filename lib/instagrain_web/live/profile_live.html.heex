@@ -21,7 +21,7 @@
           @profile.id != @current_user.id &&
             @profile.id not in Enum.map(@current_user.followings, & &1.id)
         ) do %>
-          <.button phx-click="follow">
+          <.button phx-click="follow" color={:blue}>
             Follow
           </.button>
         <% end %>
@@ -30,13 +30,13 @@
           @profile.id != @current_user.id &&
             @profile.id in Enum.map(@current_user.followings, & &1.id)
         ) do %>
-          <.button phx-click="unfollow">
+          <.button phx-click="unfollow" color={:grey}>
             Unfollow
           </.button>
         <% end %>
 
         <.link :if={@profile.id == @current_user.id} navigate={~p"/users/settings"}>
-          <.button>
+          <.button color={:grey}>
             Edit Profile
           </.button>
         </.link>

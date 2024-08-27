@@ -2,7 +2,11 @@
   <%= if Map.has_key?(assigns, :top_nav), do: @top_nav %>
 
   <%!-- pb-1 is a hack to make infinite scroll work on mobile --%>
-  <main class="sm:py-10 sm:px-6 lg:px-8 grow overflow-y-scroll pb-1">
+  <main class={[
+    !Map.has_key?(assigns, :raw_layout) && "sm:py-10 sm:px-6 lg:px-8",
+    Map.get(assigns, :raw_layout),
+    "grow overflow-y-scroll pb-1"
+  ]}>
     <.flash_group flash={@flash} />
     <%= @inner_content %>
 
@@ -39,17 +43,25 @@
       />
 
       <.nav_button
-        phx-click={show_modal("new-post-modal")}
-        icon_name="hero-plus-circle"
-        label="Create"
-      />
-
-      <.nav_button
         patch={~p"/users/settings"}
         icon_name="hero-cog-8-tooth"
         icon_name_solid="hero-cog-8-tooth-solid"
         selected?={@socket.view == InstagrainWeb.UserSettingsLive}
         label="Settings"
+      />
+
+      <.nav_button
+        patch={~p"/messages"}
+        icon_name="hero-pencil-square"
+        icon_name_solid="hero-pencil-square-solid"
+        selected?={@socket.view == InstagrainWeb.MessagesLive}
+        label="Messages"
+      />
+
+      <.nav_button
+        phx-click={show_modal("new-post-modal")}
+        icon_name="hero-plus-circle"
+        label="Create"
       />
 
       <.nav_button

@@ -19,20 +19,32 @@ defmodule InstagrainWeb.UserComponents do
   end
 
   attr :user, User, required: true
-  attr :size, :atom, values: [:xs, :sm], default: :xs
+  attr :size, :atom, values: [:xs, :sm, :md, :lg], default: :xs
+  attr :class, :string, default: nil
 
   def avatar(assigns) do
     ~H"""
-    <div class="rounded-full border">
+    <div class={["rounded-full border", @class]}>
       <.icon
         :if={is_nil(@user.avatar)}
         name="hero-user"
-        class={[@size == :xs && "h-7 w-7", @size == :sm && "h-8 w-8"]}
+        class={[
+          @size == :xs && "h-7 w-7",
+          @size == :sm && "h-8 w-8",
+          @size == :md && "h-10 w-10",
+          @size == :lg && "h-14 w-14"
+        ]}
       />
       <img
         :if={!is_nil(@user.avatar)}
         src={~p"/uploads/avatars/#{@user.avatar}"}
-        class={[@size == :xs && "h-7 w-7", @size == :sm && "h-8 w-8", "object-cover rounded-full"]}
+        class={[
+          @size == :xs && "h-7 w-7",
+          @size == :sm && "h-8 w-8",
+          @size == :md && "h-10 w-10",
+          @size == :lg && "h-14 w-14",
+          "object-cover rounded-full"
+        ]}
       />
     </div>
     """
