@@ -10,7 +10,7 @@
     <.flash_group flash={@flash} />
     <%= @inner_content %>
 
-    <div class="flex justify-center max-md:hidden my-12">
+    <div :if={!Map.has_key?(assigns, :raw_layout)} class="flex justify-center max-md:hidden my-12">
       <span class="font-medium text-xs text-neutral-500">
         © 2024 Instagrain from Kelostrada
       </span>

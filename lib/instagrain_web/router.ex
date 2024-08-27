@@ -28,6 +28,7 @@ defmodule InstagrainWeb.Router do
       live "/p/:id/comments", PostLive.Show.Comments, :show
 
       live "/messages", MessagesLive
+      live "/messages/:conversation_id", MessagesLive
 
       live "/:username", ProfileLive, :posts
       live "/:username/saved", ProfileLive, :saved

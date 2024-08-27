@@ -49,6 +49,30 @@ let liveSocket = new LiveSocket("/live", Socket, {
         this.el.style.height = 'auto';
         this.el.style.height = this.el.scrollHeight + 'px';
       }
+    },
+    ScrollToBottom: {
+      mounted() {
+        this.el.scrollTo(0, this.el.scrollHeight);
+      },
+
+      updated() {
+        const pixelsBelowBottom =
+          this.el.scrollHeight - this.el.clientHeight - this.el.scrollTop;
+
+        if (pixelsBelowBottom < this.el.clientHeight * 0.3) {
+          this.el.scrollTo(0, this.el.scrollHeight);
+        }
+      },
+    },
+    SubmitOnEnter: {
+      mounted() {
+        this.el.addEventListener("keydown", e => {
+          if (!e.shiftKey && e.key == "Enter" && this.el.value.trim() != "") {
+            this.el.form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+            e.preventDefault();
+          }
+        })
+      }
     }
   }
 })
