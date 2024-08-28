@@ -14,8 +14,11 @@ services:
     environment:
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       DATABASE_URL: ecto://postgres:postgres@db/instagrain
-      HOST: ${HOST}
+      PHX_HOST: ${PHX_HOST}
       VERSION: ${VERSION}
+      PHX_SERVER: ${PHX_SERVER}
+      MAILJET_API_KEY: ${MAILJET_API_KEY}
+      MAILJET_API_SECRET: ${MAILJET_API_SECRET}
     ports:
       - "${PORT}:4000"
     depends_on:
