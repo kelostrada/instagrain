@@ -100,7 +100,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
 
         <div class="p-3 flex gap-2 items-center max-md:hidden">
           <div class="">
-            <.avatar user={@post.user} size={:sm} />
+            <.avatar user={@current_user} size={:sm} />
           </div>
           <div class="pt-4 flex-1">
             <.live_component
