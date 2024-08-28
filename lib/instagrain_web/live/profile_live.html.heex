@@ -72,6 +72,16 @@
   </div>
 </div>
 
+<div class="sm:hidden p-4">
+  <div class="font-bold text-sm ">
+    <%= @profile.full_name %>
+  </div>
+
+  <div class="">
+    <.user_content text={@profile.description} />
+  </div>
+</div>
+
 <div class="mt-4 max-w-[935px] mx-auto border-t sm:hidden flex justify-around p-2">
   <div class="flex flex-col items-center">
     <span class="font-extrabold text-sm"><%= format_number(length(@profile.posts)) %></span>
