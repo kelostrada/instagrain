@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  db:
+    image: postgres
+    restart: unless-stopped
+    volumes:
+      - ./volumes/instagrain_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: instagrain
+  web:
+    image: kelu/instagrain:${VERSION}
+    restart: unless-stopped
+    environment:
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      DATABASE_URL: ecto://postgres:postgres@db/instagrain
+      HOST: ${HOST}
+      VERSION: ${VERSION}
+    ports:
+      - "${PORT}:4000"
+    depends_on:
+      - db
