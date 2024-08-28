@@ -8,7 +8,7 @@ defmodule Instagrain.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Instagrain", "contact@example.com"})
+      |> from({"Instagrain", "instagrain@melinakrzemowa.pl"})
       |> subject(subject)
       |> text_body(body)
 
