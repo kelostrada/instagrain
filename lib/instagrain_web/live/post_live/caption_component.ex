@@ -1,7 +1,6 @@
 defmodule InstagrainWeb.PostLive.CaptionComponent do
   use InstagrainWeb, :live_component
 
-  import InstagrainWeb.PostComponents
   import InstagrainWeb.UserComponents
 
   attr :current_user, Instagrain.Accounts.User, required: true

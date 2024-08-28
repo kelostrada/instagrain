@@ -1,13 +1,12 @@
 defmodule InstagrainWeb.PostLive.Show.Comments do
   use InstagrainWeb, :live_view
 
-  import InstagrainWeb.PostComponents
   import InstagrainWeb.UserComponents
 
   alias Instagrain.Feed
 
   @impl true
-  def mount(%{"id" => post_id}, _session, socket) do
+  def mount(%{"id" => _post_id}, _session, socket) do
     top_nav = mobile_nav_header(%{title: "Comments"})
     {:ok, assign(socket, top_nav: top_nav)}
   end
