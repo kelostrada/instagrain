@@ -59,4 +59,4 @@ jobs:
           host: insta.melinakrzemowa.pl
           username: kelu
           key: ${{ secrets.PRIVATE_KEY }}
-          script: export VERSION=${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }} && cd /var/www/insta.melinakrzemowa.pl && docker-compose up --no-deps -d web
+          script: export VERSION=${{ steps.previoustag.outputs.tag }} VERSION_HASH=${{ steps.get_hash.outputs.HASH }} && cd /var/www/insta.melinakrzemowa.pl && docker-compose up --no-deps -d web && docker-compose run web /app/bin/migrate

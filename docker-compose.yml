@@ -9,13 +9,16 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: instagrain
   web:
-    image: kelu/instagrain:${VERSION}
+    image: kelu/instagrain:${VERSION}-${VERSION_HASH}
     restart: unless-stopped
+    volumes:
+      - ./volumes/instagrain_uploads:/app/lib/instagrain-${VERSION}/priv/static/uploads
     environment:
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       DATABASE_URL: ecto://postgres:postgres@db/instagrain
       PHX_HOST: ${PHX_HOST}
       VERSION: ${VERSION}
+      VERSION_HASH: ${VERSION_HASH}
       PHX_SERVER: ${PHX_SERVER}
       MAILJET_API_KEY: ${MAILJET_API_KEY}
       MAILJET_API_SECRET: ${MAILJET_API_SECRET}
