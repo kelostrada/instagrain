@@ -1,11 +1,12 @@
-<div class="flex sm:flex-row-reverse max-sm:flex-col h-screen max-sm:divide-y-[1px]">
+<div class="flex sm:flex-row-reverse max-sm:flex-col h-screen max-sm:divide-y-[1px] overflow-hidden">
   <%= if Map.has_key?(assigns, :top_nav), do: @top_nav %>
 
   <%!-- pb-1 is a hack to make infinite scroll work on mobile --%>
   <main class={[
     !Map.has_key?(assigns, :raw_layout) && "sm:py-10 sm:px-6 lg:px-8",
     Map.get(assigns, :raw_layout),
-    "grow overflow-y-scroll pb-1"
+    "flex-1 overflow-y-auto pb-1",
+    "max-sm:mb-32"
   ]}>
     <.flash_group flash={@flash} />
     <%= @inner_content %>
@@ -19,10 +20,10 @@
 
   <%= if @current_user do %>
     <nav class={[
-      "flex items-center",
+      "flex items-center overflow-hidden",
       "bg-white",
       "sm:h-full sm:border-r-[1px] sm:p-3 sm:flex-col",
-      "max-sm:w-full max-sm:justify-around"
+      "max-sm:w-full max-sm:justify-around max-sm:absolute max-sm:bottom-0"
     ]}>
       <div class="sm:pb-5 sm:pt-2.5 max-sm:hidden lg:hidden">
         <.nav_button patch={~p"/"} icon_name="instagrain-logo" size={:small} label="Home" />
