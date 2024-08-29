@@ -83,7 +83,7 @@ defmodule InstagrainWeb.MessagesLive do
             </span>
           </div>
           <div
-            class="flex flex-col gap-4 h-[calc(100%-11rem)] overflow-y-auto p-6"
+            class="flex flex-col gap-4 h-[calc(100%-7rem)] overflow-y-auto p-6"
             phx-hook="ScrollToBottom"
             id="messages-list"
           >
