@@ -702,7 +702,7 @@ defmodule InstagrainWeb.CoreComponents do
   end
 
   attr :navigate, :any, default: nil
-  attr :title, :string, default: ""
+  attr :title, :any, default: ""
 
   def mobile_nav_header(assigns) do
     ~H"""

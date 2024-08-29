@@ -8,7 +8,10 @@ defmodule InstagrainWeb.MessagesLive do
   def render(assigns) do
     ~H"""
     <div class="flex h-full">
-      <div class="sm:border-r max-sm:w-full md:w-85 overflow-y-auto">
+      <div class={[
+        "sm:border-r max-sm:w-full md:w-85 overflow-y-auto",
+        @conversation_id && "max-sm:hidden"
+      ]}>
         <div class="max-sm:p-4 sm:p-6 flex justify-between sm:max-md:justify-center w-full">
           <div class="sm:max-md:hidden">
             <h1 class="text-base font-extrabold">Messages</h1>
@@ -58,7 +61,7 @@ defmodule InstagrainWeb.MessagesLive do
       </div>
       <%= if @conversation_id do %>
         <div class="grow">
-          <div class="px-4 py-2 border-b flex items-center gap-4">
+          <div class="max-sm:hidden px-4 py-2 border-b flex items-center gap-4">
             <%= if length(@conversations[@conversation_id].participants) == 1 do %>
               <div>
                 <.avatar size={:lg} user={List.first(@conversations[@conversation_id].participants)} />
@@ -147,6 +150,39 @@ defmodule InstagrainWeb.MessagesLive do
     """
   end
 
+  defp conversation_avatar(assigns) do
+    ~H"""
+    <div class="flex items-center gap-4">
+      <%= if length(@conversation.participants) == 1 do %>
+        <div>
+          <.avatar size={@size} user={List.first(@conversation.participants)} />
+        </div>
+      <% else %>
+        <div class={[
+          "relative",
+          @size == :xxs && "w-[22px] h-[22px]",
+          @size == :xs && "w-[30px] h-[30px]",
+          @size == :sm && "w-[34px] h-[34px]",
+          @size == :md && "w-[42px] h-[42px]",
+          @size == :lg && "w-[58px] h-[58px]"
+        ]}>
+          <% [user1, user2 | _] = @conversation.participants %>
+
+          <.avatar size={@size_small} user={user1} class="absolute top-0 left-0" />
+          <.avatar
+            size={@size_small}
+            user={user2}
+            class="absolute bottom-0 right-0 border-white border-2"
+          />
+        </div>
+      <% end %>
+      <span class="font-bold text-base">
+        <%= @conversation.name %>
+      </span>
+    </div>
+    """
+  end
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
@@ -159,7 +195,20 @@ defmodule InstagrainWeb.MessagesLive do
 
   @impl true
   def handle_params(%{"conversation_id" => conversation_id}, _, socket) do
-    {:noreply, assign(socket, conversation_id: String.to_integer(conversation_id))}
+    conversation_id = String.to_integer(conversation_id)
+    conversation = socket.assigns.conversations[conversation_id]
+    assigns = %{conversation: conversation}
+
+    top_nav =
+      mobile_nav_header(%{
+        title: ~H"""
+        <div class="py-1">
+          <.conversation_avatar conversation={@conversation} size={:sm} size_small={:xxs} />
+        </div>
+        """
+      })
+
+    {:noreply, assign(socket, conversation_id: conversation_id, top_nav: top_nav)}
   end
 
   def handle_params(_params, _, socket) do

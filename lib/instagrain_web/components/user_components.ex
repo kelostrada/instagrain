@@ -19,7 +19,7 @@ defmodule InstagrainWeb.UserComponents do
   end
 
   attr :user, User, required: true
-  attr :size, :atom, values: [:xs, :sm, :md, :lg], default: :xs
+  attr :size, :atom, values: [:xxs, :xs, :sm, :md, :lg], default: :xs
   attr :class, :string, default: nil
 
   def avatar(assigns) do
@@ -29,6 +29,7 @@ defmodule InstagrainWeb.UserComponents do
         :if={is_nil(@user.avatar)}
         name="hero-user"
         class={[
+          @size == :xxs && "h-5 w-5",
           @size == :xs && "h-7 w-7",
           @size == :sm && "h-8 w-8",
           @size == :md && "h-10 w-10",
@@ -39,6 +40,7 @@ defmodule InstagrainWeb.UserComponents do
         :if={!is_nil(@user.avatar)}
         src={~p"/uploads/avatars/#{@user.avatar}"}
         class={[
+          @size == :xxs && "h-5 w-5",
           @size == :xs && "h-7 w-7",
           @size == :sm && "h-8 w-8",
           @size == :md && "h-10 w-10",
