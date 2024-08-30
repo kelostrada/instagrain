@@ -284,7 +284,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
      |> assign_new(:form, fn ->
        to_form(Feed.change_post(%Post{}, %{user_id: current_user.id}))
      end)
-     |> allow_upload(:file, accept: ~w(.jpg .jpeg .png .avi .mov .mpg .mp4), max_entries: 9)}
+     |> allow_upload(:file, accept: ~w(.jpg .jpeg .png .avi .mov .mpg .mp4 .webp), max_entries: 9)}
   end
 
   @impl true
