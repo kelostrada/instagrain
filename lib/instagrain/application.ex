@@ -14,8 +14,10 @@ defmodule Instagrain.Application do
       {Phoenix.PubSub, name: Instagrain.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Instagrain.Finch},
+
       # Start a worker by calling: Instagrain.Worker.start_link(arg)
-      # {Instagrain.Worker, arg},
+      {Registry, keys: :unique, name: Instagrain.Conversations.Registry},
+      {Instagrain.Conversations.ConversationsSupervisor, []},
       # Start to serve requests, typically the last entry
       InstagrainWeb.Endpoint
     ]

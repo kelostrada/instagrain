@@ -1,6 +1,8 @@
 defmodule InstagrainWeb.MessagesLive do
-  alias Instagrain.Accounts
   use InstagrainWeb, :live_view
+
+  alias Instagrain.Accounts
+  alias Instagrain.Conversations
 
   import InstagrainWeb.UserComponents
 
@@ -51,6 +53,7 @@ defmodule InstagrainWeb.MessagesLive do
             <div>
               <.user_content text={conversation.last_message} class="text-xs text-neutral-500" />
               <.time
+                :if={conversation.last_message_at}
                 prefix="· "
                 datetime={conversation.last_message_at}
                 class="text-xs text-neutral-500"
@@ -83,7 +86,7 @@ defmodule InstagrainWeb.MessagesLive do
             </span>
           </div>
           <div
-            class="flex flex-col gap-4 h-[calc(100%-7rem)] overflow-y-auto p-6"
+            class="flex flex-col gap-4 max-sm:h-[calc(100%-7rem)] sm:h-[calc(100%-10rem)] overflow-y-auto p-6"
             phx-hook="ScrollToBottom"
             id="messages-list"
           >
@@ -185,12 +188,18 @@ defmodule InstagrainWeb.MessagesLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok,
-     assign(socket,
-       raw_layout: "",
-       message: "",
-       conversations: get_conversations(socket.assigns.current_user.id)
-     )}
+    conversations = Conversations.link_and_list_conversations(socket.assigns.current_user.id)
+
+    {:ok, assign(socket, raw_layout: "", message: "", conversations: conversations)}
+  end
+
+  @impl true
+  def handle_info({:conversations_update, conversations}, socket) do
+    {:noreply, assign(socket, conversations: conversations)}
+  end
+
+  def handle_info(_, socket) do
+    {:noreply, socket}
   end
 
   @impl true
@@ -221,102 +230,12 @@ defmodule InstagrainWeb.MessagesLive do
   end
 
   def handle_event("send-message", params, socket) do
-    conversation = socket.assigns.conversations[socket.assigns.conversation_id]
+    Conversations.send_message(
+      socket.assigns.current_user.id,
+      socket.assigns.conversation_id,
+      String.trim(params["message"])
+    )
 
-    messages =
-      conversation.messages ++
-        [
-          %{
-            message: String.trim(params["message"]),
-            user: socket.assigns.current_user,
-            inserted_at: DateTime.utc_now()
-          }
-        ]
-
-    {:noreply,
-     assign(socket,
-       message: "",
-       conversations:
-         Map.put(socket.assigns.conversations, socket.assigns.conversation_id, %{
-           conversation
-           | messages: messages
-         })
-     )}
-  end
-
-  defp get_conversations(_user_id) do
-    user1 = Accounts.get_user!(1)
-    user2 = Accounts.get_user!(2)
-    user3 = Accounts.get_user!(3)
-    user4 = Accounts.get_user!(4)
-
-    %{
-      1 => %{
-        id: 1,
-        name: user2.full_name || user2.username,
-        participants: [
-          user2
-        ],
-        last_message: "Liked a message",
-        last_message_at: user1.inserted_at,
-        messages: [
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()}
-        ]
-      },
-      2 => %{
-        id: 2,
-        name: user4.full_name || user4.username,
-        participants: [
-          user4
-        ],
-        last_message: "You sent an attachment.",
-        last_message_at: user2.inserted_at,
-        messages: [
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo", inserted_at: DateTime.utc_now()}
-        ]
-      },
-      3 => %{
-        id: 3,
-        name: "Melina Krzemowa",
-        participants: [
-          user1,
-          user4,
-          user2
-        ],
-        last_message: "Thanks 😊",
-        last_message_at: user3.inserted_at,
-        messages: [
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()},
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()},
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()},
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()},
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()},
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()},
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()},
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()},
-          %{user: user1, message: "elo", inserted_at: DateTime.utc_now()},
-          %{user: user2, message: "no elo", inserted_at: DateTime.utc_now()},
-          %{user: user4, message: "no elo elo", inserted_at: DateTime.utc_now()}
-        ]
-      }
-    }
+    {:noreply, assign(socket, message: "")}
   end
 end

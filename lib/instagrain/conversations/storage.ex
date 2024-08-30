@@ -26,7 +26,7 @@ defmodule Instagrain.Conversations.Storage do
       where: u.user_id == ^user_id
     )
     |> Repo.all()
-    |> Repo.preload([:users, :messages])
+    |> Repo.preload(messages: :user, users: :user)
   end
 
   @doc """
@@ -115,12 +115,19 @@ defmodule Instagrain.Conversations.Storage do
   of :users list in a conversation.
   """
   def add_message(%Conversation{} = conversation, user_id, message) do
-    if user_id in Enum.map(conversation.users, & &1.id) do
+    if user_id in Enum.map(conversation.users, & &1.user_id) do
       create_conversation_message(%{
         conversation_id: conversation.id,
         user_id: user_id,
         message: message
       })
+      |> case do
+        {:ok, message} ->
+          {:ok, Repo.preload(message, [:user])}
+
+        {:error, error} ->
+          {:error, error}
+      end
     else
       {:error, :cannot_add_message}
     end
