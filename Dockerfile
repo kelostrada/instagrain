@@ -18,9 +18,14 @@ ARG DEBIAN_VERSION=bullseye-20240612-slim
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
-ARG VERSION=${VERSION}
-
 FROM ${BUILDER_IMAGE} as builder
+
+ARG VERSION
+ARG VERSION_HASH
+
+# set versions
+ENV VERSION=${VERSION}
+ENV VERSION_HASH=${VERSION_HASH}
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git \
@@ -35,9 +40,6 @@ RUN mix local.hex --force && \
 
 # set build ENV
 ENV MIX_ENV="prod"
-
-# set version
-ENV VERSION=${VERSION}
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
