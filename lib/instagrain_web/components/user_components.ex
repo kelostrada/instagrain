@@ -25,20 +25,12 @@ defmodule InstagrainWeb.UserComponents do
   def avatar(assigns) do
     ~H"""
     <div class={["rounded-full border", @class]}>
-      <.icon
-        :if={is_nil(@user.avatar)}
-        name="hero-user"
-        class={[
-          @size == :xxs && "h-5 w-5",
-          @size == :xs && "h-7 w-7",
-          @size == :sm && "h-8 w-8",
-          @size == :md && "h-10 w-10",
-          @size == :lg && "h-14 w-14"
-        ]}
-      />
       <img
-        :if={!is_nil(@user.avatar)}
-        src={~p"/uploads/avatars/#{@user.avatar}"}
+        src={
+          if is_nil(@user.avatar),
+            do: ~p"/images/person.webp",
+            else: ~p"/uploads/avatars/#{@user.avatar}"
+        }
         class={[
           @size == :xxs && "h-5 w-5",
           @size == :xs && "h-7 w-7",

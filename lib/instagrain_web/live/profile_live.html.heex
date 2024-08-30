@@ -1,13 +1,11 @@
 <div class="flex gap-4 max-w-[935px] mx-auto max-sm:mt-6">
   <div class="rounded-full border m-auto max-sm:max-w-32 max-sm:max-h-32 max-sm:mx-4 sm:w-32 sm:h-32 sm:mx-8 md:h-40 md:w-40 md:mx-16">
-    <.icon
-      :if={is_nil(@profile.avatar)}
-      name="hero-user"
-      class="max-sm:w-32 max-sm:h-32 sm:w-32 sm:h-32 md:w-40 md:h-40"
-    />
     <img
-      :if={!is_nil(@profile.avatar)}
-      src={~p"/uploads/avatars/#{@profile.avatar}"}
+      src={
+        if is_nil(@profile.avatar),
+          do: ~p"/images/person.webp",
+          else: ~p"/uploads/avatars/#{@profile.avatar}"
+      }
       class="object-cover rounded-full w-full h-full"
     />
   </div>
