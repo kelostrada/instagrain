@@ -13,7 +13,7 @@
 
     <div :if={!Map.has_key?(assigns, :raw_layout)} class="flex justify-center max-md:hidden my-12">
       <span class="font-medium text-xs text-neutral-500">
-        © 2024 Instagrain from Kelostrada
+        © 2024 Instagrain from Kelostrada | Build: <%= "#{Instagrain.version()}-#{Instagrain.build_hash()}" %>
       </span>
     </div>
   </main>
