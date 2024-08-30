@@ -4,13 +4,24 @@ defmodule Instagrain.MixProject do
   def project do
     [
       app: :instagrain,
-      version: "0.0.1",
+      version: version(),
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
     ]
+  end
+
+  defp version do
+    System.get_env("VERSION") || last_git_tag() || "0.0.1"
+  end
+
+  defp last_git_tag do
+    case System.cmd("git", ["describe", "--tags", "--abbrev=0"]) do
+      {tag, 0} -> String.trim(tag)
+      _ -> nil
+    end
   end
 
   # Configuration for the OTP application.
