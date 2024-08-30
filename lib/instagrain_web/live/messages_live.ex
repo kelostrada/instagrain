@@ -38,6 +38,18 @@ defmodule InstagrainWeb.MessagesLive do
     """
   end
 
+  defp top_nav(conversation) do
+    assigns = %{conversation: conversation}
+
+    mobile_nav_header(%{
+      title: ~H"""
+      <div class="py-1">
+        <.conversation_avatar conversation={@conversation} size={:sm} size_small={:xxs} />
+      </div>
+      """
+    })
+  end
+
   @impl true
   def mount(_params, _session, socket) do
     conversations = Conversations.link_and_list_conversations(socket.assigns.current_user.id)
@@ -55,25 +67,26 @@ defmodule InstagrainWeb.MessagesLive do
   end
 
   @impl true
-  def handle_params(%{"conversation_id" => conversation_id}, _, socket) do
-    conversation_id = String.to_integer(conversation_id)
-    conversation = socket.assigns.conversations[conversation_id]
-    assigns = %{conversation: conversation}
+  def handle_params(params, _uri, socket) do
+    case socket.assigns.live_action do
+      :new ->
+        conversation =
+          Conversations.create_conversation(socket.assigns.current_user.id, [
+            String.to_integer(params["user_id"])
+          ])
 
-    top_nav =
-      mobile_nav_header(%{
-        title: ~H"""
-        <div class="py-1">
-          <.conversation_avatar conversation={@conversation} size={:sm} size_small={:xxs} />
-        </div>
-        """
-      })
+        {:noreply, push_navigate(socket, to: ~p"/messages/#{conversation.id}")}
 
-    {:noreply, assign(socket, conversation_id: conversation_id, top_nav: top_nav)}
-  end
+      :show ->
+        conversation_id = String.to_integer(params["conversation_id"])
+        conversation = socket.assigns.conversations[conversation_id]
 
-  def handle_params(_params, _, socket) do
-    {:noreply, assign(socket, conversation_id: nil)}
+        {:noreply,
+         assign(socket, conversation_id: conversation_id, top_nav: top_nav(conversation))}
+
+      _ ->
+        {:noreply, assign(socket, conversation_id: nil)}
+    end
   end
 
   @impl true

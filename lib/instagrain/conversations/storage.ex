@@ -80,10 +80,13 @@ defmodule Instagrain.Conversations.Storage do
 
   def find_or_create_conversation(user_ids) do
     Repo.transaction(fn ->
-      case find_conversation(user_ids) do
+      user_ids
+      |> find_conversation()
+      |> case do
         nil -> create_conversation_in_transaction(user_ids)
         conversation -> conversation
       end
+      |> Repo.preload(users: :user, messages: :user)
     end)
   end
 

@@ -38,6 +38,12 @@
             Edit Profile
           </.button>
         </.link>
+
+        <.link :if={@profile.id != @current_user.id} navigate={~p"/messages/new/#{@profile.id}"}>
+          <.button color={:blue}>
+            Message
+          </.button>
+        </.link>
       </div>
     </div>
 

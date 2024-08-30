@@ -180,7 +180,7 @@ defmodule InstagrainWeb.UserSettingsLive do
       |> assign(:username_form, to_form(username_changeset))
       |> assign(:profile_form, to_form(profile_changeset))
       |> assign(:trigger_submit, false)
-      |> allow_upload(:avatar, accept: ~w(.jpg .jpeg .png), max_entries: 1)
+      |> allow_upload(:avatar, accept: ~w(.jpg .jpeg .png .webp), max_entries: 1)
 
     {:ok, socket}
   end

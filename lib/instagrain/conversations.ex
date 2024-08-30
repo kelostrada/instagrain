@@ -11,4 +11,8 @@ defmodule Instagrain.Conversations do
   def send_message(user_id, conversation_id, message) do
     Instagrain.Conversations.ConversationServer.send_message(user_id, conversation_id, message)
   end
+
+  def create_conversation(user_id, user_ids) do
+    Instagrain.Conversations.ConversationServer.create_conversation(user_id, user_ids)
+  end
 end

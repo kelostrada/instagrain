@@ -55,6 +55,17 @@ defmodule Instagrain.Conversations.ConversationServer do
     {:noreply, Map.put(state, :conversations, conversations)}
   end
 
+  def handle_cast({:notify_new_conversation, conversation}, state) do
+    conversations = [conversation | state.conversations]
+
+    Enum.each(
+      state.links,
+      &send(&1, {:conversations_update, format_conversations(conversations, state.user_id)})
+    )
+
+    {:noreply, Map.put(state, :conversations, conversations)}
+  end
+
   @impl true
   def handle_call(:link_and_list_conversations, {from, _}, state) do
     Process.monitor(from)
@@ -62,6 +73,24 @@ defmodule Instagrain.Conversations.ConversationServer do
     conversations = format_conversations(state.conversations, state.user_id)
 
     {:reply, conversations, Map.put(state, :links, MapSet.put(state.links, from))}
+  end
+
+  def handle_call({:create_conversation, user_ids}, _from, state) do
+    case Storage.find_or_create_conversation([state.user_id | user_ids]) do
+      {:ok, conversation} ->
+        if conversation.id in Enum.map(state.conversations, & &1.id) do
+          {:reply, format_conversation(conversation, state.user_id), state}
+        else
+          Enum.each(conversation.users, fn user ->
+            notify_new_conversation(user.user_id, conversation)
+          end)
+
+          {:reply, format_conversation(conversation, state.user_id), state}
+        end
+
+      {:error, error} ->
+        {:reply, {:error, error}, state}
+    end
   end
 
   @impl true
@@ -81,33 +110,44 @@ defmodule Instagrain.Conversations.ConversationServer do
     GenServer.cast(via_tuple(user_id), {:notify_message, conversation_id, message})
   end
 
+  defp notify_new_conversation(user_id, conversation) do
+    GenServer.cast(via_tuple(user_id), {:notify_new_conversation, conversation})
+  end
+
   def link_and_list_conversations(user_id) do
     GenServer.call(via_tuple(user_id), :link_and_list_conversations)
   end
 
+  def create_conversation(user_id, user_ids) do
+    GenServer.call(via_tuple(user_id), {:create_conversation, user_ids})
+  end
+
   defp format_conversations(conversations, user_id) do
     Enum.into(conversations, %{}, fn conversation ->
-      other_users =
-        conversation.users
-        |> Enum.map(& &1.user)
-        |> Enum.filter(&(&1.id != user_id))
-
-      messages = conversation.messages |> Enum.sort_by(& &1.inserted_at, :asc)
-      last_message = messages |> List.last() || %{}
-
-      {conversation.id,
-       %{
-         id: conversation.id,
-         name:
-           if(length(other_users) > 1,
-             do: conversation.name || "test",
-             else: List.first(other_users).full_name
-           ),
-         participants: other_users,
-         last_message: Map.get(last_message, :message, ""),
-         last_message_at: Map.get(last_message, :inserted_at),
-         messages: messages
-       }}
+      {conversation.id, format_conversation(conversation, user_id)}
     end)
+  end
+
+  defp format_conversation(conversation, user_id) do
+    other_users =
+      conversation.users
+      |> Enum.map(& &1.user)
+      |> Enum.filter(&(&1.id != user_id))
+
+    messages = conversation.messages |> Enum.sort_by(& &1.inserted_at, :asc)
+    last_message = messages |> List.last() || %{}
+
+    %{
+      id: conversation.id,
+      name:
+        if(length(other_users) > 1,
+          do: conversation.name || "test",
+          else: List.first(other_users).full_name || List.first(other_users).username
+        ),
+      participants: other_users,
+      last_message: Map.get(last_message, :message, ""),
+      last_message_at: Map.get(last_message, :inserted_at),
+      messages: messages
+    }
   end
 end
