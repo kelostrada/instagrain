@@ -1,7 +1,6 @@
 defmodule InstagrainWeb.MessagesLive do
   use InstagrainWeb, :live_view
 
-  alias Instagrain.Accounts
   alias Instagrain.Conversations
 
   import InstagrainWeb.UserComponents
