@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres
+    image: postgres:13
     restart: unless-stopped
     volumes:
       - ./volumes/instagrain_db:/var/lib/postgresql/data
