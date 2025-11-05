@@ -14,52 +14,66 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Self-Hosted Registry
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: registry.melinakrzemowa.pl
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: Get the hash
         id: get_hash
         run: |
-          echo ::set-output name=HASH::${GITHUB_SHA::8}
+          echo "HASH=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
 
       - name: "Get Previous tag"
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@master"
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: true
+          platforms: linux/arm64/v8
           tags: |
-            kelu/instagrain:latest
-            kelu/instagrain:${{ steps.previoustag.outputs.tag }}
-            kelu/instagrain:${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
+            registry.melinakrzemowa.pl/instagrain:latest
+            registry.melinakrzemowa.pl/instagrain:${{ steps.previoustag.outputs.tag }}
+            registry.melinakrzemowa.pl/instagrain:${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
           build-args: |
             VERSION=${{ steps.previoustag.outputs.tag }}
             VERSION_HASH=${{ steps.get_hash.outputs.HASH }}
+          cache-from: type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache
+          cache-to: type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache,mode=max
 
       - name: Copy docker-compose.yml
         uses: appleboy/scp-action@master
         with:
-          host: insta.melinakrzemowa.pl
-          username: kelu
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.PRIVATE_KEY }}
           source: "docker-compose.yml"
-          target: "/var/www/insta.melinakrzemowa.pl"
+          target: "/home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/"
           overwrite: true
       
       - name: Update service using docker-compose
         uses: appleboy/ssh-action@master
         with:
-          host: insta.melinakrzemowa.pl
-          username: kelu
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.PRIVATE_KEY }}
-          script: export VERSION=${{ steps.previoustag.outputs.tag }} VERSION_HASH=${{ steps.get_hash.outputs.HASH }} && cd /var/www/insta.melinakrzemowa.pl && docker-compose up --no-deps -d web && docker-compose run web /app/bin/migrate
+          script: |
+            sudo mv /home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/docker-compose.yml /var/www/instagra.in/docker-compose.yml
+            export VERSION=${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
+            cd /var/www/instagra.in
+            docker pull registry.melinakrzemowa.pl/instagrain:${VERSION}
+            docker compose up -d
