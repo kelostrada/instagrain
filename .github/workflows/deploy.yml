@@ -50,8 +50,8 @@ jobs:
           build-args: |
             VERSION=${{ steps.previoustag.outputs.tag }}
             VERSION_HASH=${{ steps.get_hash.outputs.HASH }}
-          # cache-from: type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache
-          # cache-to: type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache,mode=max
+          cache-from: type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache
+          cache-to: type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache,mode=max
 
       - name: Copy docker-compose.yml
         uses: appleboy/scp-action@master
@@ -73,7 +73,8 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             sudo mv /home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/docker-compose.yml /var/www/instagra.in/docker-compose.yml
-            export VERSION=${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
+            export VERSION=${{ steps.previoustag.outputs.tag }}
+            export VERSION_HASH=${{ steps.get_hash.outputs.HASH }}
             cd /var/www/instagra.in
             docker pull registry.melinakrzemowa.pl/instagrain:${VERSION}
             docker compose up -d
