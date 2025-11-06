@@ -44,6 +44,13 @@
       />
 
       <.nav_button
+        phx-click={show_modal("search-modal")}
+        icon_name="hero-magnifying-glass"
+        icon_name_solid="hero-magnifying-glass"
+        label="Search"
+      />
+
+      <.nav_button
         patch={~p"/users/settings"}
         icon_name="hero-cog-8-tooth"
         icon_name_solid="hero-cog-8-tooth-solid"
