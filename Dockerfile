@@ -52,16 +52,20 @@ RUN mkdir config
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
+# Copy priv directory (rarely changes, so cache this layer)
 COPY priv priv
 
-COPY lib lib
-
+# Copy assets first - if assets haven't changed, this layer is cached
+# Assets are copied before lib to maximize cache hits when only code changes
 COPY assets assets
 
-# compile assets
+# Copy lib directory (changes frequently - invalidates cache from here)
+COPY lib lib
+
+# compile assets (cached if assets and lib haven't changed)
 RUN mix assets.deploy
 
-# Compile the release
+# Compile the release (cached if lib hasn't changed)
 RUN mix compile
 
 # Changes to config/runtime.exs don't require recompiling the code

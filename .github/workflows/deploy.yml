@@ -50,7 +50,9 @@ jobs:
           build-args: |
             VERSION=${{ steps.previoustag.outputs.tag }}
             VERSION_HASH=${{ steps.get_hash.outputs.HASH }}
-          cache-from: type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache
+          cache-from: |
+            type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache
+            type=registry,ref=registry.melinakrzemowa.pl/instagrain:latest
           cache-to: type=registry,ref=registry.melinakrzemowa.pl/instagrain:buildcache,mode=max
 
       - name: Copy docker-compose.yml
