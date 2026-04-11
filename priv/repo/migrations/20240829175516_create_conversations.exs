@@ -9,8 +9,8 @@ defmodule Instagrain.Repo.Migrations.CreateConversations do
     end
 
     create table(:conversations_users, primary_key: false) do
-      add :user_id, references(:users, on_delete: :delete_all, primary_key: true)
-      add :conversation_id, references(:conversations, on_delete: :delete_all, primary_key: true)
+      add :user_id, references(:users, on_delete: :delete_all), primary_key: true
+      add :conversation_id, references(:conversations, on_delete: :delete_all), primary_key: true
 
       timestamps(type: :utc_datetime)
     end

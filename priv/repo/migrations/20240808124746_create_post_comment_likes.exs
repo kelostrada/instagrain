@@ -3,8 +3,8 @@ defmodule Instagrain.Repo.Migrations.CreatePostCommentLikes do
 
   def change do
     create table(:post_comment_likes, primary_key: false) do
-      add :comment_id, references(:post_comments, on_delete: :delete_all, primary_key: true)
-      add :user_id, references(:users, on_delete: :delete_all, primary_key: true)
+      add :comment_id, references(:post_comments, on_delete: :delete_all), primary_key: true
+      add :user_id, references(:users, on_delete: :delete_all), primary_key: true
 
       timestamps(type: :utc_datetime)
     end
