@@ -8,10 +8,15 @@ defmodule InstagrainWeb.ExploreLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok,
+    {:ok, assign(socket, search_query: "", search_results: [], searching?: false)}
+  end
+
+  @impl true
+  def handle_params(_params, _url, socket) do
+    {:noreply,
      socket
-     |> assign(page: 0, end_reached?: false, search_query: "", search_results: [], searching?: false)
-     |> stream(:posts, [])
+     |> assign(page: 0, end_reached?: false, seed: :rand.uniform(1_000_000) |> to_string())
+     |> stream(:posts, [], reset: true)
      |> fetch_posts()}
   end
 
@@ -48,6 +53,7 @@ defmodule InstagrainWeb.ExploreLive do
     posts =
       Feed.list_explore_posts(
         socket.assigns.current_user.id,
+        socket.assigns.seed,
         socket.assigns.page
       )
 

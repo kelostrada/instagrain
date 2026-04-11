@@ -25,14 +25,33 @@ defmodule Instagrain.Feed do
   """
   def list_posts(current_user_id, page \\ 0) do
     limit = 3
-    offset = 3 * page
+    offset = limit * page
+
+    # Subquery: how many of current user's follows liked each post
+    follow_likes =
+      from(fl in Like,
+        join: f in "follows",
+        on: f.follow_id == fl.user_id and f.user_id == ^current_user_id,
+        group_by: fl.post_id,
+        select: %{post_id: fl.post_id, count: count(fl.post_id)}
+      )
 
     from(p in Post,
       left_join: l in Like,
       on: l.post_id == p.id and l.user_id == ^current_user_id,
       left_join: s in Save,
       on: s.post_id == p.id and s.user_id == ^current_user_id,
-      order_by: {:desc, p.inserted_at},
+      left_join: f in "follows",
+      on: f.follow_id == p.user_id and f.user_id == ^current_user_id,
+      left_join: fl in subquery(follow_likes),
+      on: fl.post_id == p.id,
+      where: p.user_id != ^current_user_id,
+      order_by: [
+        desc: not is_nil(f.follow_id),
+        desc: coalesce(fl.count, 0),
+        desc: p.likes,
+        desc: p.inserted_at
+      ],
       offset: ^offset,
       limit: ^limit,
       select: %{
@@ -42,21 +61,7 @@ defmodule Instagrain.Feed do
       }
     )
     |> Repo.all()
-    |> Repo.preload([:user, :resources, comments: [:user, :comment_likes]])
-    |> Enum.map(fn post ->
-      comments =
-        Enum.map(post.comments, fn comment ->
-          %{
-            comment
-            | liked_by_current_user?:
-                Enum.any?(comment.comment_likes, fn like ->
-                  like.user_id == current_user_id
-                end)
-          }
-        end)
-
-      %{post | comments: comments}
-    end)
+    |> preload_and_process(current_user_id)
   end
 
   @doc """
@@ -223,7 +228,7 @@ defmodule Instagrain.Feed do
     |> Repo.preload([:resources, :user, comments: [:user, :comment_likes]])
   end
 
-  def list_explore_posts(current_user_id, page \\ 0, limit \\ 18) do
+  def list_explore_posts(current_user_id, seed, page \\ 0, limit \\ 18) do
     offset = limit * page
 
     from(p in Post,
@@ -236,26 +241,12 @@ defmodule Instagrain.Feed do
         | liked_by_current_user?: not is_nil(l.post_id),
           saved_by_current_user?: not is_nil(s.post_id)
       },
-      order_by: {:desc, p.inserted_at},
+      order_by: fragment("md5(? || ?)", p.id, ^seed),
       offset: ^offset,
       limit: ^limit
     )
     |> Repo.all()
-    |> Repo.preload([:resources, :user, comments: [:user, :comment_likes]])
-    |> Enum.map(fn post ->
-      comments =
-        Enum.map(post.comments, fn comment ->
-          %{
-            comment
-            | liked_by_current_user?:
-                Enum.any?(comment.comment_likes, fn like ->
-                  like.user_id == current_user_id
-                end)
-          }
-        end)
-
-      %{post | comments: comments}
-    end)
+    |> preload_and_process(current_user_id)
   end
 
   def list_other_posts(%Post{id: id, user_id: user_id}, limit \\ 6) do
@@ -623,5 +614,22 @@ defmodule Instagrain.Feed do
       {1, _} -> :ok
       _ -> {:error, :not_found}
     end
+  end
+
+  defp preload_and_process(posts, current_user_id) when is_list(posts) do
+    posts
+    |> Repo.preload([:user, :resources, comments: [:user, :comment_likes]])
+    |> Enum.map(fn post ->
+      comments =
+        Enum.map(post.comments, fn comment ->
+          %{
+            comment
+            | liked_by_current_user?:
+                Enum.any?(comment.comment_likes, &(&1.user_id == current_user_id))
+          }
+        end)
+
+      %{post | comments: comments}
+    end)
   end
 end
