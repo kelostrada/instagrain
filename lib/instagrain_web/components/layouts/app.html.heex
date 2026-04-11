@@ -44,9 +44,10 @@
       />
 
       <.nav_button
-        phx-click={show_modal("search-modal")}
+        patch={~p"/explore"}
         icon_name="hero-magnifying-glass"
         icon_name_solid="hero-magnifying-glass"
+        selected?={@socket.view == InstagrainWeb.ExploreLive}
         label="Search"
       />
 

@@ -60,6 +60,17 @@ defmodule Instagrain.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  def search_users(query, limit \\ 20) do
+    pattern = "%#{query}%"
+
+    from(u in User,
+      where: ilike(u.username, ^pattern) or ilike(u.full_name, ^pattern),
+      order_by: [asc: u.username],
+      limit: ^limit
+    )
+    |> Repo.all()
+  end
+
   ## User registration
 
   @doc """

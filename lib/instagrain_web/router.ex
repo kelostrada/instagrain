@@ -31,6 +31,8 @@ defmodule InstagrainWeb.Router do
       live "/messages/new/:user_id", MessagesLive, :new
       live "/messages/:conversation_id", MessagesLive, :show
 
+      live "/explore", ExploreLive, :index
+
       live "/:username", ProfileLive, :posts
       live "/:username/saved", ProfileLive, :saved
     end
