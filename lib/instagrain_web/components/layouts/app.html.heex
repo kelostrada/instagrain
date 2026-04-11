@@ -43,12 +43,33 @@
         label="Home"
       />
 
+      <%!-- Mobile: magnifying glass goes to explore page --%>
       <.nav_button
+        class="sm:hidden"
         patch={~p"/explore"}
         icon_name="hero-magnifying-glass"
         icon_name_solid="hero-magnifying-glass"
         selected?={@socket.view == InstagrainWeb.ExploreLive}
         label="Search"
+      />
+
+      <%!-- Desktop: magnifying glass toggles search panel --%>
+      <.nav_button
+        class="max-sm:hidden"
+        phx-click={toggle_search_panel()}
+        icon_name="hero-magnifying-glass"
+        icon_name_solid="hero-magnifying-glass"
+        label="Search"
+      />
+
+      <%!-- Desktop: explore with compass icon --%>
+      <.nav_button
+        class="max-sm:hidden"
+        patch={~p"/explore"}
+        icon_name="hero-globe-alt"
+        icon_name_solid="hero-globe-alt"
+        selected?={@socket.view == InstagrainWeb.ExploreLive}
+        label="Explore"
       />
 
       <.nav_button
@@ -83,6 +104,12 @@
         label="Profile"
       />
     </nav>
+
+    <.live_component
+      module={InstagrainWeb.SearchComponent}
+      id="search-panel"
+      current_user={@current_user}
+    />
 
     <.modal id="new-post-modal">
       <.live_component

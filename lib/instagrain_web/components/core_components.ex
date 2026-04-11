@@ -865,6 +865,16 @@ defmodule InstagrainWeb.CoreComponents do
     )
   end
 
+  def toggle_search_panel(js \\ %JS{}) do
+    js
+    |> JS.toggle(
+      to: "#search-panel",
+      in: {"transition-transform duration-300", "-translate-x-full", "translate-x-0"},
+      out: {"transition-transform duration-300", "translate-x-0", "-translate-x-full"},
+      display: "flex"
+    )
+  end
+
   def show_modal(js \\ %JS{}, id) when is_binary(id) do
     js
     |> JS.show(to: "##{id}")
