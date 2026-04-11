@@ -317,7 +317,11 @@ Enum.each(Enum.with_index(all_posts, 1), fn {post, i} ->
   if rem(i, 100) == 0, do: IO.puts("  Liked #{i}/#{length(all_posts)} posts")
 end)
 
-IO.puts("Done!\n")
+IO.puts("Done with likes.\n")
+
+# --- Add Comments and Replies ---
+
+Instagrain.Seeds.Comments.run(users, all_posts)
 
 total_users = length(users)
 total_posts = length(all_posts)
