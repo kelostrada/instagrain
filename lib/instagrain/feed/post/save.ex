@@ -15,6 +15,6 @@ defmodule Instagrain.Feed.Post.Save do
     save
     |> cast(attrs, [:user_id, :post_id])
     |> validate_required([:user_id, :post_id])
-    |> unique_constraint([:post_id, :user_id])
+    |> unique_constraint([:post_id, :user_id], name: :post_saves_pkey)
   end
 end

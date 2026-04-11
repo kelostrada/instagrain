@@ -4,12 +4,14 @@ defmodule Instagrain.AccountsFixtures do
   entities via the `Instagrain.Accounts` context.
   """
 
-  def unique_user_email, do: "user#{System.unique_integer()}@example.com"
+  def unique_user_email, do: "user#{System.unique_integer([:positive])}@example.com"
+  def unique_user_username, do: "user#{System.unique_integer([:positive])}"
   def valid_user_password, do: "hello world!"
 
   def valid_user_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{
       email: unique_user_email(),
+      username: unique_user_username(),
       password: valid_user_password()
     })
   end

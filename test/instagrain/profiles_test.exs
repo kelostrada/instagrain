@@ -3,55 +3,55 @@ defmodule Instagrain.ProfilesTest do
 
   alias Instagrain.Profiles
 
-  describe "follows" do
-    alias Instagrain.Profiles.Follow
+  import Instagrain.AccountsFixtures
 
-    import Instagrain.ProfilesFixtures
+  describe "follow_user/2" do
+    test "creates a follow relationship" do
+      user = user_fixture()
+      target = user_fixture()
 
-    @invalid_attrs %{}
-
-    test "list_follows/0 returns all follows" do
-      follow = follow_fixture()
-      assert Profiles.list_follows() == [follow]
+      assert {:ok, follow} = Profiles.follow_user(user.id, target.id)
+      assert follow.user_id == user.id
+      assert follow.follow_id == target.id
     end
 
-    test "get_follow!/1 returns the follow with given id" do
-      follow = follow_fixture()
-      assert Profiles.get_follow!(follow.id) == follow
+    test "fails for duplicate follows" do
+      user = user_fixture()
+      target = user_fixture()
+
+      assert {:ok, _} = Profiles.follow_user(user.id, target.id)
+      assert {:error, _} = Profiles.follow_user(user.id, target.id)
+    end
+  end
+
+  describe "unfollow_user/2" do
+    test "removes a follow relationship" do
+      user = user_fixture()
+      target = user_fixture()
+
+      {:ok, _} = Profiles.follow_user(user.id, target.id)
+      assert :ok = Profiles.unfollow_user(user.id, target.id)
     end
 
-    test "create_follow/1 with valid data creates a follow" do
-      valid_attrs = %{}
+    test "returns error when not following" do
+      user = user_fixture()
+      target = user_fixture()
 
-      assert {:ok, %Follow{} = follow} = Profiles.create_follow(valid_attrs)
+      assert {:error, :not_found} = Profiles.unfollow_user(user.id, target.id)
+    end
+  end
+
+  describe "get_profile/1" do
+    test "returns user profile by username" do
+      user = user_fixture()
+      profile = Profiles.get_profile(user.username)
+
+      assert profile.id == user.id
+      assert profile.username == user.username
     end
 
-    test "create_follow/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Profiles.create_follow(@invalid_attrs)
-    end
-
-    test "update_follow/2 with valid data updates the follow" do
-      follow = follow_fixture()
-      update_attrs = %{}
-
-      assert {:ok, %Follow{} = follow} = Profiles.update_follow(follow, update_attrs)
-    end
-
-    test "update_follow/2 with invalid data returns error changeset" do
-      follow = follow_fixture()
-      assert {:error, %Ecto.Changeset{}} = Profiles.update_follow(follow, @invalid_attrs)
-      assert follow == Profiles.get_follow!(follow.id)
-    end
-
-    test "delete_follow/1 deletes the follow" do
-      follow = follow_fixture()
-      assert {:ok, %Follow{}} = Profiles.delete_follow(follow)
-      assert_raise Ecto.NoResultsError, fn -> Profiles.get_follow!(follow.id) end
-    end
-
-    test "change_follow/1 returns a follow changeset" do
-      follow = follow_fixture()
-      assert %Ecto.Changeset{} = Profiles.change_follow(follow)
+    test "returns nil for nonexistent username" do
+      assert is_nil(Profiles.get_profile("nonexistent"))
     end
   end
 end

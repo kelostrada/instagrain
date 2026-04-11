@@ -17,7 +17,7 @@ defmodule InstagrainWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import InstagrainWeb.Gettext
+  use Gettext, backend: InstagrainWeb.Gettext
 
   @doc """
   Renders a modal.

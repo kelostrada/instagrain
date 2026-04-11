@@ -4,19 +4,22 @@ defmodule Instagrain.FeedFixtures do
   entities via the `Instagrain.Feed` context.
   """
 
+  import Instagrain.AccountsFixtures
+
   @doc """
   Generate a post.
   """
   def post_fixture(attrs \\ %{}) do
+    user = Map.get_lazy(attrs, :user, fn -> user_fixture() end)
+
     {:ok, post} =
       attrs
       |> Enum.into(%{
         caption: "some caption",
-        disable_comments: true,
-        hide_likes: true,
-        image: "some image",
-        likes: 42,
-        location_id: 42
+        disable_comments: false,
+        hide_likes: false,
+        likes: 0,
+        user_id: user.id
       })
       |> Instagrain.Feed.create_post()
 
@@ -27,12 +30,15 @@ defmodule Instagrain.FeedFixtures do
   Generate a resource.
   """
   def resource_fixture(attrs \\ %{}) do
+    post = Map.get_lazy(attrs, :post, fn -> post_fixture() end)
+
     {:ok, resource} =
       attrs
       |> Enum.into(%{
         alt: "some alt",
         file: "some file",
-        type: :photo
+        type: :photo,
+        post_id: post.id
       })
       |> Instagrain.Feed.create_resource()
 
@@ -40,53 +46,21 @@ defmodule Instagrain.FeedFixtures do
   end
 
   @doc """
-  Generate a like.
-  """
-  def like_fixture(attrs \\ %{}) do
-    {:ok, like} =
-      attrs
-      |> Enum.into(%{})
-      |> Instagrain.Feed.create_like()
-
-    like
-  end
-
-  @doc """
   Generate a comment.
   """
   def comment_fixture(attrs \\ %{}) do
+    user = Map.get_lazy(attrs, :user, fn -> user_fixture() end)
+    post = Map.get_lazy(attrs, :post, fn -> post_fixture(%{user: user}) end)
+
     {:ok, comment} =
       attrs
       |> Enum.into(%{
         comment: "some comment",
-        likes: 42
+        post_id: post.id,
+        user_id: user.id
       })
       |> Instagrain.Feed.create_comment()
 
     comment
-  end
-
-  @doc """
-  Generate a comment_like.
-  """
-  def comment_like_fixture(attrs \\ %{}) do
-    {:ok, comment_like} =
-      attrs
-      |> Enum.into(%{})
-      |> Instagrain.Feed.create_comment_like()
-
-    comment_like
-  end
-
-  @doc """
-  Generate a save.
-  """
-  def save_fixture(attrs \\ %{}) do
-    {:ok, save} =
-      attrs
-      |> Enum.into(%{})
-      |> Instagrain.Feed.create_save()
-
-    save
   end
 end

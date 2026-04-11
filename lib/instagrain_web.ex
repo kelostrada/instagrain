@@ -43,7 +43,7 @@ defmodule InstagrainWeb do
         layouts: [html: InstagrainWeb.Layouts]
 
       import Plug.Conn
-      import InstagrainWeb.Gettext
+      use Gettext, backend: InstagrainWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -93,7 +93,7 @@ defmodule InstagrainWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import InstagrainWeb.CoreComponents
-      import InstagrainWeb.Gettext
+      use Gettext, backend: InstagrainWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
