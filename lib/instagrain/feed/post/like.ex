@@ -15,6 +15,6 @@ defmodule Instagrain.Feed.Post.Like do
     like
     |> cast(attrs, [:user_id, :post_id])
     |> validate_required([:user_id, :post_id])
-    |> unique_constraint([:post_id, :user_id])
+    |> unique_constraint([:post_id, :user_id], name: :post_likes_pkey)
   end
 end

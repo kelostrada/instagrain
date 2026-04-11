@@ -15,6 +15,6 @@ defmodule Instagrain.Profiles.Follow do
     follow
     |> cast(attrs, [:user_id, :follow_id])
     |> validate_required([:user_id, :follow_id])
-    |> unique_constraint([:user_id, :follow_id])
+    |> unique_constraint([:user_id, :follow_id], name: :follows_pkey)
   end
 end

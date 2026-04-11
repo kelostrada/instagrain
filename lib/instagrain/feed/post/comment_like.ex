@@ -15,6 +15,6 @@ defmodule Instagrain.Feed.Post.CommentLike do
     comment_like
     |> cast(attrs, [:comment_id, :user_id])
     |> validate_required([:comment_id, :user_id])
-    |> unique_constraint([:comment_id, :user_id])
+    |> unique_constraint([:comment_id, :user_id], name: :post_comment_likes_pkey)
   end
 end
