@@ -43,6 +43,7 @@ defmodule Instagrain.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:tidewave, "~> 0.5", only: [:dev]},
       {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.18"},
       {:phoenix_ecto, "~> 4.6"},
