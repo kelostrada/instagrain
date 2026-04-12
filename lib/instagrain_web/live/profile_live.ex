@@ -62,7 +62,12 @@ defmodule InstagrainWeb.ProfileLive do
         profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
         current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
 
-        {:noreply, assign(socket, profile: profile, current_user: current_user)}
+        {:noreply,
+         assign(socket,
+           profile: profile,
+           current_user: current_user,
+           following_user_ids: Enum.map(current_user.followings, & &1.id)
+         )}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Follow failed")}
@@ -75,7 +80,12 @@ defmodule InstagrainWeb.ProfileLive do
         profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
         current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
 
-        {:noreply, assign(socket, profile: profile, current_user: current_user)}
+        {:noreply,
+         assign(socket,
+           profile: profile,
+           current_user: current_user,
+           following_user_ids: Enum.map(current_user.followings, & &1.id)
+         )}
 
       _ ->
         {:noreply, put_flash(socket, :error, "Unfollow failed")}
