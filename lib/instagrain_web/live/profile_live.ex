@@ -48,63 +48,25 @@ defmodule InstagrainWeb.ProfileLive do
   @impl true
   def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
     Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
-    current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
-
-    {:noreply,
-     assign(socket,
-       profile: profile,
-       current_user: current_user,
-       following_user_ids: Enum.map(current_user.followings, & &1.id)
-     )}
+    {:noreply, reload_follow_state(socket)}
   end
 
   def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
     Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
-    profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
-    current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
-
-    {:noreply,
-     assign(socket,
-       profile: profile,
-       current_user: current_user,
-       following_user_ids: Enum.map(current_user.followings, & &1.id)
-     )}
+    {:noreply, reload_follow_state(socket)}
   end
 
   def handle_event("follow", _, socket) do
     case Profiles.follow_user(socket.assigns.current_user.id, socket.assigns.profile.id) do
-      {:ok, _follow} ->
-        profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
-        current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
-
-        {:noreply,
-         assign(socket,
-           profile: profile,
-           current_user: current_user,
-           following_user_ids: Enum.map(current_user.followings, & &1.id)
-         )}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Follow failed")}
+      {:ok, _follow} -> {:noreply, reload_follow_state(socket)}
+      {:error, _} -> {:noreply, put_flash(socket, :error, "Follow failed")}
     end
   end
 
   def handle_event("unfollow", _, socket) do
     case Profiles.unfollow_user(socket.assigns.current_user.id, socket.assigns.profile.id) do
-      :ok ->
-        profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
-        current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
-
-        {:noreply,
-         assign(socket,
-           profile: profile,
-           current_user: current_user,
-           following_user_ids: Enum.map(current_user.followings, & &1.id)
-         )}
-
-      _ ->
-        {:noreply, put_flash(socket, :error, "Unfollow failed")}
+      :ok -> {:noreply, reload_follow_state(socket)}
+      _ -> {:noreply, put_flash(socket, :error, "Unfollow failed")}
     end
   end
 
@@ -134,5 +96,24 @@ defmodule InstagrainWeb.ProfileLive do
     else
       socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)
     end
+  end
+
+  defp reload_follow_state(socket) do
+    profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
+    current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
+    following_ids = Enum.map(current_user.followings, & &1.id)
+
+    # Reload all currently loaded posts to refresh stream items (menus inside streams)
+    total = (socket.assigns.page + 1) * 9
+
+    posts =
+      case socket.assigns.live_action do
+        :posts -> Feed.list_user_posts(profile.id, current_user.id, 0, total)
+        :saved -> Feed.list_saved_posts(current_user.id, 0, total)
+      end
+
+    socket
+    |> assign(profile: profile, current_user: current_user, following_user_ids: following_ids)
+    |> stream(:posts, posts, reset: true)
   end
 end
