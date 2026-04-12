@@ -7,39 +7,6 @@ defmodule InstagrainWeb.MessagesLive do
 
   import InstagrainWeb.UserComponents
 
-  defp conversation_avatar(assigns) do
-    ~H"""
-    <div class="flex items-center gap-4">
-      <%= if length(@conversation.participants) == 1 do %>
-        <div>
-          <.avatar size={@size} user={List.first(@conversation.participants)} />
-        </div>
-      <% else %>
-        <div class={[
-          "relative",
-          @size == :xxs && "w-[22px] h-[22px]",
-          @size == :xs && "w-[30px] h-[30px]",
-          @size == :sm && "w-[34px] h-[34px]",
-          @size == :md && "w-[42px] h-[42px]",
-          @size == :lg && "w-[58px] h-[58px]"
-        ]}>
-          <% [user1, user2 | _] = @conversation.participants %>
-
-          <.avatar size={@size_small} user={user1} class="absolute top-0 left-0" />
-          <.avatar
-            size={@size_small}
-            user={user2}
-            class="absolute bottom-0 right-0 border-white border-2"
-          />
-        </div>
-      <% end %>
-      <span class="font-bold text-base">
-        <%= @conversation.name %>
-      </span>
-    </div>
-    """
-  end
-
   defp top_nav(conversation) do
     assigns = %{conversation: conversation}
 
@@ -139,13 +106,20 @@ defmodule InstagrainWeb.MessagesLive do
         {:noreply,
          assign(socket,
            conversation_id: conversation_id,
+           main_no_scroll: true,
            top_nav: top_nav(conversation),
            show_details: false,
            hide_mobile_nav: true
          )}
 
       _ ->
-        {:noreply, assign(socket, conversation_id: nil, hide_mobile_nav: false, top_nav: nil)}
+        {:noreply,
+         assign(socket,
+           conversation_id: nil,
+           main_no_scroll: false,
+           hide_mobile_nav: false,
+           top_nav: nil
+         )}
     end
   end
 
