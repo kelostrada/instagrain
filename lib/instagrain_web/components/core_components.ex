@@ -823,23 +823,57 @@ defmodule InstagrainWeb.CoreComponents do
     """
   end
 
-  # Function to replace user tags with safe HTML links
+  # Function to replace user tags and URLs with safe HTML links
   defp replace_user_tags(text) do
-    # Use a regex to find user tags (e.g., @username)
+    # First split by @mentions, then split plain text segments by URLs
     Regex.split(~r/(?<!\S)@\w+(?:\.\w+)*/, text, include_captures: true, trim: true)
+    |> Enum.flat_map(fn segment ->
+      if String.starts_with?(segment, "@") do
+        [convert_to_safe_html(segment)]
+      else
+        split_urls(segment)
+      end
+    end)
+  end
+
+  @url_regex ~r{(https?://[^\s<>"]+|(?:www\.)[^\s<>"]+\.[^\s<>"]+)}
+
+  defp split_urls(text) do
+    Regex.split(@url_regex, text, include_captures: true, trim: true)
     |> Enum.map(&convert_to_safe_html/1)
   end
 
   # Function to convert user tags to safe HTML link or plain text
   defp convert_to_safe_html("@" <> username) do
     assigns = %{username: username}
-    # Generate the HTML link structure safely
     ~H(<.link navigate={"/#{@username}"} class="text-sky-800">@<%= @username %></.link>)
   end
 
+  defp convert_to_safe_html("http" <> _ = url) do
+    assigns = %{url: url, display: display_url(url)}
+
+    ~H"""
+    <a href={@url} target="_blank" rel="noopener noreferrer" class="text-sky-800 inline-flex items-center gap-0.5"><span class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
+    """
+  end
+
+  defp convert_to_safe_html("www." <> _ = url) do
+    assigns = %{url: "https://#{url}", display: display_url(url)}
+
+    ~H"""
+    <a href={@url} target="_blank" rel="noopener noreferrer" class="text-sky-800 inline-flex items-center gap-0.5"><span class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
+    """
+  end
+
   defp convert_to_safe_html(text) do
-    # Ensure other text is safe
     Phoenix.HTML.html_escape(text)
+  end
+
+  defp display_url(url) do
+    url
+    |> String.replace(~r{^https?://}, "")
+    |> String.replace(~r{^www\.}, "")
+    |> String.trim_trailing("/")
   end
 
   ## JS Commands
