@@ -8,7 +8,7 @@ defmodule InstagrainWeb.PostLive.Index do
     {:ok,
      socket
      |> stream(:posts, Feed.list_posts(socket.assigns.current_user.id))
-     |> assign(page: 0, end_reached?: false)}
+     |> assign(page: 0, end_reached?: false, share_post_id: nil)}
   end
 
   @impl true
@@ -23,6 +23,14 @@ defmodule InstagrainWeb.PostLive.Index do
 
   def handle_info({_, {:post_updated, post}}, socket) do
     {:noreply, stream_insert(socket, :posts, post)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.IconsComponent, {:open_share, post_id}}, socket) do
+    {:noreply, assign(socket, share_post_id: post_id)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.ShareComponent, :share_sent}, socket) do
+    {:noreply, assign(socket, share_post_id: nil)}
   end
 
   @impl true

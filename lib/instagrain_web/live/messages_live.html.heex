@@ -16,7 +16,7 @@
         </button>
         <button
           class="sm:hidden cursor-pointer"
-          phx-click={JS.show(to: "#new-message-mobile") |> JS.push("open-new-message")}
+          phx-click={JS.show(to: "#new-message-mobile", display: "flex") |> JS.push("open-new-message")}
         >
           <.icon name="hero-pencil-square" />
         </button>
@@ -197,7 +197,7 @@
                     Add people
                   </button>
                   <button
-                    phx-click={JS.show(to: "#add-member-mobile") |> JS.push("open-add-member")}
+                    phx-click={JS.show(to: "#add-member-mobile", display: "flex") |> JS.push("open-add-member")}
                     class="sm:hidden cursor-pointer text-blue-500 font-semibold text-sm hover:text-blue-700"
                   >
                     Add people

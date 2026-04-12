@@ -20,7 +20,8 @@ defmodule InstagrainWeb.ProfileLive do
        current_user: current_user,
        page: 0,
        end_reached?: false,
-       current_user_profile?: current_user_profile?
+       current_user_profile?: current_user_profile?,
+       share_post_id: nil
      )
      |> stream(:posts, [], reset: true)
      |> fetch_posts()}
@@ -33,6 +34,14 @@ defmodule InstagrainWeb.ProfileLive do
 
   def handle_info({_, {:post_updated, post}}, socket) do
     {:noreply, stream_insert(socket, :posts, post)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.IconsComponent, {:open_share, post_id}}, socket) do
+    {:noreply, assign(socket, share_post_id: post_id)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.ShareComponent, :share_sent}, socket) do
+    {:noreply, assign(socket, share_post_id: nil)}
   end
 
   @impl true

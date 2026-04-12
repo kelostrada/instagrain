@@ -17,3 +17,10 @@
 <div :if={@end_reached?} class="my-5 text-xl text-center">
   No more posts available
 </div>
+
+<.live_component
+  module={InstagrainWeb.PostLive.ShareComponent}
+  id="share-component"
+  current_user={@current_user}
+  post_id={@share_post_id}
+/>

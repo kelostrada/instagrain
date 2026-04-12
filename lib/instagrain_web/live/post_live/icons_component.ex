@@ -41,10 +41,24 @@ defmodule InstagrainWeb.PostLive.IconsComponent do
           </.link>
         <% end %>
 
-        <.icon
-          name="hero-paper-airplane"
-          class="w-7 h-7 ml-1 rotate-[-27deg] translate-y-[-0.1875rem] cursor-pointer hover:text-neutral-400 "
-        />
+        <span
+          class="max-sm:hidden"
+          phx-click={show_modal("share-modal") |> JS.push("open-share", target: @myself)}
+        >
+          <.icon
+            name="hero-paper-airplane"
+            class="w-7 h-7 ml-1 rotate-[-27deg] translate-y-[-0.1875rem] cursor-pointer hover:text-neutral-400"
+          />
+        </span>
+        <span
+          class="sm:hidden"
+          phx-click={JS.show(to: "#share-mobile", display: "flex") |> JS.push("open-share", target: @myself)}
+        >
+          <.icon
+            name="hero-paper-airplane"
+            class="w-7 h-7 ml-1 rotate-[-27deg] translate-y-[-0.1875rem] cursor-pointer hover:text-neutral-400"
+          />
+        </span>
       </div>
       <div class="flex py-3 flex-row-reverse">
         <%= if @post.saved_by_current_user? do %>
@@ -125,6 +139,11 @@ defmodule InstagrainWeb.PostLive.IconsComponent do
         notify_parent({:error, "Remove Save failed"})
         {:noreply, socket}
     end
+  end
+
+  def handle_event("open-share", _, socket) do
+    notify_parent({:open_share, socket.assigns.post.id})
+    {:noreply, socket}
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

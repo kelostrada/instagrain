@@ -64,6 +64,42 @@ let liveSocket = new LiveSocket("/live", Socket, {
         }
       },
     },
+    CopyToClipboard: {
+      mounted() {
+        this.el.addEventListener("click", () => {
+          const text = this.el.getAttribute("data-clipboard-text");
+          navigator.clipboard.writeText(text).then(() => {
+            const label = this.el.querySelector("span");
+            if (label) {
+              const original = label.textContent;
+              label.textContent = "Copied!";
+              setTimeout(() => { label.textContent = original; }, 2000);
+            }
+          });
+        });
+      }
+    },
+    NativeShare: {
+      mounted() {
+        this.el.addEventListener("click", () => {
+          const url = this.el.getAttribute("data-share-url");
+          const title = this.el.getAttribute("data-share-title") || "";
+          if (navigator.share) {
+            navigator.share({ title, url }).catch(() => {});
+          } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(url).then(() => {
+              const label = this.el.querySelector("span");
+              if (label) {
+                const original = label.textContent;
+                label.textContent = "Copied!";
+                setTimeout(() => { label.textContent = original; }, 2000);
+              }
+            });
+          }
+        });
+      }
+    },
     ImageSlider: {
       mounted() {
         this.index = 0;
@@ -176,6 +212,19 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
+
+window.addEventListener("phx:close-share-modal", () => {
+  // Close desktop modal
+  const modal = document.getElementById("share-modal");
+  if (modal) {
+    liveSocket.execJS(modal, modal.getAttribute("phx-remove"));
+  }
+  // Close mobile full-screen
+  const mobile = document.getElementById("share-mobile");
+  if (mobile) {
+    mobile.style.display = "none";
+  }
+})
 
 window.addEventListener("phx:focus", (e) => {
   let el = document.getElementById(e.detail.id)

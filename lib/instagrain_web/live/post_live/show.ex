@@ -8,7 +8,7 @@ defmodule InstagrainWeb.PostLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, top_nav: mobile_nav_header(%{title: "Post"}))}
+    {:ok, assign(socket, top_nav: mobile_nav_header(%{title: "Post"}), share_post_id: nil)}
   end
 
   @impl true
@@ -29,6 +29,14 @@ defmodule InstagrainWeb.PostLive.Show do
 
   def handle_info({_, {:post_updated, post}}, socket) do
     {:noreply, assign(socket, post: post)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.IconsComponent, {:open_share, post_id}}, socket) do
+    {:noreply, assign(socket, share_post_id: post_id)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.ShareComponent, :share_sent}, socket) do
+    {:noreply, assign(socket, share_post_id: nil)}
   end
 
   defp page_title(:show), do: "Show Post"
