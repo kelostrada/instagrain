@@ -45,6 +45,11 @@ defmodule InstagrainWeb.ProfileLive do
   end
 
   @impl true
+  def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
+    Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
+    {:noreply, socket}
+  end
+
   def handle_event("follow", _, socket) do
     case Profiles.follow_user(socket.assigns.current_user.id, socket.assigns.profile.id) do
       {:ok, _follow} ->

@@ -41,6 +41,11 @@ defmodule InstagrainWeb.ExploreLive do
   end
 
   @impl true
+  def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
+    Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
+    {:noreply, socket}
+  end
+
   def handle_event("load-more", _, socket) do
     {:noreply, fetch_posts(socket)}
   end

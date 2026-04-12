@@ -34,6 +34,11 @@ defmodule InstagrainWeb.PostLive.Index do
   end
 
   @impl true
+  def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
+    Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
+    {:noreply, socket}
+  end
+
   def handle_event("delete", %{"id" => id}, socket) do
     post = Feed.get_post!(id, socket.assigns.current_user.id)
     {:ok, _} = Feed.delete_post(post)

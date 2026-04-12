@@ -39,6 +39,12 @@ defmodule InstagrainWeb.PostLive.Show do
     {:noreply, assign(socket, share_post_id: nil)}
   end
 
+  @impl true
+  def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
+    Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
+    {:noreply, socket}
+  end
+
   defp page_title(:show), do: "Show Post"
   defp page_title(:edit), do: "Edit Post"
 end

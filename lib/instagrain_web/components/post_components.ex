@@ -20,9 +20,14 @@ defmodule InstagrainWeb.PostComponents do
 
       <.modal id={@modal_id}>
         <div class="max-sm:w-80 sm:w-96 flex flex-col divide-y">
-          <div class="flex items-center justify-center text-sm font-semibold p-3.5 cursor-pointer">
-            Follow
-          </div>
+          <%= if @post.user.id != @current_user.id do %>
+            <div
+              class="flex items-center justify-center text-sm font-semibold p-3.5 cursor-pointer"
+              phx-click={JS.push("menu-follow", value: %{post_user_id: @post.user.id}) |> hide_modal(@modal_id)}
+            >
+              Follow
+            </div>
+          <% end %>
           <div
             class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer"
             phx-click={JS.patch(~p"/p/#{@post.id}")}
