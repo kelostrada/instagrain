@@ -129,6 +129,9 @@
                     "font-medium text-sm leading-6 " <>
                     if(message.user.id == @current_user.id, do: "text-white", else: "text-black")
                   }
+                  link_class={
+                    if(message.user.id == @current_user.id, do: "text-white underline", else: "text-sky-800")
+                  }
                 />
               </div>
             </div>

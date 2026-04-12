@@ -800,6 +800,7 @@ defmodule InstagrainWeb.CoreComponents do
 
   attr :text, :string, required: true
   attr :class, :string, default: nil
+  attr :link_class, :string, default: "text-sky-800"
 
   def user_content(assigns) do
     # Split the text by lines
@@ -807,7 +808,7 @@ defmodule InstagrainWeb.CoreComponents do
     parts_length = length(parts)
 
     # Apply the replacement function to each part
-    parts = Enum.map(parts, &replace_user_tags/1)
+    parts = Enum.map(parts, &replace_user_tags(&1, assigns.link_class))
 
     assigns = assign(assigns, parts: parts, parts_length: parts_length)
 
@@ -824,48 +825,46 @@ defmodule InstagrainWeb.CoreComponents do
   end
 
   # Function to replace user tags and URLs with safe HTML links
-  defp replace_user_tags(text) do
-    # First split by @mentions, then split plain text segments by URLs
+  defp replace_user_tags(text, link_class) do
     Regex.split(~r/(?<!\S)@\w+(?:\.\w+)*/, text, include_captures: true, trim: true)
     |> Enum.flat_map(fn segment ->
       if String.starts_with?(segment, "@") do
-        [convert_to_safe_html(segment)]
+        [convert_to_safe_html(segment, link_class)]
       else
-        split_urls(segment)
+        split_urls(segment, link_class)
       end
     end)
   end
 
   @url_regex ~r{(https?://[^\s<>"]+|(?:www\.)[^\s<>"]+\.[^\s<>"]+)}
 
-  defp split_urls(text) do
+  defp split_urls(text, link_class) do
     Regex.split(@url_regex, text, include_captures: true, trim: true)
-    |> Enum.map(&convert_to_safe_html/1)
+    |> Enum.map(&convert_to_safe_html(&1, link_class))
   end
 
-  # Function to convert user tags to safe HTML link or plain text
-  defp convert_to_safe_html("@" <> username) do
-    assigns = %{username: username}
-    ~H(<.link navigate={"/#{@username}"} class="text-sky-800">@<%= @username %></.link>)
+  defp convert_to_safe_html("@" <> username, link_class) do
+    assigns = %{username: username, link_class: link_class}
+    ~H(<.link navigate={"/#{@username}"} class={@link_class}>@<%= @username %></.link>)
   end
 
-  defp convert_to_safe_html("http" <> _ = url) do
-    assigns = %{url: url, display: display_url(url)}
+  defp convert_to_safe_html("http" <> _ = url, link_class) do
+    assigns = %{url: url, display: display_url(url), link_class: link_class}
 
     ~H"""
-    <a href={@url} target="_blank" rel="noopener noreferrer" class="text-sky-800 inline-flex items-center gap-0.5"><span class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
+    <a href={@url} target="_blank" rel="noopener noreferrer" class={[@link_class, "inline-flex items-center gap-0.5"]}><span class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
     """
   end
 
-  defp convert_to_safe_html("www." <> _ = url) do
-    assigns = %{url: "https://#{url}", display: display_url(url)}
+  defp convert_to_safe_html("www." <> _ = url, link_class) do
+    assigns = %{url: "https://#{url}", display: display_url(url), link_class: link_class}
 
     ~H"""
-    <a href={@url} target="_blank" rel="noopener noreferrer" class="text-sky-800 inline-flex items-center gap-0.5"><span class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
+    <a href={@url} target="_blank" rel="noopener noreferrer" class={[@link_class, "inline-flex items-center gap-0.5"]}><span class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
     """
   end
 
-  defp convert_to_safe_html(text) do
+  defp convert_to_safe_html(text, _link_class) do
     Phoenix.HTML.html_escape(text)
   end
 
