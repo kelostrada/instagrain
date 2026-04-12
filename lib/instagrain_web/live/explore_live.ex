@@ -8,7 +8,7 @@ defmodule InstagrainWeb.ExploreLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, search_query: "", search_results: [], searching?: false)}
+    {:ok, assign(socket, search_query: "", search_results: [], searching?: false, share_post_id: nil)}
   end
 
   @impl true
@@ -18,6 +18,26 @@ defmodule InstagrainWeb.ExploreLive do
      |> assign(page: 0, end_reached?: false, seed: :rand.uniform(1_000_000) |> to_string())
      |> stream(:posts, [], reset: true)
      |> fetch_posts()}
+  end
+
+  @impl true
+  def handle_info({_, {:error, message}}, socket) do
+    {:noreply, put_flash(socket, :error, message)}
+  end
+
+  def handle_info({_, {:post_updated, post}}, socket) do
+    {:noreply, stream_insert(socket, :posts, post)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.IconsComponent, {:open_share, post_id}}, socket) do
+    {:noreply, assign(socket, share_post_id: post_id)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.ShareComponent, :share_sent}, socket) do
+    {:noreply,
+     socket
+     |> assign(share_post_id: nil)
+     |> push_event("close-share-modal", %{})}
   end
 
   @impl true
