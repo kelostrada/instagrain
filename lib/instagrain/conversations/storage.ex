@@ -66,7 +66,8 @@ defmodule Instagrain.Conversations.Storage do
     from(c in Conversation,
       join: cu in assoc(c, :users),
       group_by: c.id,
-      having: fragment("? = ARRAY_AGG(? ORDER BY ?)", ^user_ids, cu.user_id, cu.user_id)
+      having: fragment("? = ARRAY_AGG(? ORDER BY ?)", ^user_ids, cu.user_id, cu.user_id),
+      limit: 1
     )
     |> Repo.one()
     |> Repo.preload([:users, :messages])
@@ -235,5 +236,12 @@ defmodule Instagrain.Conversations.Storage do
   """
   def change_conversation(%Conversation{} = conversation, attrs \\ %{}) do
     Conversation.changeset(conversation, attrs)
+  end
+
+  def remove_conversation_user(conversation_id, user_id) do
+    from(cu in ConversationUser,
+      where: cu.conversation_id == ^conversation_id and cu.user_id == ^user_id
+    )
+    |> Repo.delete_all()
   end
 end

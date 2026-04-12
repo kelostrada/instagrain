@@ -65,6 +65,10 @@ let liveSocket = new LiveSocket("/live", Socket, {
       },
     },
     SubmitOnEnter: {
+      resize() {
+        this.el.style.height = 'auto';
+        this.el.style.height = this.el.scrollHeight + 'px';
+      },
       mounted() {
         this.el.addEventListener("keydown", e => {
           if (!e.shiftKey && e.key == "Enter" && this.el.value.trim() != "") {
@@ -72,6 +76,11 @@ let liveSocket = new LiveSocket("/live", Socket, {
             e.preventDefault();
           }
         })
+        this.el.addEventListener("input", () => this.resize());
+        this.resize();
+      },
+      updated() {
+        this.resize();
       }
     }
   }

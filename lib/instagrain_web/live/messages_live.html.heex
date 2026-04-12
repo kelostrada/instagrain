@@ -8,7 +8,18 @@
         <h1 class="text-base font-extrabold">Messages</h1>
       </div>
       <div>
-        <.icon name="hero-pencil-square" class="cursor-pointer" />
+        <button
+          class="max-sm:hidden cursor-pointer"
+          phx-click={show_modal("new-message-modal") |> JS.push("open-new-message")}
+        >
+          <.icon name="hero-pencil-square" />
+        </button>
+        <button
+          class="sm:hidden cursor-pointer"
+          phx-click={JS.show(to: "#new-message-mobile") |> JS.push("open-new-message")}
+        >
+          <.icon name="hero-pencil-square" />
+        </button>
       </div>
     </div>
 
@@ -52,82 +63,216 @@
     </div>
   </div>
   <%= if @conversation_id do %>
-    <div class="grow">
-      <div class="max-sm:hidden px-4 py-2 border-b flex items-center gap-4">
-        <%= if length(@conversations[@conversation_id].participants) == 1 do %>
-          <div>
-            <.avatar size={:lg} user={List.first(@conversations[@conversation_id].participants)} />
-          </div>
-        <% else %>
-          <div class="relative w-[58px] h-[58px]">
-            <% [user1, user2 | _] = @conversations[@conversation_id].participants %>
+    <div class="grow flex">
+      <div class={["grow flex flex-col", @show_details && "max-sm:hidden"]}>
+        <div class="max-sm:hidden px-4 py-2 border-b flex items-center gap-4">
+          <%= if length(@conversations[@conversation_id].participants) == 1 do %>
+            <.link navigate={~p"/#{List.first(@conversations[@conversation_id].participants).username}"} class="flex items-center gap-4 grow cursor-pointer hover:opacity-80">
+              <.avatar
+                size={:lg}
+                user={List.first(@conversations[@conversation_id].participants)}
+              />
+              <div>
+                <p class="font-bold text-base">
+                  <%= List.first(@conversations[@conversation_id].participants).full_name || List.first(@conversations[@conversation_id].participants).username %>
+                </p>
+                <p class="text-xs text-neutral-500">
+                  <%= List.first(@conversations[@conversation_id].participants).username %>
+                </p>
+              </div>
+            </.link>
+          <% else %>
+            <div class="flex items-center gap-4 grow">
+              <div class="relative w-[58px] h-[58px]">
+                <% [user1, user2 | _] = @conversations[@conversation_id].participants %>
 
-            <.avatar size={:md} user={user1} class="absolute top-0 left-0" />
-            <.avatar
-              size={:md}
-              user={user2}
-              class="absolute bottom-0 right-0 border-white border-2"
-            />
-          </div>
-        <% end %>
-        <span class="font-bold text-base">
-          <%= @conversations[@conversation_id].name %>
-        </span>
-      </div>
-      <div
-        class="flex flex-col gap-4 max-sm:h-[calc(100%-7rem)] sm:h-[calc(100%-10rem)] overflow-y-auto p-6"
-        phx-hook="ScrollToBottom"
-        id="messages-list"
-      >
-        <%= for message <- @conversations[@conversation_id].messages do %>
-          <div class={"flex " <> if(message.user.id == @current_user.id, do: "justify-end", else: "")}>
-            <div class={[
-              "py-2 px-4 rounded-[1.5rem] inline",
-              if(message.user.id == @current_user.id, do: "bg-sky-500", else: "bg-neutral-200")
-            ]}>
-              <.username
-                user={message.user}
-                class={
-                  "font-bold text-sm leading-6 " <>
-                  if(message.user.id == @current_user.id, do: "text-white", else: "text-black")
-                }
-              />
-              <.user_content
-                text={message.message}
-                class={
-                  "font-medium text-sm leading-6 " <>
-                  if(message.user.id == @current_user.id, do: "text-white", else: "text-black")
-                }
-              />
+                <.avatar size={:md} user={user1} class="absolute top-0 left-0" />
+                <.avatar
+                  size={:md}
+                  user={user2}
+                  class="absolute bottom-0 right-0 border-white border-2"
+                />
+              </div>
+              <div>
+                <p class="font-bold text-base"><%= @conversations[@conversation_id].name %></p>
+              </div>
             </div>
-          </div>
-        <% end %>
-      </div>
-      <div class="border-t p-4">
-        <div class="rounded-full border">
-          <form phx-change="message-edit" phx-submit="send-message">
-            <div class="flex justify-between">
-              <textarea
-                id="message-input"
-                name="message"
-                phx-hook="SubmitOnEnter"
-                class={[
-                  "block w-full mx-6 mt-4 p-0 border-0 outline-none outline-clear",
-                  "resize-none overflow-hidden placeholder:font-medium placeholder:text-neutral-500 text-black font-medium text-sm"
-                ]}
-                placeholder="Message..."
-              ><%= Phoenix.HTML.Form.normalize_value("textarea", @message) %></textarea>
-              <div class="mx-6 mt-4">
+          <% end %>
+          <button phx-click="toggle-details" class="cursor-pointer flex-shrink-0">
+            <.icon
+              name={if(@show_details, do: "hero-information-circle-solid", else: "hero-information-circle")}
+              class="h-6 w-6"
+            />
+          </button>
+        </div>
+        <div
+          class="flex flex-col gap-4 grow overflow-y-auto p-6"
+          phx-hook="ScrollToBottom"
+          id="messages-list"
+        >
+          <%= for message <- @conversations[@conversation_id].messages do %>
+            <div class={"flex " <> if(message.user.id == @current_user.id, do: "justify-end", else: "")}>
+              <div class={[
+                "py-2 px-4 rounded-[1.5rem] inline",
+                if(message.user.id == @current_user.id, do: "bg-sky-500", else: "bg-neutral-200")
+              ]}>
+                <.username
+                  user={message.user}
+                  class={
+                    "font-bold text-sm leading-6 " <>
+                    if(message.user.id == @current_user.id, do: "text-white", else: "text-black")
+                  }
+                />
+                <.user_content
+                  text={message.message}
+                  class={
+                    "font-medium text-sm leading-6 " <>
+                    if(message.user.id == @current_user.id, do: "text-white", else: "text-black")
+                  }
+                />
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="border-t p-3">
+          <div class="rounded-2xl border px-4 py-2">
+            <form phx-change="message-edit" phx-submit="send-message">
+              <div class="flex items-end gap-2">
+                <textarea
+                  id="message-input"
+                  name="message"
+                  rows="1"
+                  phx-hook="SubmitOnEnter"
+                  class={[
+                    "block w-full p-0 border-0 outline-none focus:ring-0",
+                    "resize-none overflow-hidden max-h-32",
+                    "placeholder:font-medium placeholder:text-neutral-500 text-black font-medium text-sm leading-5"
+                  ]}
+                  placeholder="Message..."
+                ><%= Phoenix.HTML.Form.normalize_value("textarea", @message) %></textarea>
                 <%= if String.length(@message) > 0 do %>
-                  <button class="cursor-pointer font-bold text-sm text-sky-500 hover:text-sky-900">
+                  <button class="cursor-pointer font-bold text-sm text-sky-500 hover:text-sky-900 flex-shrink-0 mb-0.5">
                     Send
                   </button>
                 <% end %>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
+
+      <%!-- Details panel --%>
+      <%= if @show_details do %>
+        <div class="max-sm:w-full sm:w-80 sm:min-w-80 border-l overflow-y-auto">
+          <div class="flex items-center gap-3 px-4 border-b max-sm:py-[14px] sm:py-[23px]">
+            <button phx-click="close-details" class="sm:hidden cursor-pointer">
+              <.icon name="hero-arrow-left" class="h-6 w-6" />
+            </button>
+            <h2 class="font-bold max-sm:text-base sm:text-xl">Details</h2>
+          </div>
+
+          <div class="divide-y">
+            <%= if @conversations[@conversation_id].is_group do %>
+              <%!-- Change group name --%>
+              <div class="px-4 py-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm">Change group name</span>
+                  <button
+                    phx-click={show_modal("rename-group-modal")}
+                    class="cursor-pointer border rounded-lg px-4 py-1.5 text-sm font-semibold hover:bg-neutral-50"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+
+              <%!-- Members --%>
+              <div class="px-4 py-4">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="font-bold text-base">Members</span>
+                  <button
+                    phx-click={show_modal("add-member-modal") |> JS.push("open-add-member")}
+                    class="max-sm:hidden cursor-pointer text-blue-500 font-semibold text-sm hover:text-blue-700"
+                  >
+                    Add people
+                  </button>
+                  <button
+                    phx-click={JS.show(to: "#add-member-mobile") |> JS.push("open-add-member")}
+                    class="sm:hidden cursor-pointer text-blue-500 font-semibold text-sm hover:text-blue-700"
+                  >
+                    Add people
+                  </button>
+                </div>
+
+                <div :for={user <- @conversations[@conversation_id].all_participants} class="flex items-center gap-3 py-2">
+                  <.avatar size={:md} user={user} />
+                  <div class="grow min-w-0">
+                    <p class="font-semibold text-sm truncate">
+                      <%= user.full_name || user.username %>
+                    </p>
+                    <p class="text-xs text-neutral-500 truncate"><%= user.username %></p>
+                  </div>
+                  <%= if user.id != @current_user.id do %>
+                    <button
+                      phx-click="remove-member"
+                      phx-value-id={user.id}
+                      class="cursor-pointer text-red-500 hover:text-red-700"
+                      data-confirm="Remove this member?"
+                    >
+                      <.icon name="hero-x-mark" class="h-5 w-5" />
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+
+              <%!-- Leave / Delete --%>
+              <div class="px-4 py-4 space-y-4">
+                <button
+                  phx-click="leave-chat"
+                  class="cursor-pointer text-red-500 font-semibold text-sm"
+                  data-confirm="Leave this chat?"
+                >
+                  Leave Chat
+                </button>
+                <p class="text-xs text-neutral-500">
+                  You won't be able to send or receive messages unless someone adds you back to the chat. No one will be notified that you left the chat.
+                </p>
+                <button
+                  phx-click="delete-chat"
+                  class="cursor-pointer text-red-500 font-semibold text-sm"
+                  data-confirm="Delete this chat? This cannot be undone."
+                >
+                  Delete Chat
+                </button>
+              </div>
+            <% else %>
+              <%!-- 1-on-1 conversation: simplified view --%>
+              <div class="px-4 py-4">
+                <span class="font-bold text-base">Members</span>
+                <div :for={user <- @conversations[@conversation_id].participants} class="flex items-center gap-3 py-3">
+                  <.avatar size={:md} user={user} />
+                  <div class="grow min-w-0">
+                    <p class="font-semibold text-sm truncate">
+                      <%= user.full_name || user.username %>
+                    </p>
+                    <p class="text-xs text-neutral-500 truncate"><%= user.username %></p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-4 py-4">
+                <button
+                  phx-click="delete-chat"
+                  class="cursor-pointer text-red-500 font-semibold text-sm"
+                  data-confirm="Delete this chat? This cannot be undone."
+                >
+                  Delete Chat
+                </button>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     </div>
   <% else %>
     <div class="max-sm:hidden flex flex-col items-center justify-center gap-4 grow">
@@ -135,7 +280,329 @@
         Your messages
       </h1>
       <span class="text-sm">Send private photos and messages to a friend or group.</span>
-      <.button>Send message</.button>
+      <.button phx-click={show_modal("new-message-modal") |> JS.push("open-new-message")}>
+        Send message
+      </.button>
     </div>
   <% end %>
+</div>
+
+<%!-- New message modal - Desktop --%>
+<.modal id="new-message-modal" corner_style={:xl} on_cancel={JS.push("open-new-message")}>
+  <div class="max-sm:hidden w-[90vw] max-w-[550px] max-h-[70vh] flex flex-col">
+    <div class="flex items-center justify-between px-4 py-3 border-b">
+      <div class="w-8"></div>
+      <h2 class="font-bold text-base">New message</h2>
+      <button
+        type="button"
+        phx-click={hide_modal("new-message-modal")}
+        class="cursor-pointer"
+      >
+        <.icon name="hero-x-mark" class="h-6 w-6" />
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2 px-4 py-2 border-b flex-wrap">
+      <span class="font-semibold text-base">To:</span>
+      <span
+        :for={user <- @selected_users}
+        class="inline-flex items-center gap-1 bg-blue-100 text-blue-600 rounded-full px-3 py-1 text-sm font-semibold"
+      >
+        <%= user.full_name || user.username %>
+        <button
+          type="button"
+          phx-click="deselect-user"
+          phx-value-id={user.id}
+          class="cursor-pointer"
+        >
+          <.icon name="hero-x-mark" class="h-3 w-3" />
+        </button>
+      </span>
+      <form phx-change="new-message-search" class="grow min-w-[100px]">
+        <input
+          type="text"
+          name="query"
+          value={@new_message_search}
+          placeholder="Search..."
+          autocomplete="off"
+          phx-debounce="300"
+          class="w-full border-0 focus:ring-0 text-sm placeholder:text-neutral-400 p-1"
+        />
+      </form>
+    </div>
+
+    <div class="overflow-y-auto grow">
+      <p :if={@new_message_search == ""} class="px-4 py-2 font-semibold text-sm">Suggested</p>
+      <div
+        :for={user <- @new_message_results}
+        class="flex items-center gap-3 px-4 py-2 hover:bg-neutral-50 cursor-pointer"
+        phx-click="select-user"
+        phx-value-id={user.id}
+      >
+        <.avatar size={:md} user={user} />
+        <div class="grow min-w-0">
+          <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
+          <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
+        </div>
+        <div class="flex-shrink-0">
+          <%= if Enum.any?(@selected_users, & &1.id == user.id) do %>
+            <div class="w-6 h-6 rounded-full bg-black flex items-center justify-center">
+              <.icon name="hero-check" class="h-4 w-4 text-white" />
+            </div>
+          <% else %>
+            <div class="w-6 h-6 rounded-full border-2 border-neutral-300"></div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4 border-t">
+      <button
+        type="button"
+        phx-click="create-conversation"
+        disabled={@selected_users == []}
+        class={[
+          "w-full py-3 rounded-xl text-white font-bold text-sm",
+          if(@selected_users == [],
+            do: "bg-blue-300 cursor-not-allowed",
+            else: "bg-blue-500 hover:bg-blue-600 cursor-pointer"
+          )
+        ]}
+      >
+        Chat
+      </button>
+    </div>
+  </div>
+</.modal>
+
+<%!-- New message modal - Mobile (full screen) --%>
+<div
+  id="new-message-mobile"
+  class="sm:hidden fixed inset-0 bg-white z-50 flex flex-col hidden"
+>
+  <div class="flex items-center px-4 py-3">
+    <button
+      type="button"
+      phx-click={JS.hide(to: "#new-message-mobile")}
+      class="cursor-pointer"
+    >
+      <.icon name="hero-arrow-left" class="h-6 w-6" />
+    </button>
+    <h2 class="grow text-center font-bold text-base">New message</h2>
+    <button
+      type="button"
+      phx-click="create-conversation"
+      class={[
+        "font-semibold text-sm",
+        if(@selected_users == [], do: "text-blue-300", else: "text-blue-500 cursor-pointer")
+      ]}
+      disabled={@selected_users == []}
+    >
+      Next
+    </button>
+  </div>
+
+  <div class="flex items-center gap-2 px-4 py-2 border-b border-t flex-wrap">
+    <span class="font-semibold text-base">To:</span>
+    <span
+      :for={user <- @selected_users}
+      class="inline-flex items-center gap-1 bg-blue-100 text-blue-600 rounded-full px-3 py-1 text-sm font-semibold"
+    >
+      <%= user.full_name || user.username %>
+      <button
+        type="button"
+        phx-click="deselect-user"
+        phx-value-id={user.id}
+        class="cursor-pointer"
+      >
+        <.icon name="hero-x-mark" class="h-3 w-3" />
+      </button>
+    </span>
+    <form phx-change="new-message-search" class="grow min-w-[100px]">
+      <input
+        type="text"
+        name="query"
+        value={@new_message_search}
+        placeholder="Search..."
+        autocomplete="off"
+        phx-debounce="300"
+        class="w-full border-0 focus:ring-0 text-sm placeholder:text-neutral-400 p-1"
+      />
+    </form>
+  </div>
+
+  <div class="overflow-y-auto grow">
+    <p :if={@new_message_search == ""} class="px-4 py-2 font-semibold text-sm">Suggested</p>
+    <div
+      :for={user <- @new_message_results}
+      class="flex items-center gap-3 px-4 py-2 hover:bg-neutral-50 cursor-pointer"
+      phx-click="select-user"
+      phx-value-id={user.id}
+    >
+      <.avatar size={:md} user={user} />
+      <div class="grow min-w-0">
+        <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
+        <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
+      </div>
+      <div class="flex-shrink-0">
+        <%= if Enum.any?(@selected_users, & &1.id == user.id) do %>
+          <div class="w-6 h-6 rounded-full bg-black flex items-center justify-center">
+            <.icon name="hero-check" class="h-4 w-4 text-white" />
+          </div>
+        <% else %>
+          <div class="w-6 h-6 rounded-full border-2 border-neutral-300"></div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%!-- Rename group modal --%>
+<.modal id="rename-group-modal" corner_style={:xl}>
+  <div class="w-[90vw] max-w-[400px] p-0">
+    <div class="flex items-center gap-3 px-4 py-3 border-b">
+      <button
+        type="button"
+        phx-click={hide_modal("rename-group-modal")}
+        class="cursor-pointer"
+      >
+        <.icon name="hero-x-mark" class="h-6 w-6" />
+      </button>
+      <h2 class="font-bold text-base">Change group name</h2>
+    </div>
+    <div class="p-4">
+      <p class="text-sm text-neutral-600 mb-4">
+        Changing the name of a group chat changes it for everyone.
+      </p>
+      <form phx-change="rename-group-edit" phx-submit="rename-group">
+        <div class="relative border rounded-lg px-3 pt-5 pb-2">
+          <label class="absolute top-2 left-3 text-xs text-neutral-500">Group name</label>
+          <input
+            type="text"
+            name="name"
+            value={@details_group_name}
+            class="w-full border-0 p-0 text-sm focus:ring-0"
+            autocomplete="off"
+          />
+        </div>
+        <button
+          type="submit"
+          phx-click={hide_modal("rename-group-modal")}
+          class={[
+            "w-full mt-4 py-3 rounded-xl text-white font-bold text-sm cursor-pointer",
+            "bg-blue-500 hover:bg-blue-600"
+          ]}
+        >
+          Save
+        </button>
+      </form>
+    </div>
+  </div>
+</.modal>
+
+<%!-- Add member modal - Desktop --%>
+<.modal id="add-member-modal" corner_style={:xl}>
+  <div class="max-sm:hidden w-[90vw] max-w-[550px] max-h-[70vh] flex flex-col">
+    <div class="flex items-center justify-between px-4 py-3 border-b">
+      <div class="w-8"></div>
+      <h2 class="font-bold text-base">Add people</h2>
+      <button
+        type="button"
+        phx-click={hide_modal("add-member-modal")}
+        class="cursor-pointer"
+      >
+        <.icon name="hero-x-mark" class="h-6 w-6" />
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2 px-4 py-2 border-b">
+      <span class="font-semibold text-base">To:</span>
+      <form phx-change="add-member-search" class="grow">
+        <input
+          type="text"
+          name="query"
+          value={@add_member_search}
+          placeholder="Search..."
+          autocomplete="off"
+          phx-debounce="300"
+          class="w-full border-0 focus:ring-0 text-sm placeholder:text-neutral-400 p-1"
+        />
+      </form>
+    </div>
+
+    <div class="overflow-y-auto grow">
+      <p :if={@add_member_search == ""} class="px-4 py-2 font-semibold text-sm">Suggested</p>
+      <div
+        :for={user <- @add_member_results}
+        class="flex items-center gap-3 px-4 py-2 hover:bg-neutral-50 cursor-pointer"
+        phx-click={JS.push("add-member", value: %{id: user.id}) |> hide_modal("add-member-modal")}
+      >
+        <.avatar size={:md} user={user} />
+        <div class="grow min-w-0">
+          <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
+          <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
+        </div>
+      </div>
+      <p
+        :if={@add_member_search != "" && @add_member_results == []}
+        class="px-4 py-8 text-sm text-neutral-500 text-center"
+      >
+        No results found.
+      </p>
+    </div>
+  </div>
+</.modal>
+
+<%!-- Add member - Mobile (full screen) --%>
+<div
+  id="add-member-mobile"
+  class="sm:hidden fixed inset-0 bg-white z-50 flex flex-col hidden"
+>
+  <div class="flex items-center px-4 py-3 border-b">
+    <button
+      type="button"
+      phx-click={JS.hide(to: "#add-member-mobile")}
+      class="cursor-pointer"
+    >
+      <.icon name="hero-x-mark" class="h-6 w-6" />
+    </button>
+    <h2 class="grow text-center font-bold text-base">Add people</h2>
+    <div class="w-6"></div>
+  </div>
+
+  <div class="flex items-center gap-2 px-4 py-2 border-b">
+    <span class="font-semibold text-base">To:</span>
+    <form phx-change="add-member-search" class="grow">
+      <input
+        type="text"
+        name="query"
+        value={@add_member_search}
+        placeholder="Search..."
+        autocomplete="off"
+        phx-debounce="300"
+        class="w-full border-0 focus:ring-0 text-sm placeholder:text-neutral-400 p-1"
+      />
+    </form>
+  </div>
+
+  <div class="overflow-y-auto grow">
+    <p :if={@add_member_search == ""} class="px-4 py-2 font-semibold text-sm">Suggested</p>
+    <div
+      :for={user <- @add_member_results}
+      class="flex items-center gap-3 px-4 py-2 hover:bg-neutral-50 cursor-pointer"
+      phx-click={JS.push("add-member", value: %{id: user.id}) |> JS.hide(to: "#add-member-mobile")}
+    >
+      <.avatar size={:md} user={user} />
+      <div class="grow min-w-0">
+        <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
+        <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
+      </div>
+    </div>
+    <p
+      :if={@add_member_search != "" && @add_member_results == []}
+      class="px-4 py-8 text-sm text-neutral-500 text-center"
+    >
+      No results found.
+    </p>
+  </div>
 </div>

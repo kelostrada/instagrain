@@ -55,6 +55,42 @@ defmodule Instagrain.Conversations.ConversationServer do
     {:noreply, Map.put(state, :conversations, conversations)}
   end
 
+  def handle_cast({:notify_conversation_update, conversation_id, name}, state) do
+    conversations =
+      Enum.map(state.conversations, fn c ->
+        if c.id == conversation_id, do: %{c | name: name}, else: c
+      end)
+
+    Enum.each(state.links, fn pid ->
+      send(pid, {:conversations_update, format_conversations(conversations, state.user_id)})
+    end)
+
+    {:noreply, Map.put(state, :conversations, conversations)}
+  end
+
+  def handle_cast({:notify_members_changed, conversation_id}, state) do
+    conversation = Enum.find(state.conversations, &(&1.id == conversation_id))
+
+    if conversation do
+      refreshed =
+        Storage.get_conversation!(conversation_id)
+        |> Instagrain.Repo.preload(users: :user, messages: :user)
+
+      conversations =
+        Enum.map(state.conversations, fn c ->
+          if c.id == conversation_id, do: refreshed, else: c
+        end)
+
+      Enum.each(state.links, fn pid ->
+        send(pid, {:conversations_update, format_conversations(conversations, state.user_id)})
+      end)
+
+      {:noreply, Map.put(state, :conversations, conversations)}
+    else
+      {:noreply, state}
+    end
+  end
+
   def handle_cast({:notify_new_conversation, conversation}, state) do
     conversations = [conversation | state.conversations]
 
@@ -73,6 +109,113 @@ defmodule Instagrain.Conversations.ConversationServer do
     conversations = format_conversations(state.conversations, state.user_id)
 
     {:reply, conversations, Map.put(state, :links, MapSet.put(state.links, from))}
+  end
+
+  def handle_call({:rename_conversation, conversation_id, name}, _from, state) do
+    conversation = Enum.find(state.conversations, &(&1.id == conversation_id))
+
+    case Storage.update_conversation(conversation, %{name: name}) do
+      {:ok, updated} ->
+        conversations =
+          Enum.map(state.conversations, fn c ->
+            if c.id == conversation_id, do: %{c | name: updated.name}, else: c
+          end)
+
+        Enum.each(conversation.users, fn user ->
+          if user.user_id != state.user_id do
+            notify_conversation_update(user.user_id, conversation_id, name)
+          end
+        end)
+
+        Enum.each(state.links, fn pid ->
+          send(pid, {:conversations_update, format_conversations(conversations, state.user_id)})
+        end)
+
+        {:reply, :ok, Map.put(state, :conversations, conversations)}
+
+      {:error, error} ->
+        {:reply, {:error, error}, state}
+    end
+  end
+
+  def handle_call({:add_member, conversation_id, new_user_id}, _from, state) do
+    conversation = Enum.find(state.conversations, &(&1.id == conversation_id))
+
+    case Storage.create_conversation_user(%{
+           conversation_id: conversation_id,
+           user_id: new_user_id
+         }) do
+      {:ok, cu} ->
+        cu = Instagrain.Repo.preload(cu, :user)
+        updated_conversation = %{conversation | users: conversation.users ++ [cu]}
+
+        conversations =
+          Enum.map(state.conversations, fn c ->
+            if c.id == conversation_id, do: updated_conversation, else: c
+          end)
+
+        notify_new_conversation(new_user_id, updated_conversation)
+
+        Enum.each(conversation.users, fn user ->
+          if user.user_id != state.user_id do
+            notify_members_changed(user.user_id, conversation_id)
+          end
+        end)
+
+        Enum.each(state.links, fn pid ->
+          send(pid, {:conversations_update, format_conversations(conversations, state.user_id)})
+        end)
+
+        {:reply, :ok, Map.put(state, :conversations, conversations)}
+
+      {:error, error} ->
+        {:reply, {:error, error}, state}
+    end
+  end
+
+  def handle_call({:remove_member, conversation_id, target_user_id}, _from, state) do
+    Storage.remove_conversation_user(conversation_id, target_user_id)
+    conversation = Enum.find(state.conversations, &(&1.id == conversation_id))
+
+    conversations =
+      if target_user_id == state.user_id do
+        # Leaving: remove the conversation entirely from our list
+        Enum.reject(state.conversations, &(&1.id == conversation_id))
+      else
+        # Removing someone else: update the member list
+        updated_conversation = %{
+          conversation
+          | users: Enum.reject(conversation.users, &(&1.user_id == target_user_id))
+        }
+
+        Enum.map(state.conversations, fn c ->
+          if c.id == conversation_id, do: updated_conversation, else: c
+        end)
+      end
+
+    Enum.each(state.links, fn pid ->
+      send(pid, {:conversations_update, format_conversations(conversations, state.user_id)})
+    end)
+
+    {:reply, :ok, Map.put(state, :conversations, conversations)}
+  end
+
+  def handle_call({:delete_conversation, conversation_id}, _from, state) do
+    conversation = Enum.find(state.conversations, &(&1.id == conversation_id))
+
+    case Storage.delete_conversation(conversation) do
+      {:ok, _} ->
+        conversations = Enum.reject(state.conversations, &(&1.id == conversation_id))
+
+        Enum.each(state.links, fn pid ->
+          send(pid, {:conversations_update, format_conversations(conversations, state.user_id)})
+        end)
+
+        {:reply, :ok, Map.put(state, :conversations, conversations)}
+
+      {:error, error} ->
+        {:reply, {:error, error}, state}
+    end
   end
 
   def handle_call({:create_conversation, user_ids}, _from, state) do
@@ -114,12 +257,36 @@ defmodule Instagrain.Conversations.ConversationServer do
     GenServer.cast(via_tuple(user_id), {:notify_new_conversation, conversation})
   end
 
+  defp notify_conversation_update(user_id, conversation_id, name) do
+    GenServer.cast(via_tuple(user_id), {:notify_conversation_update, conversation_id, name})
+  end
+
+  defp notify_members_changed(user_id, conversation_id) do
+    GenServer.cast(via_tuple(user_id), {:notify_members_changed, conversation_id})
+  end
+
   def link_and_list_conversations(user_id) do
     GenServer.call(via_tuple(user_id), :link_and_list_conversations)
   end
 
   def create_conversation(user_id, user_ids) do
     GenServer.call(via_tuple(user_id), {:create_conversation, user_ids})
+  end
+
+  def rename_conversation(user_id, conversation_id, name) do
+    GenServer.call(via_tuple(user_id), {:rename_conversation, conversation_id, name})
+  end
+
+  def add_member(user_id, conversation_id, new_user_id) do
+    GenServer.call(via_tuple(user_id), {:add_member, conversation_id, new_user_id})
+  end
+
+  def remove_member(user_id, conversation_id, target_user_id) do
+    GenServer.call(via_tuple(user_id), {:remove_member, conversation_id, target_user_id})
+  end
+
+  def delete_conversation(user_id, conversation_id) do
+    GenServer.call(via_tuple(user_id), {:delete_conversation, conversation_id})
   end
 
   defp format_conversations(conversations, user_id) do
@@ -137,14 +304,20 @@ defmodule Instagrain.Conversations.ConversationServer do
     messages = conversation.messages |> Enum.sort_by(& &1.inserted_at, :asc)
     last_message = messages |> List.last() || %{}
 
+    all_users = conversation.users |> Enum.map(& &1.user)
+
     %{
       id: conversation.id,
       name:
         if(length(other_users) > 1,
-          do: conversation.name || "test",
+          do:
+            conversation.name ||
+              Enum.map_join(other_users, ", ", &(&1.full_name || &1.username)),
           else: List.first(other_users).full_name || List.first(other_users).username
         ),
       participants: other_users,
+      all_participants: all_users,
+      is_group: length(other_users) > 1,
       last_message: Map.get(last_message, :message, ""),
       last_message_at: Map.get(last_message, :inserted_at),
       messages: messages

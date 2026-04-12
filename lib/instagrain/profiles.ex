@@ -53,4 +53,14 @@ defmodule Instagrain.Profiles do
       _ -> {:error, :not_found}
     end
   end
+
+  def list_following(user_id) do
+    from(u in User,
+      join: f in Follow,
+      on: f.follow_id == u.id,
+      where: f.user_id == ^user_id,
+      order_by: [asc: u.username]
+    )
+    |> Repo.all()
+  end
 end
