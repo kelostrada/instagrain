@@ -47,13 +47,29 @@ defmodule InstagrainWeb.ProfileLive do
 
   @impl true
   def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
-    Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, assign(socket, following_user_ids: [user_id | socket.assigns.following_user_ids])}
+    Profiles.follow_user(socket.assigns.current_user.id, user_id)
+    profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
+    current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
+
+    {:noreply,
+     assign(socket,
+       profile: profile,
+       current_user: current_user,
+       following_user_ids: Enum.map(current_user.followings, & &1.id)
+     )}
   end
 
   def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
-    Instagrain.Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
+    Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
+    profile = socket.assigns.profile |> Repo.preload([:followers], force: true)
+    current_user = socket.assigns.current_user |> Repo.preload([:followings], force: true)
+
+    {:noreply,
+     assign(socket,
+       profile: profile,
+       current_user: current_user,
+       following_user_ids: Enum.map(current_user.followings, & &1.id)
+     )}
   end
 
   def handle_event("follow", _, socket) do
