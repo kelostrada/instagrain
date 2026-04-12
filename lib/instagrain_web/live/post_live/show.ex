@@ -8,7 +8,15 @@ defmodule InstagrainWeb.PostLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, top_nav: mobile_nav_header(%{title: "Post"}), share_post_id: nil)}
+    following_ids =
+      Instagrain.Profiles.list_following(socket.assigns.current_user.id) |> Enum.map(& &1.id)
+
+    {:ok,
+     assign(socket,
+       top_nav: mobile_nav_header(%{title: "Post"}),
+       share_post_id: nil,
+       following_user_ids: following_ids
+     )}
   end
 
   @impl true
@@ -42,7 +50,12 @@ defmodule InstagrainWeb.PostLive.Show do
   @impl true
   def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
     Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, socket}
+    {:noreply, assign(socket, following_user_ids: [user_id | socket.assigns.following_user_ids])}
+  end
+
+  def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
+    Instagrain.Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
+    {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
   end
 
   defp page_title(:show), do: "Show Post"

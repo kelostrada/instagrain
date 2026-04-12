@@ -21,7 +21,8 @@ defmodule InstagrainWeb.ProfileLive do
        page: 0,
        end_reached?: false,
        current_user_profile?: current_user_profile?,
-       share_post_id: nil
+       share_post_id: nil,
+       following_user_ids: Enum.map(current_user.followings, & &1.id)
      )
      |> stream(:posts, [], reset: true)
      |> fetch_posts()}
@@ -47,7 +48,12 @@ defmodule InstagrainWeb.ProfileLive do
   @impl true
   def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
     Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, socket}
+    {:noreply, assign(socket, following_user_ids: [user_id | socket.assigns.following_user_ids])}
+  end
+
+  def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
+    Instagrain.Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
+    {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
   end
 
   def handle_event("follow", _, socket) do

@@ -17,6 +17,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
             current_user={@current_user}
             modal_id={"post-details-menu-mobile-#{@post.id}"}
             post={@post}
+            following_user_ids={@following_user_ids}
           />
         </div>
       </div>
@@ -37,6 +38,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
               current_user={@current_user}
               modal_id={"post-details-menu-#{@post.id}"}
               post={@post}
+              following_user_ids={@following_user_ids}
             />
           </div>
         </div>

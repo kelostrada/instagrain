@@ -14,6 +14,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           module={InstagrainWeb.PostLive.PostDetailsComponent}
           id={"#post-details-modal-content-#{@post.id}"}
           post={@post}
+          following_user_ids={@following_user_ids}
         />
       </.modal>
 
@@ -27,7 +28,7 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           </div>
         </div>
         <div>
-          <.menu current_user={@current_user} modal_id={"post-menu-#{@post.id}"} post={@post} />
+          <.menu current_user={@current_user} modal_id={"post-menu-#{@post.id}"} post={@post} following_user_ids={@following_user_ids} />
         </div>
       </div>
 

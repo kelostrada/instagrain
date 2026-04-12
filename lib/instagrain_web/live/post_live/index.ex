@@ -3,12 +3,17 @@ defmodule InstagrainWeb.PostLive.Index do
 
   alias Instagrain.Feed
 
+  alias Instagrain.Profiles
+
   @impl true
   def mount(_params, _session, socket) do
+    following_ids =
+      Profiles.list_following(socket.assigns.current_user.id) |> Enum.map(& &1.id)
+
     {:ok,
      socket
      |> stream(:posts, Feed.list_posts(socket.assigns.current_user.id))
-     |> assign(page: 0, end_reached?: false, share_post_id: nil)}
+     |> assign(page: 0, end_reached?: false, share_post_id: nil, following_user_ids: following_ids)}
   end
 
   @impl true
@@ -36,7 +41,12 @@ defmodule InstagrainWeb.PostLive.Index do
   @impl true
   def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
     Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, socket}
+    {:noreply, assign(socket, following_user_ids: [user_id | socket.assigns.following_user_ids])}
+  end
+
+  def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
+    Instagrain.Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
+    {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
   end
 
   def handle_event("delete", %{"id" => id}, socket) do

@@ -8,7 +8,17 @@ defmodule InstagrainWeb.ExploreLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, search_query: "", search_results: [], searching?: false, share_post_id: nil)}
+    following_ids =
+      Instagrain.Profiles.list_following(socket.assigns.current_user.id) |> Enum.map(& &1.id)
+
+    {:ok,
+     assign(socket,
+       search_query: "",
+       search_results: [],
+       searching?: false,
+       share_post_id: nil,
+       following_user_ids: following_ids
+     )}
   end
 
   @impl true
@@ -43,7 +53,12 @@ defmodule InstagrainWeb.ExploreLive do
   @impl true
   def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
     Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, socket}
+    {:noreply, assign(socket, following_user_ids: [user_id | socket.assigns.following_user_ids])}
+  end
+
+  def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
+    Instagrain.Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
+    {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
   end
 
   def handle_event("load-more", _, socket) do
