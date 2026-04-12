@@ -64,6 +64,83 @@ let liveSocket = new LiveSocket("/live", Socket, {
         }
       },
     },
+    ImageSlider: {
+      mounted() {
+        this.index = 0;
+        this.count = parseInt(this.el.dataset.count) || 1;
+        this.track = this.el.querySelector("[data-slider-track]");
+        this.prevBtn = this.el.querySelector("[data-slider-prev]");
+        this.nextBtn = this.el.querySelector("[data-slider-next]");
+        this.dotsContainer = this.el.querySelector("[data-slider-dots]");
+
+        if (this.count <= 1) return;
+
+        // Arrow buttons
+        this.prevBtn?.addEventListener("click", (e) => { e.stopPropagation(); this.goTo(this.index - 1); });
+        this.nextBtn?.addEventListener("click", (e) => { e.stopPropagation(); this.goTo(this.index + 1); });
+
+        // Touch swipe
+        let startX = 0, startY = 0, deltaX = 0, swiping = false;
+        this.el.addEventListener("touchstart", (e) => {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          deltaX = 0;
+          swiping = false;
+          this.track.style.transition = "none";
+        }, { passive: true });
+
+        this.el.addEventListener("touchmove", (e) => {
+          deltaX = e.touches[0].clientX - startX;
+          const deltaY = e.touches[0].clientY - startY;
+          if (!swiping && Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+            swiping = true;
+          }
+          if (swiping) {
+            e.preventDefault();
+            const offset = -(this.index * 100) + (deltaX / this.el.offsetWidth) * 100;
+            this.track.style.transform = `translateX(${offset}%)`;
+          }
+        }, { passive: false });
+
+        this.el.addEventListener("touchend", () => {
+          this.track.style.transition = "transform 300ms ease-out";
+          if (swiping) {
+            const threshold = this.el.offsetWidth * 0.2;
+            if (deltaX < -threshold && this.index < this.count - 1) {
+              this.goTo(this.index + 1);
+            } else if (deltaX > threshold && this.index > 0) {
+              this.goTo(this.index - 1);
+            } else {
+              this.goTo(this.index); // snap back
+            }
+          }
+          swiping = false;
+        }, { passive: true });
+
+        this.updateUI();
+      },
+
+      goTo(idx) {
+        this.index = Math.max(0, Math.min(idx, this.count - 1));
+        this.track.style.transition = "transform 300ms ease-out";
+        this.track.style.transform = `translateX(${-this.index * 100}%)`;
+        this.updateUI();
+      },
+
+      updateUI() {
+        if (!this.prevBtn) return;
+        this.prevBtn.style.display = this.index > 0 ? "flex" : "none";
+        this.nextBtn.style.display = this.index < this.count - 1 ? "flex" : "none";
+
+        if (this.dotsContainer) {
+          this.dotsContainer.querySelectorAll("[data-dot-index]").forEach((dot, i) => {
+            dot.className = i === this.index
+              ? "w-1.5 h-1.5 rounded-full transition-colors duration-300 bg-blue-500"
+              : "w-1.5 h-1.5 rounded-full transition-colors duration-300 bg-white/60";
+          });
+        }
+      }
+    },
     SubmitOnEnter: {
       resize() {
         this.el.style.height = 'auto';
