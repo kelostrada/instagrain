@@ -1,6 +1,6 @@
 <div class="flex h-full">
   <div class={[
-    "sm:border-r max-sm:w-full md:w-85 overflow-y-auto",
+    "sm:border-r max-sm:w-full md:w-96 overflow-y-auto",
     @conversation_id && "max-sm:hidden"
   ]}>
     <div class="max-sm:p-4 sm:p-6 flex justify-between sm:max-md:justify-center w-full">
@@ -33,11 +33,11 @@
       phx-value-id={conversation.id}
     >
       <%= if length(conversation.participants) == 1 do %>
-        <div>
+        <div class="flex-shrink-0">
           <.avatar size={:lg} user={List.first(conversation.participants)} />
         </div>
       <% else %>
-        <div class="relative w-[58px] h-[58px]">
+        <div class="relative w-[58px] h-[58px] flex-shrink-0">
           <% [user1, user2 | _] = conversation.participants %>
 
           <.avatar size={:md} user={user1} class="absolute top-0 left-0" />
@@ -48,16 +48,13 @@
           />
         </div>
       <% end %>
-      <div class="grow flex flex-col justify-center sm:max-md:hidden">
+      <div class="grow flex flex-col justify-center sm:max-md:hidden min-w-0">
         <div class="text-sm font-medium"><%= conversation.name %></div>
-        <div>
-          <.user_content text={conversation.last_message} class="text-xs text-neutral-500" />
-          <.time
-            :if={conversation.last_message_at}
-            prefix="· "
-            datetime={conversation.last_message_at}
-            class="text-xs text-neutral-500"
-          />
+        <div class="flex items-center min-w-0">
+          <span class="text-xs text-neutral-500 truncate"><%= conversation.last_message %></span>
+          <span :if={conversation.last_message_at} class="text-xs text-neutral-500 flex-shrink-0">
+            &nbsp;· <.time datetime={conversation.last_message_at} class="text-xs text-neutral-500" />
+          </span>
         </div>
       </div>
     </div>
@@ -113,7 +110,7 @@
           <%= for message <- @conversations[@conversation_id].messages do %>
             <div class={"flex " <> if(message.user.id == @current_user.id, do: "justify-end", else: "")}>
               <div class={[
-                "py-2 px-4 rounded-[1.5rem] inline",
+                "py-2 px-4 rounded-[1.5rem] inline-block max-w-[85%] [overflow-wrap:anywhere]",
                 if(message.user.id == @current_user.id, do: "bg-sky-500", else: "bg-neutral-200")
               ]}>
                 <.username
@@ -130,7 +127,7 @@
                     if(message.user.id == @current_user.id, do: "text-white", else: "text-black")
                   }
                   link_class={
-                    if(message.user.id == @current_user.id, do: "text-white underline", else: "text-sky-800")
+                    if(message.user.id == @current_user.id, do: "text-white font-bold", else: "text-sky-800 font-bold")
                   }
                 />
               </div>

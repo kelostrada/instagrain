@@ -801,6 +801,7 @@ defmodule InstagrainWeb.CoreComponents do
   attr :text, :string, required: true
   attr :class, :string, default: nil
   attr :link_class, :string, default: "text-sky-800"
+  attr :show_link_icon, :boolean, default: false
 
   def user_content(assigns) do
     # Split the text by lines
@@ -808,7 +809,7 @@ defmodule InstagrainWeb.CoreComponents do
     parts_length = length(parts)
 
     # Apply the replacement function to each part
-    parts = Enum.map(parts, &replace_user_tags(&1, assigns.link_class))
+    parts = Enum.map(parts, &replace_user_tags(&1, assigns.link_class, assigns.show_link_icon))
 
     assigns = assign(assigns, parts: parts, parts_length: parts_length)
 
@@ -825,47 +826,41 @@ defmodule InstagrainWeb.CoreComponents do
   end
 
   # Function to replace user tags and URLs with safe HTML links
-  defp replace_user_tags(text, link_class) do
+  defp replace_user_tags(text, link_class, show_link_icon) do
     Regex.split(~r/(?<!\S)@\w+(?:\.\w+)*/, text, include_captures: true, trim: true)
     |> Enum.flat_map(fn segment ->
       if String.starts_with?(segment, "@") do
-        [convert_to_safe_html(segment, link_class)]
+        [convert_mention(segment, link_class)]
       else
-        split_urls(segment, link_class)
+        split_urls(segment, link_class, show_link_icon)
       end
     end)
   end
 
-  @url_regex ~r{(https?://[^\s<>"]+|(?:www\.)[^\s<>"]+\.[^\s<>"]+)}
+  @url_regex ~r{(https?://[^\s<>"]+(?<![.,;:!?\)])|\b(?:www\.)[^\s<>"]+\.[^\s<>"]+(?<![.,;:!?\)]))}
 
-  defp split_urls(text, link_class) do
+  defp split_urls(text, link_class, show_link_icon) do
     Regex.split(@url_regex, text, include_captures: true, trim: true)
-    |> Enum.map(&convert_to_safe_html(&1, link_class))
+    |> Enum.map(fn segment ->
+      cond do
+        String.starts_with?(segment, "http") -> convert_url(segment, segment, link_class, show_link_icon)
+        String.starts_with?(segment, "www.") -> convert_url("https://#{segment}", segment, link_class, show_link_icon)
+        true -> Phoenix.HTML.html_escape(segment)
+      end
+    end)
   end
 
-  defp convert_to_safe_html("@" <> username, link_class) do
+  defp convert_mention("@" <> username, link_class) do
     assigns = %{username: username, link_class: link_class}
     ~H(<.link navigate={"/#{@username}"} class={@link_class}>@<%= @username %></.link>)
   end
 
-  defp convert_to_safe_html("http" <> _ = url, link_class) do
-    assigns = %{url: url, display: display_url(url), link_class: link_class}
+  defp convert_url(href, raw, link_class, show_link_icon) do
+    assigns = %{href: href, display: display_url(raw), link_class: link_class, show_link_icon: show_link_icon}
 
     ~H"""
-    <a href={@url} target="_blank" rel="noopener noreferrer" class={[@link_class, "inline-flex items-center gap-0.5"]}><span class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
+    <a href={@href} target="_blank" rel="noopener noreferrer" class={[@link_class, @show_link_icon && "inline-flex items-center gap-0.5"]}><span :if={@show_link_icon} class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
     """
-  end
-
-  defp convert_to_safe_html("www." <> _ = url, link_class) do
-    assigns = %{url: "https://#{url}", display: display_url(url), link_class: link_class}
-
-    ~H"""
-    <a href={@url} target="_blank" rel="noopener noreferrer" class={[@link_class, "inline-flex items-center gap-0.5"]}><span class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
-    """
-  end
-
-  defp convert_to_safe_html(text, _link_class) do
-    Phoenix.HTML.html_escape(text)
   end
 
   defp display_url(url) do
