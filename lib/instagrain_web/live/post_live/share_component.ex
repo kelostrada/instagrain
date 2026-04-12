@@ -310,7 +310,4 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
      |> push_event("close-share-modal", %{})}
   end
 
-  defp post_url(post_id) do
-    InstagrainWeb.Endpoint.url() <> "/p/#{post_id}"
-  end
 end
