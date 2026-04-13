@@ -39,14 +39,28 @@ defmodule InstagrainWeb.PostLive.Index do
   end
 
   @impl true
-  def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
+  def handle_event("menu-follow", %{"post_user_id" => user_id, "post_id" => post_id}, socket) do
     Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, assign(socket, following_user_ids: [user_id | socket.assigns.following_user_ids])}
+    following_ids = [user_id | socket.assigns.following_user_ids]
+
+    send_update(InstagrainWeb.PostLive.PostComponent,
+      id: post_id,
+      following_user_ids: following_ids
+    )
+
+    {:noreply, assign(socket, following_user_ids: following_ids)}
   end
 
-  def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
+  def handle_event("menu-unfollow", %{"post_user_id" => user_id, "post_id" => post_id}, socket) do
     Instagrain.Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
+    following_ids = List.delete(socket.assigns.following_user_ids, user_id)
+
+    send_update(InstagrainWeb.PostLive.PostComponent,
+      id: post_id,
+      following_user_ids: following_ids
+    )
+
+    {:noreply, assign(socket, following_user_ids: following_ids)}
   end
 
   def handle_event("delete", %{"id" => id}, socket) do

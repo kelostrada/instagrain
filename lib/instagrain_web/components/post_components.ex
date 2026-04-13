@@ -25,14 +25,14 @@ defmodule InstagrainWeb.PostComponents do
             <%= if @post.user.id in @following_user_ids do %>
               <div
                 class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer"
-                phx-click={JS.push("menu-unfollow", value: %{post_user_id: @post.user.id})}
+                phx-click={JS.push("menu-unfollow", value: %{post_user_id: @post.user.id, post_id: @post.id})}
               >
                 Unfollow
               </div>
             <% else %>
               <div
                 class="flex items-center justify-center text-sm font-semibold p-3.5 cursor-pointer"
-                phx-click={JS.push("menu-follow", value: %{post_user_id: @post.user.id})}
+                phx-click={JS.push("menu-follow", value: %{post_user_id: @post.user.id, post_id: @post.id})}
               >
                 Follow
               </div>

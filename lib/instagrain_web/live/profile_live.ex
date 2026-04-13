@@ -46,14 +46,28 @@ defmodule InstagrainWeb.ProfileLive do
   end
 
   @impl true
-  def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
+  def handle_event("menu-follow", %{"post_user_id" => user_id, "post_id" => post_id}, socket) do
     Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, reload_follow_state(socket)}
+    following_ids = [user_id | socket.assigns.following_user_ids]
+
+    send_update(InstagrainWeb.PostLive.PostDetailsComponent,
+      id: "#post-details-modal-content-#{post_id}",
+      following_user_ids: following_ids
+    )
+
+    {:noreply, assign(socket, following_user_ids: following_ids)}
   end
 
-  def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
+  def handle_event("menu-unfollow", %{"post_user_id" => user_id, "post_id" => post_id}, socket) do
     Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, reload_follow_state(socket)}
+    following_ids = List.delete(socket.assigns.following_user_ids, user_id)
+
+    send_update(InstagrainWeb.PostLive.PostDetailsComponent,
+      id: "#post-details-modal-content-#{post_id}",
+      following_user_ids: following_ids
+    )
+
+    {:noreply, assign(socket, following_user_ids: following_ids)}
   end
 
   def handle_event("follow", _, socket) do
