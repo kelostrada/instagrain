@@ -53,12 +53,12 @@ defmodule InstagrainWeb.ExploreLive do
   @impl true
   def handle_event("menu-follow", %{"post_user_id" => user_id}, socket) do
     Instagrain.Profiles.follow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, assign(socket, following_user_ids: [user_id | socket.assigns.following_user_ids])}
+    {:noreply, reload_follow_state(socket)}
   end
 
   def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
     Instagrain.Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
+    {:noreply, reload_follow_state(socket)}
   end
 
   def handle_event("load-more", _, socket) do
@@ -87,6 +87,25 @@ defmodule InstagrainWeb.ExploreLive do
 
   def handle_event("clear-search", _, socket) do
     {:noreply, assign(socket, search_query: "", search_results: [], searching?: false)}
+  end
+
+  defp reload_follow_state(socket) do
+    following_ids =
+      Instagrain.Profiles.list_following(socket.assigns.current_user.id) |> Enum.map(& &1.id)
+
+    total = socket.assigns.page * 18
+
+    posts =
+      Feed.list_explore_posts(
+        socket.assigns.current_user.id,
+        socket.assigns.seed,
+        0,
+        total
+      )
+
+    socket
+    |> assign(following_user_ids: following_ids)
+    |> stream(:posts, posts, reset: true)
   end
 
   defp fetch_posts(socket) do
