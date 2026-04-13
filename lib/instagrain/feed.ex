@@ -25,16 +25,54 @@ defmodule Instagrain.Feed do
 
   """
   def list_posts(current_user_id, page \\ 0, seed \\ nil) do
-    limit = 3
-    offset = limit * page
+    page_size = 3
     seed = seed || (:rand.uniform() |> Float.to_string())
 
+    # Every 5th post (positions 4, 9, 14, ...) is a discovery post from non-followed users
+    total_before = page * page_size
+    slots = Enum.map(0..(page_size - 1), fn i -> rem(total_before + i, 5) == 4 end)
+    discovery_on_page = Enum.count(slots, & &1)
+    followed_on_page = page_size - discovery_on_page
+
+    # Count how many of each type were shown on previous pages
+    discovery_before = div(total_before, 5)
+    followed_before = total_before - discovery_before
+
+    followed = feed_query(current_user_id, seed, true) |> offset(^followed_before) |> limit(^followed_on_page) |> Repo.all()
+    discovery = feed_query(current_user_id, seed, false) |> offset(^discovery_before) |> limit(^discovery_on_page) |> Repo.all()
+
+    # Interleave according to slot pattern
+    {result, _, _} =
+      Enum.reduce(slots, {[], followed, discovery}, fn is_discovery?, {acc, f, d} ->
+        if is_discovery? do
+          case d do
+            [post | rest] -> {[post | acc], f, rest}
+            [] -> case f do
+              [post | rest] -> {[post | acc], rest, d}
+              [] -> {acc, f, d}
+            end
+          end
+        else
+          case f do
+            [post | rest] -> {[post | acc], rest, d}
+            [] -> case d do
+              [post | rest] -> {[post | acc], f, rest}
+              [] -> {acc, f, d}
+            end
+          end
+        end
+      end)
+
+    result |> Enum.reverse() |> preload_and_process(current_user_id)
+  end
+
+  defp feed_query(current_user_id, seed, followed?) do
     from(p in Post,
       left_join: l in Like,
       on: l.post_id == p.id and l.user_id == ^current_user_id,
       left_join: s in Save,
       on: s.post_id == p.id and s.user_id == ^current_user_id,
-      left_join: f in "follows",
+      join: f in "follows",
       on: f.follow_id == p.user_id and f.user_id == ^current_user_id,
       left_join: imp in Impression,
       on: imp.post_id == p.id and imp.user_id == ^current_user_id,
@@ -43,28 +81,36 @@ defmodule Instagrain.Feed do
         desc:
           fragment(
             """
-            (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * 10)
-            + (CASE WHEN ? IS NOT NULL THEN 50 ELSE 0 END)
-            - (COALESCE(?, 0) * 15)
+            (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * 20)
+            - (COALESCE(?, 0) * 3)
             + (EXTRACT(EPOCH FROM (? - NOW())) / 86400.0 + 7) * 3
             """,
             p.id,
             ^seed,
-            f.follow_id,
             imp.view_count,
             p.inserted_at
           )
       ],
-      offset: ^offset,
-      limit: ^limit,
       select: %{
         p
         | liked_by_current_user?: not is_nil(l.post_id),
           saved_by_current_user?: not is_nil(s.post_id)
       }
     )
-    |> Repo.all()
-    |> preload_and_process(current_user_id)
+    |> then(fn query ->
+      if followed? do
+        query
+      else
+        # Discovery: posts from users NOT followed
+        query
+        |> exclude(:join)
+        |> join(:left, [p], l in Like, on: l.post_id == p.id and l.user_id == ^current_user_id)
+        |> join(:left, [p, _l], s in Save, on: s.post_id == p.id and s.user_id == ^current_user_id)
+        |> join(:left, [p, _l, _s], f in "follows", on: f.follow_id == p.user_id and f.user_id == ^current_user_id)
+        |> join(:left, [p, _l, _s, _f], imp in Impression, on: imp.post_id == p.id and imp.user_id == ^current_user_id)
+        |> where([_p, _l, _s, f, _imp], is_nil(f.follow_id))
+      end
+    end)
   end
 
   @doc """
