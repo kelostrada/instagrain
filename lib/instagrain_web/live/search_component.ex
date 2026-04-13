@@ -18,14 +18,25 @@ defmodule InstagrainWeb.SearchComponent do
     if query == "" do
       {:noreply, assign(socket, search_query: "", search_results: [], searching?: false)}
     else
+      hashtags =
+        if String.starts_with?(query, "#") or String.match?(query, ~r/^[a-zA-Z0-9_]+$/) do
+          Feed.search_hashtags(query, 10)
+        else
+          []
+        end
+
       users = Accounts.search_users(query, 20)
 
       results =
-        if users != [] do
-          Enum.map(users, fn user -> {:user, user} end)
-        else
+        Enum.map(hashtags, fn h -> {:hashtag, h} end) ++
+          Enum.map(users, fn u -> {:user, u} end)
+
+      results =
+        if results == [] do
           posts = Feed.search_posts_by_caption(query, socket.assigns.current_user.id, 20)
           Enum.map(posts, fn post -> {:post, post} end)
+        else
+          results
         end
 
       {:noreply, assign(socket, search_query: query, search_results: results, searching?: true)}
@@ -74,6 +85,22 @@ defmodule InstagrainWeb.SearchComponent do
       <div class="border-t border-neutral-200 flex-1 overflow-y-auto">
         <div :if={@searching? && @search_results != []}>
           <div :for={{type, item} <- @search_results}>
+            <%= if type == :hashtag do %>
+              <.link
+                navigate={~p"/explore/tags/#{item.name}"}
+                class="flex items-center gap-3 px-6 py-3 hover:bg-neutral-50"
+              >
+                <div class="w-11 h-11 rounded-full bg-neutral-100 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-neutral-600">
+                  #
+                </div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-sm truncate">#<%= item.name %></p>
+                  <p class="text-sm text-neutral-500 truncate">
+                    <%= format_count(item.post_count) %> posts
+                  </p>
+                </div>
+              </.link>
+            <% end %>
             <%= if type == :user do %>
               <.link
                 navigate={~p"/#{item.username}"}
@@ -96,7 +123,8 @@ defmodule InstagrainWeb.SearchComponent do
                   </p>
                 </div>
               </.link>
-            <% else %>
+            <% end %>
+            <%= if type == :post do %>
               <.link
                 navigate={~p"/p/#{item.id}"}
                 class="flex items-center gap-3 px-6 py-3 hover:bg-neutral-50"
@@ -126,6 +154,10 @@ defmodule InstagrainWeb.SearchComponent do
     </div>
     """
   end
+
+  defp format_count(n) when n >= 1_000_000, do: "#{Float.round(n / 1_000_000, 1)}M"
+  defp format_count(n) when n >= 1_000, do: "#{Float.round(n / 1_000, 1)}K"
+  defp format_count(n), do: to_string(n)
 
   defp hide_search_panel do
     %Phoenix.LiveView.JS{}
