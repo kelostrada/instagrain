@@ -23,6 +23,9 @@ defmodule InstagrainWeb.PostLive.Show do
   def handle_params(%{"id" => id}, _, socket) do
     post = Feed.get_post!(id, socket.assigns.current_user.id)
 
+    # Direct post view has weight 3 (higher impact than feed scroll)
+    Feed.record_impressions(socket.assigns.current_user.id, [post.id], 3)
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))

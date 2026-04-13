@@ -70,10 +70,14 @@ defmodule Instagrain.Feed do
   @doc """
   Records impressions for a list of posts shown to a user.
   Uses upsert to increment view_count on repeat views.
-  """
-  def record_impressions(_user_id, []), do: {0, nil}
 
-  def record_impressions(user_id, post_ids) when is_list(post_ids) do
+  `weight` controls how much each impression counts (default 1).
+  Use higher weight for direct post views (e.g., 3).
+  """
+  def record_impressions(user_id, post_ids, weight \\ 1)
+  def record_impressions(_user_id, [], _weight), do: {0, nil}
+
+  def record_impressions(user_id, post_ids, weight) when is_list(post_ids) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
     entries =
@@ -81,7 +85,7 @@ defmodule Instagrain.Feed do
         %{
           user_id: user_id,
           post_id: post_id,
-          view_count: 1,
+          view_count: weight,
           last_seen_at: now,
           inserted_at: now,
           updated_at: now
@@ -95,7 +99,7 @@ defmodule Instagrain.Feed do
         from(imp in Impression,
           update: [
             set: [
-              view_count: fragment("? + 1", imp.view_count),
+              view_count: fragment("? + ?", imp.view_count, ^weight),
               last_seen_at: ^now,
               updated_at: ^now
             ]

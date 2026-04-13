@@ -114,6 +114,8 @@ defmodule InstagrainWeb.ExploreLive do
     if posts == [] do
       assign(socket, end_reached?: true)
     else
+      Feed.record_impressions(socket.assigns.current_user.id, Enum.map(posts, & &1.id))
+
       socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)
     end
   end
