@@ -7,12 +7,14 @@ defmodule Instagrain.Feed do
   alias Ecto.Multi
   alias Instagrain.Repo
 
+  alias Instagrain.Feed.Hashtag
   alias Instagrain.Feed.Post
   alias Instagrain.Feed.Post.Comment
   alias Instagrain.Feed.Post.CommentLike
   alias Instagrain.Feed.Post.Like
   alias Instagrain.Feed.Post.Resource
   alias Instagrain.Feed.Post.Impression
+  alias Instagrain.Feed.PostHashtag
   alias Instagrain.Feed.Post.Save
 
   @doc """
@@ -363,9 +365,16 @@ defmodule Instagrain.Feed do
 
   """
   def create_post(attrs \\ %{}) do
-    %Post{}
-    |> Post.changeset(attrs)
-    |> Repo.insert()
+    Multi.new()
+    |> Multi.insert(:post, Post.changeset(%Post{}, attrs))
+    |> Multi.run(:hashtags, fn _repo, %{post: post} ->
+      sync_hashtags(post)
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{post: post}} -> {:ok, post}
+      {:error, :post, changeset, _} -> {:error, changeset}
+    end
   end
 
   @doc """
@@ -381,9 +390,25 @@ defmodule Instagrain.Feed do
 
   """
   def update_post(%Post{} = post, attrs) do
-    post
-    |> Post.changeset(attrs)
-    |> Repo.update()
+    Multi.new()
+    |> Multi.update(:post, Post.changeset(post, attrs))
+    |> Multi.run(:hashtags, fn _repo, %{post: updated_post} ->
+      # Remove old hashtag links and decrement counts
+      old_hashtag_ids =
+        Repo.all(from ph in PostHashtag, where: ph.post_id == ^post.id, select: ph.hashtag_id)
+
+      if old_hashtag_ids != [] do
+        Repo.delete_all(from ph in PostHashtag, where: ph.post_id == ^post.id)
+        Repo.update_all(from(h in Hashtag, where: h.id in ^old_hashtag_ids), inc: [post_count: -1])
+      end
+
+      sync_hashtags(updated_post)
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{post: post}} -> {:ok, post}
+      {:error, :post, changeset, _} -> {:error, changeset}
+    end
   end
 
   @doc """
@@ -399,6 +424,14 @@ defmodule Instagrain.Feed do
 
   """
   def delete_post(%Post{} = post) do
+    # Decrement hashtag counts before deletion (junction rows auto-delete via on_delete)
+    hashtag_ids =
+      Repo.all(from ph in PostHashtag, where: ph.post_id == ^post.id, select: ph.hashtag_id)
+
+    if hashtag_ids != [] do
+      Repo.update_all(from(h in Hashtag, where: h.id in ^hashtag_ids), inc: [post_count: -1])
+    end
+
     Repo.delete(post)
   end
 
@@ -722,5 +755,100 @@ defmodule Instagrain.Feed do
 
       %{post | comments: comments}
     end)
+  end
+
+  # --- Hashtag functions ---
+
+  @doc """
+  Extracts hashtag names from a caption string.
+  Returns a list of unique, lowercase tag names without the `#` prefix.
+  """
+  def extract_hashtags(nil), do: []
+
+  def extract_hashtags(caption) do
+    Regex.scan(~r/(?<!\S)#([a-zA-Z0-9_]+)/, caption)
+    |> Enum.map(fn [_, tag] -> String.downcase(tag) end)
+    |> Enum.uniq()
+  end
+
+  @doc """
+  Searches hashtags by partial name match, ordered by post_count.
+  """
+  def search_hashtags(query, limit \\ 20) do
+    pattern = "#{String.downcase(String.trim_leading(query, "#"))}%"
+
+    from(h in Hashtag,
+      where: ilike(h.name, ^pattern) and h.post_count > 0,
+      order_by: [desc: h.post_count],
+      limit: ^limit
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns posts for a given hashtag name, paginated.
+  """
+  def list_posts_by_hashtag(tag_name, current_user_id, page \\ 0, limit \\ 18) do
+    offset = limit * page
+
+    from(p in Post,
+      join: ph in PostHashtag,
+      on: ph.post_id == p.id,
+      join: h in Hashtag,
+      on: h.id == ph.hashtag_id,
+      left_join: l in Like,
+      on: l.post_id == p.id and l.user_id == ^current_user_id,
+      left_join: s in Save,
+      on: s.post_id == p.id and s.user_id == ^current_user_id,
+      where: h.name == ^String.downcase(tag_name),
+      select: %{
+        p
+        | liked_by_current_user?: not is_nil(l.post_id),
+          saved_by_current_user?: not is_nil(s.post_id)
+      },
+      order_by: [desc: p.inserted_at],
+      offset: ^offset,
+      limit: ^limit
+    )
+    |> Repo.all()
+    |> preload_and_process(current_user_id)
+  end
+
+  @doc """
+  Gets a hashtag by its name.
+  """
+  def get_hashtag_by_name(name) do
+    Repo.get_by(Hashtag, name: String.downcase(name))
+  end
+
+  defp sync_hashtags(post) do
+    tag_names = extract_hashtags(post.caption)
+
+    if tag_names == [] do
+      {:ok, []}
+    else
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      entries =
+        Enum.map(tag_names, fn name ->
+          %{name: name, post_count: 0, inserted_at: now, updated_at: now}
+        end)
+
+      Repo.insert_all(Hashtag, entries, on_conflict: :nothing, conflict_target: :name)
+
+      hashtags = Repo.all(from(h in Hashtag, where: h.name in ^tag_names))
+
+      junction_entries =
+        Enum.map(hashtags, fn h ->
+          %{post_id: post.id, hashtag_id: h.id, inserted_at: now, updated_at: now}
+        end)
+
+      Repo.insert_all(PostHashtag, junction_entries, on_conflict: :nothing)
+
+      hashtag_ids = Enum.map(hashtags, & &1.id)
+      Repo.update_all(from(h in Hashtag, where: h.id in ^hashtag_ids), inc: [post_count: 1])
+
+      {:ok, hashtags}
+    end
   end
 end

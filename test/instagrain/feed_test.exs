@@ -237,6 +237,231 @@ defmodule Instagrain.FeedTest do
     end
   end
 
+  describe "hashtags" do
+    test "extract_hashtags/1 extracts unique lowercase tags from caption" do
+      assert Feed.extract_hashtags("Hello #World #elixir #world") == ["world", "elixir"]
+    end
+
+    test "extract_hashtags/1 returns empty list for nil" do
+      assert Feed.extract_hashtags(nil) == []
+    end
+
+    test "extract_hashtags/1 returns empty list when no hashtags" do
+      assert Feed.extract_hashtags("no tags here") == []
+    end
+
+    test "extract_hashtags/1 ignores hashtags embedded in words" do
+      assert Feed.extract_hashtags("email#notag but #real") == ["real"]
+    end
+
+    test "create_post/1 syncs hashtags from caption" do
+      user = user_fixture()
+
+      {:ok, post} =
+        Feed.create_post(%{
+          caption: "Check out #elixir and #phoenix",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+
+      assert post.id
+
+      elixir_tag = Feed.get_hashtag_by_name("elixir")
+      phoenix_tag = Feed.get_hashtag_by_name("phoenix")
+
+      assert elixir_tag != nil
+      assert phoenix_tag != nil
+      assert elixir_tag.post_count == 1
+      assert phoenix_tag.post_count == 1
+    end
+
+    test "create_post/1 with no hashtags does not create any" do
+      user = user_fixture()
+
+      {:ok, _post} =
+        Feed.create_post(%{
+          caption: "No tags here",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+
+      assert Feed.search_hashtags("no") == []
+    end
+
+    test "update_post/2 updates hashtag links and counts" do
+      user = user_fixture()
+
+      {:ok, post} =
+        Feed.create_post(%{
+          caption: "Love #elixir",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+
+      assert Feed.get_hashtag_by_name("elixir").post_count == 1
+
+      {:ok, _updated} = Feed.update_post(post, %{caption: "Love #phoenix"})
+
+      # elixir count decremented, phoenix incremented
+      elixir_tag = Feed.get_hashtag_by_name("elixir")
+      assert elixir_tag.post_count == 0
+
+      phoenix_tag = Feed.get_hashtag_by_name("phoenix")
+      assert phoenix_tag.post_count == 1
+    end
+
+    test "delete_post/1 decrements hashtag counts" do
+      user = user_fixture()
+
+      {:ok, post} =
+        Feed.create_post(%{
+          caption: "Bye #elixir",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+
+      assert Feed.get_hashtag_by_name("elixir").post_count == 1
+
+      Feed.delete_post(post)
+
+      assert Feed.get_hashtag_by_name("elixir").post_count == 0
+    end
+
+    test "search_hashtags/2 returns matching hashtags ordered by post_count" do
+      user = user_fixture()
+
+      # Create posts to generate hashtags with different counts
+      for _ <- 1..3 do
+        Feed.create_post(%{
+          caption: "#coding is fun",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+      end
+
+      Feed.create_post(%{
+        caption: "#coder life",
+        user_id: user.id,
+        likes: 0,
+        hide_likes: false,
+        disable_comments: false
+      })
+
+      results = Feed.search_hashtags("cod")
+      assert length(results) == 2
+      assert hd(results).name == "coding"
+      assert hd(results).post_count == 3
+    end
+
+    test "search_hashtags/2 excludes hashtags with zero post_count" do
+      user = user_fixture()
+
+      {:ok, post} =
+        Feed.create_post(%{
+          caption: "#temp tag",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+
+      Feed.delete_post(post)
+
+      assert Feed.search_hashtags("temp") == []
+    end
+
+    test "list_posts_by_hashtag/4 returns posts for a given tag" do
+      user = user_fixture()
+
+      {:ok, post1} =
+        Feed.create_post(%{
+          caption: "#elixir rocks",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+
+      {:ok, _post2} =
+        Feed.create_post(%{
+          caption: "#phoenix framework",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+
+      posts = Feed.list_posts_by_hashtag("elixir", user.id)
+      assert length(posts) == 1
+      assert hd(posts).id == post1.id
+    end
+
+    test "list_posts_by_hashtag/4 is case-insensitive" do
+      user = user_fixture()
+
+      {:ok, _post} =
+        Feed.create_post(%{
+          caption: "#Elixir rocks",
+          user_id: user.id,
+          likes: 0,
+          hide_likes: false,
+          disable_comments: false
+        })
+
+      posts = Feed.list_posts_by_hashtag("ELIXIR", user.id)
+      assert length(posts) == 1
+    end
+
+    test "get_hashtag_by_name/1 returns hashtag or nil" do
+      user = user_fixture()
+
+      Feed.create_post(%{
+        caption: "#elixir",
+        user_id: user.id,
+        likes: 0,
+        hide_likes: false,
+        disable_comments: false
+      })
+
+      assert %Instagrain.Feed.Hashtag{name: "elixir"} = Feed.get_hashtag_by_name("elixir")
+      assert %Instagrain.Feed.Hashtag{name: "elixir"} = Feed.get_hashtag_by_name("ELIXIR")
+      assert Feed.get_hashtag_by_name("nonexistent") == nil
+    end
+
+    test "multiple posts share the same hashtag record" do
+      user = user_fixture()
+
+      Feed.create_post(%{
+        caption: "#shared",
+        user_id: user.id,
+        likes: 0,
+        hide_likes: false,
+        disable_comments: false
+      })
+
+      Feed.create_post(%{
+        caption: "#shared again",
+        user_id: user.id,
+        likes: 0,
+        hide_likes: false,
+        disable_comments: false
+      })
+
+      tag = Feed.get_hashtag_by_name("shared")
+      assert tag.post_count == 2
+    end
+  end
+
   describe "save_post/remove_save_post" do
     test "save_post/2 saves a post for a user" do
       user = user_fixture()

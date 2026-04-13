@@ -12,6 +12,8 @@ defmodule Instagrain.Feed.Post do
     belongs_to :user, Instagrain.Accounts.User
     has_many :resources, Instagrain.Feed.Post.Resource
     has_many :comments, Instagrain.Feed.Post.Comment
+    has_many :post_hashtags, Instagrain.Feed.PostHashtag
+    many_to_many :hashtags, Instagrain.Feed.Hashtag, join_through: "post_hashtags"
 
     field :location, :string, virtual: true
     field :alts, :map, virtual: true

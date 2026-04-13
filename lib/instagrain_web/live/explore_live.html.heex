@@ -30,6 +30,22 @@
   <div :if={@searching?} class="sm:hidden bg-white min-h-screen">
     <div :if={@search_results != []}>
       <div :for={{type, item} <- @search_results}>
+        <%= if type == :hashtag do %>
+          <.link
+            navigate={~p"/explore/tags/#{item.name}"}
+            class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50"
+          >
+            <div class="w-11 h-11 rounded-full bg-neutral-100 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-neutral-600">
+              #
+            </div>
+            <div class="min-w-0">
+              <p class="font-semibold text-sm truncate">#<%= item.name %></p>
+              <p class="text-sm text-neutral-500 truncate">
+                <%= format_number(item.post_count) %> posts
+              </p>
+            </div>
+          </.link>
+        <% end %>
         <%= if type == :user do %>
           <.link
             navigate={~p"/#{item.username}"}
@@ -52,7 +68,8 @@
               </p>
             </div>
           </.link>
-        <% else %>
+        <% end %>
+        <%= if type == :post do %>
           <.link
             navigate={~p"/p/#{item.id}"}
             class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50"
@@ -77,6 +94,14 @@
     <div :if={@search_results == []}>
       <p class="px-4 py-8 text-sm text-neutral-500 text-center">No results found.</p>
     </div>
+  </div>
+
+  <%!-- Tag header --%>
+  <div :if={@tag} class="py-6 px-4 border-b mb-2">
+    <h1 class="text-2xl font-bold">#<%= @tag %></h1>
+    <p :if={@hashtag} class="text-neutral-500 text-sm mt-1">
+      <%= format_number(@hashtag.post_count) %> posts
+    </p>
   </div>
 
   <%!-- Post grid (hidden on mobile when searching) --%>

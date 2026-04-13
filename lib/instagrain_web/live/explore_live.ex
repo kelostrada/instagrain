@@ -17,15 +17,40 @@ defmodule InstagrainWeb.ExploreLive do
        search_results: [],
        searching?: false,
        share_post_id: nil,
-       following_user_ids: following_ids
+       following_user_ids: following_ids,
+       tag: nil,
+       hashtag: nil
      )}
   end
 
   @impl true
+  def handle_params(%{"tag" => tag}, _url, socket) do
+    hashtag = Feed.get_hashtag_by_name(tag)
+
+    {:noreply,
+     socket
+     |> assign(
+       page: 0,
+       end_reached?: false,
+       tag: tag,
+       hashtag: hashtag,
+       searching?: false,
+       search_query: ""
+     )
+     |> stream(:posts, [], reset: true)
+     |> fetch_posts()}
+  end
+
   def handle_params(_params, _url, socket) do
     {:noreply,
      socket
-     |> assign(page: 0, end_reached?: false, seed: :rand.uniform(1_000_000) |> to_string())
+     |> assign(
+       page: 0,
+       end_reached?: false,
+       tag: nil,
+       hashtag: nil,
+       seed: :rand.uniform(1_000_000) |> to_string()
+     )
      |> stream(:posts, [], reset: true)
      |> fetch_posts()}
   end
@@ -85,14 +110,25 @@ defmodule InstagrainWeb.ExploreLive do
     if query == "" do
       {:noreply, assign(socket, search_query: "", search_results: [], searching?: false)}
     else
+      hashtags =
+        if String.starts_with?(query, "#") or String.match?(query, ~r/^[a-zA-Z0-9_]+$/) do
+          Feed.search_hashtags(query, 10)
+        else
+          []
+        end
+
       users = Accounts.search_users(query, 20)
 
       results =
-        if users != [] do
-          Enum.map(users, fn user -> {:user, user} end)
-        else
+        Enum.map(hashtags, fn h -> {:hashtag, h} end) ++
+          Enum.map(users, fn u -> {:user, u} end)
+
+      results =
+        if results == [] do
           posts = Feed.search_posts_by_caption(query, socket.assigns.current_user.id, 20)
           Enum.map(posts, fn post -> {:post, post} end)
+        else
+          results
         end
 
       {:noreply, assign(socket, search_query: query, search_results: results, searching?: true)}
@@ -101,6 +137,22 @@ defmodule InstagrainWeb.ExploreLive do
 
   def handle_event("clear-search", _, socket) do
     {:noreply, assign(socket, search_query: "", search_results: [], searching?: false)}
+  end
+
+  defp fetch_posts(%{assigns: %{tag: tag}} = socket) when not is_nil(tag) do
+    posts =
+      Feed.list_posts_by_hashtag(
+        tag,
+        socket.assigns.current_user.id,
+        socket.assigns.page
+      )
+
+    if posts == [] do
+      assign(socket, end_reached?: true)
+    else
+      Feed.record_impressions(socket.assigns.current_user.id, Enum.map(posts, & &1.id))
+      socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)
+    end
   end
 
   defp fetch_posts(socket) do

@@ -826,14 +826,17 @@ defmodule InstagrainWeb.CoreComponents do
     """
   end
 
-  # Function to replace user tags and URLs with safe HTML links
+  # Function to replace user tags, hashtags, and URLs with safe HTML links
   defp replace_user_tags(text, link_class, show_link_icon) do
-    Regex.split(~r/(?<!\S)@\w+(?:\.\w+)*/, text, include_captures: true, trim: true)
+    Regex.split(~r/(?<!\S)(?:@\w+(?:\.\w+)*|#[a-zA-Z0-9_]+)/, text,
+      include_captures: true,
+      trim: true
+    )
     |> Enum.flat_map(fn segment ->
-      if String.starts_with?(segment, "@") do
-        [convert_mention(segment, link_class)]
-      else
-        split_urls(segment, link_class, show_link_icon)
+      cond do
+        String.starts_with?(segment, "@") -> [convert_mention(segment, link_class)]
+        String.starts_with?(segment, "#") -> [convert_hashtag(segment, link_class)]
+        true -> split_urls(segment, link_class, show_link_icon)
       end
     end)
   end
@@ -854,6 +857,11 @@ defmodule InstagrainWeb.CoreComponents do
   defp convert_mention("@" <> username, link_class) do
     assigns = %{username: username, link_class: link_class}
     ~H(<.link navigate={"/#{@username}"} class={@link_class}>@<%= @username %></.link>)
+  end
+
+  defp convert_hashtag("#" <> tag, link_class) do
+    assigns = %{tag: String.downcase(tag), display: "#" <> tag, link_class: link_class}
+    ~H(<.link navigate={"/explore/tags/#{@tag}"} class={@link_class}><%= @display %></.link>)
   end
 
   defp convert_url(href, raw, link_class, show_link_icon) do
