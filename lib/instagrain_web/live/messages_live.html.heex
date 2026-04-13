@@ -24,7 +24,7 @@
     </div>
 
     <div
-      :for={{id, conversation} <- @conversations}
+      :for={{id, conversation} <- Enum.sort_by(@conversations, fn {_, c} -> if c.last_message_at, do: DateTime.to_unix(c.last_message_at), else: 0 end, :desc)}
       class={[
         "max-sm:px-4 sm:px-6 py-2 flex gap-3 hover:bg-neutral-100/50 cursor-pointer",
         @conversation_id == conversation.id && "bg-neutral-100"
@@ -103,35 +103,75 @@
           </button>
         </div>
         <div
-          class="flex flex-col gap-4 grow overflow-y-auto p-6"
+          class="flex flex-col grow overflow-y-auto px-4 py-4"
           phx-hook="ScrollToBottom"
           id="messages-list"
         >
-          <%= for message <- @conversations[@conversation_id].messages do %>
-            <div class={"flex " <> if(message.user.id == @current_user.id, do: "justify-end", else: "")}>
-              <div class={[
-                "py-2 px-4 rounded-[1.5rem] inline-block max-w-[85%] [overflow-wrap:anywhere]",
-                if(message.user.id == @current_user.id, do: "bg-sky-500", else: "bg-neutral-200")
-              ]}>
-                <.username
-                  user={message.user}
-                  class={
-                    "font-bold text-sm leading-6 " <>
-                    if(message.user.id == @current_user.id, do: "text-white", else: "text-black")
-                  }
-                />
-                <.user_content
-                  text={message.message}
-                  class={
-                    "font-medium text-sm leading-6 " <>
-                    if(message.user.id == @current_user.id, do: "text-white", else: "text-black")
-                  }
-                  link_class={
-                    if(message.user.id == @current_user.id, do: "text-white font-bold", else: "text-sky-800 font-bold")
-                  }
-                />
+          <% groups = group_messages(@conversations[@conversation_id].messages) %>
+          <% is_group_chat = @conversations[@conversation_id].is_group %>
+          <%= for {group, group_idx} <- Enum.with_index(groups) do %>
+            <% first_msg = List.first(group) %>
+            <% is_own = first_msg.user.id == @current_user.id %>
+            <% user = first_msg.user %>
+            <% total = length(group) %>
+            <% prev_group = if(group_idx > 0, do: Enum.at(groups, group_idx - 1)) %>
+            <% prev_last_at = if(prev_group, do: List.last(prev_group).inserted_at) %>
+            <% show_time = prev_last_at == nil or DateTime.diff(first_msg.inserted_at, prev_last_at, :second) > 10800 %>
+
+            <%= if show_time do %>
+              <div class={["text-center text-xs text-neutral-500 py-2", group_idx > 0 && "mt-2"]}>
+                <%= format_message_datetime(first_msg.inserted_at) %>
               </div>
-            </div>
+            <% end %>
+
+            <%= if is_own do %>
+              <div class={[
+                "flex flex-col gap-[2px] items-end max-w-[85%] self-end",
+                if(show_time, do: "mt-1", else: "mt-3")
+              ]}>
+                <%= for {message, idx} <- Enum.with_index(group) do %>
+                  <div class={bubble_class(idx, total, true)}>
+                    <.user_content
+                      text={message.message}
+                      class="font-medium text-sm leading-5 text-white"
+                      link_class="text-white font-bold"
+                    />
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <div class={[
+                "flex flex-col gap-[2px]",
+                if(show_time, do: "mt-1", else: "mt-3")
+              ]}>
+                <%= if is_group_chat do %>
+                  <span class="text-xs text-neutral-500 ml-9 mb-0.5">
+                    <%= user.full_name || user.username %>
+                  </span>
+                <% end %>
+                <%= for {message, idx} <- Enum.with_index(group) do %>
+                  <div class="flex items-end gap-2">
+                    <div class="w-7 h-7 shrink-0">
+                      <%= if idx == total - 1 do %>
+                        <.link navigate={~p"/#{user.username}"}>
+                          <img
+                            src={if is_nil(user.avatar), do: ~p"/images/person.webp", else: ~p"/uploads/avatars/#{user.avatar}"}
+                            class="w-7 h-7 rounded-full object-cover"
+                          />
+                        </.link>
+                      <% end %>
+                    </div>
+                    <div class={bubble_class(idx, total, false)}>
+                      <.user_content
+                        text={message.message}
+                        class="font-medium text-sm leading-5 text-black"
+                        link_class="text-sky-800 font-bold"
+                      />
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
           <% end %>
         </div>
         <div class="border-t p-3">

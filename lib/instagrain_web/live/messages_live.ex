@@ -325,4 +325,69 @@ defmodule InstagrainWeb.MessagesLive do
      |> assign(show_details: false)
      |> push_navigate(to: ~p"/messages")}
   end
+
+  defp group_messages(messages) do
+    Enum.chunk_while(
+      messages,
+      nil,
+      fn message, acc ->
+        case acc do
+          nil ->
+            {:cont, [message]}
+
+          [prev | _] = group ->
+            same_user = message.user.id == prev.user.id
+            gap = DateTime.diff(message.inserted_at, prev.inserted_at, :second)
+
+            if same_user and gap < 10800 do
+              {:cont, [message | group]}
+            else
+              {:cont, Enum.reverse(group), [message]}
+            end
+        end
+      end,
+      fn
+        nil -> {:cont, []}
+        group -> {:cont, Enum.reverse(group), nil}
+      end
+    )
+  end
+
+  defp format_message_datetime(datetime) do
+    date = DateTime.to_date(datetime)
+    today = Date.utc_today()
+    yesterday = Date.add(today, -1)
+    time_str = Calendar.strftime(datetime, "%H:%M")
+
+    cond do
+      date == today -> time_str
+      date == yesterday -> "Yesterday, #{time_str}"
+      date.year == today.year -> Calendar.strftime(datetime, "%-d %b, %H:%M")
+      true -> Calendar.strftime(datetime, "%-d %b %Y, %H:%M")
+    end
+  end
+
+  defp bubble_class(index, total, is_own) do
+    position =
+      cond do
+        total == 1 -> :single
+        index == 0 -> :first
+        index == total - 1 -> :last
+        true -> :middle
+      end
+
+    radius =
+      case {position, is_own} do
+        {:single, _} -> "rounded-[1.25rem]"
+        {:first, true} -> "rounded-[1.25rem] rounded-br-[4px]"
+        {:middle, true} -> "rounded-[1.25rem] rounded-r-[4px]"
+        {:last, true} -> "rounded-[1.25rem] rounded-tr-[4px]"
+        {:first, false} -> "rounded-[1.25rem] rounded-bl-[4px]"
+        {:middle, false} -> "rounded-[1.25rem] rounded-l-[4px]"
+        {:last, false} -> "rounded-[1.25rem] rounded-tl-[4px]"
+      end
+
+    color = if(is_own, do: "bg-sky-500", else: "bg-neutral-200")
+    [radius, color, "py-2 px-3 [overflow-wrap:anywhere]"]
+  end
 end
