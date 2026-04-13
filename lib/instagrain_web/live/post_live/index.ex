@@ -7,13 +7,24 @@ defmodule InstagrainWeb.PostLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    seed = :rand.uniform() |> Float.to_string()
+
     following_ids =
       Profiles.list_following(socket.assigns.current_user.id) |> Enum.map(& &1.id)
 
+    posts = Feed.list_posts(socket.assigns.current_user.id, 0, seed)
+    Feed.record_impressions(socket.assigns.current_user.id, Enum.map(posts, & &1.id))
+
     {:ok,
      socket
-     |> stream(:posts, Feed.list_posts(socket.assigns.current_user.id))
-     |> assign(page: 0, end_reached?: false, share_post_id: nil, following_user_ids: following_ids)}
+     |> stream(:posts, posts)
+     |> assign(
+       page: 0,
+       end_reached?: false,
+       share_post_id: nil,
+       following_user_ids: following_ids,
+       feed_seed: seed
+     )}
   end
 
   @impl true
@@ -71,12 +82,18 @@ defmodule InstagrainWeb.PostLive.Index do
   end
 
   def handle_event("load-more", _, socket) do
-    posts = Feed.list_posts(socket.assigns.current_user.id, socket.assigns.page + 1)
+    next_page = socket.assigns.page + 1
+    posts = Feed.list_posts(socket.assigns.current_user.id, next_page, socket.assigns.feed_seed)
 
     if posts == [] do
       {:noreply, assign(socket, end_reached?: true)}
     else
-      {:noreply, socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)}
+      Feed.record_impressions(socket.assigns.current_user.id, Enum.map(posts, & &1.id))
+
+      {:noreply,
+       socket
+       |> assign(page: next_page)
+       |> stream(:posts, posts, at: -1)}
     end
   end
 end

@@ -12,6 +12,7 @@ defmodule Instagrain.Feed do
   alias Instagrain.Feed.Post.CommentLike
   alias Instagrain.Feed.Post.Like
   alias Instagrain.Feed.Post.Resource
+  alias Instagrain.Feed.Post.Impression
   alias Instagrain.Feed.Post.Save
 
   @doc """
@@ -23,18 +24,10 @@ defmodule Instagrain.Feed do
       [%Post{}, ...]
 
   """
-  def list_posts(current_user_id, page \\ 0) do
+  def list_posts(current_user_id, page \\ 0, seed \\ nil) do
     limit = 3
     offset = limit * page
-
-    # Subquery: how many of current user's follows liked each post
-    follow_likes =
-      from(fl in Like,
-        join: f in "follows",
-        on: f.follow_id == fl.user_id and f.user_id == ^current_user_id,
-        group_by: fl.post_id,
-        select: %{post_id: fl.post_id, count: count(fl.post_id)}
-      )
+    seed = seed || (:rand.uniform() |> Float.to_string())
 
     from(p in Post,
       left_join: l in Like,
@@ -43,14 +36,24 @@ defmodule Instagrain.Feed do
       on: s.post_id == p.id and s.user_id == ^current_user_id,
       left_join: f in "follows",
       on: f.follow_id == p.user_id and f.user_id == ^current_user_id,
-      left_join: fl in subquery(follow_likes),
-      on: fl.post_id == p.id,
+      left_join: imp in Impression,
+      on: imp.post_id == p.id and imp.user_id == ^current_user_id,
       where: p.user_id != ^current_user_id,
       order_by: [
-        desc: not is_nil(f.follow_id),
-        desc: coalesce(fl.count, 0),
-        desc: p.likes,
-        desc: p.inserted_at
+        desc:
+          fragment(
+            """
+            (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * 10)
+            + (CASE WHEN ? IS NOT NULL THEN 50 ELSE 0 END)
+            - (COALESCE(?, 0) * 15)
+            + (EXTRACT(EPOCH FROM (? - NOW())) / 86400.0 + 7) * 3
+            """,
+            p.id,
+            ^seed,
+            f.follow_id,
+            imp.view_count,
+            p.inserted_at
+          )
       ],
       offset: ^offset,
       limit: ^limit,
@@ -62,6 +65,44 @@ defmodule Instagrain.Feed do
     )
     |> Repo.all()
     |> preload_and_process(current_user_id)
+  end
+
+  @doc """
+  Records impressions for a list of posts shown to a user.
+  Uses upsert to increment view_count on repeat views.
+  """
+  def record_impressions(_user_id, []), do: {0, nil}
+
+  def record_impressions(user_id, post_ids) when is_list(post_ids) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    entries =
+      Enum.map(post_ids, fn post_id ->
+        %{
+          user_id: user_id,
+          post_id: post_id,
+          view_count: 1,
+          last_seen_at: now,
+          inserted_at: now,
+          updated_at: now
+        }
+      end)
+
+    Repo.insert_all(
+      Impression,
+      entries,
+      on_conflict:
+        from(imp in Impression,
+          update: [
+            set: [
+              view_count: fragment("? + 1", imp.view_count),
+              last_seen_at: ^now,
+              updated_at: ^now
+            ]
+          ]
+        ),
+      conflict_target: [:user_id, :post_id]
+    )
   end
 
   @doc """
