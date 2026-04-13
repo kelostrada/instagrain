@@ -51,6 +51,7 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
           <.share_content
             myself={@myself}
             post_id={@post_id}
+            id_prefix="desktop"
             search_query={@search_query}
             search_results={@search_results}
             selected_users={@selected_users}
@@ -69,6 +70,7 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
         <.share_content
           myself={@myself}
           post_id={@post_id}
+          id_prefix="mobile"
           search_query={@search_query}
           search_results={@search_results}
           selected_users={@selected_users}
@@ -101,6 +103,7 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
       <div class="w-6"></div>
     </div>
 
+    <%= if @post_id do %>
     <%!-- Search --%>
     <div class="flex items-center gap-2 px-4 py-2 border-b flex-shrink-0">
       <.icon name="hero-magnifying-glass" class="h-4 w-4 text-neutral-400 flex-shrink-0" />
@@ -200,7 +203,7 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
           <div class="flex gap-4 overflow-x-auto">
             <button
               type="button"
-              id={"copy-link-#{@post_id}"}
+              id={"#{@id_prefix}-copy-link-#{@post_id}"}
               phx-hook="CopyToClipboard"
               data-clipboard-text={@url}
               class="flex flex-col items-center gap-1 cursor-pointer flex-shrink-0"
@@ -233,7 +236,7 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
             </a>
             <button
               type="button"
-              id={"native-share-#{@post_id}"}
+              id={"#{@id_prefix}-native-share-#{@post_id}"}
               phx-hook="NativeShare"
               data-share-url={@url}
               data-share-title="Check out this post"
@@ -248,6 +251,7 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
         </div>
       <% end %>
     </div>
+    <% end %>
     """
   end
 
