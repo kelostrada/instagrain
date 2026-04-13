@@ -22,6 +22,15 @@ import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.cssText = "position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#262626;color:white;padding:0.75rem 1.25rem;border-radius:0.5rem;font-size:0.875rem;z-index:100;transition:opacity 0.3s;pointer-events:none;";
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = "0"; }, 2000);
+  setTimeout(() => { toast.remove(); }, 2300);
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
@@ -68,34 +77,24 @@ let liveSocket = new LiveSocket("/live", Socket, {
       mounted() {
         this.el.addEventListener("click", () => {
           const text = this.el.getAttribute("data-clipboard-text");
-          navigator.clipboard.writeText(text).then(() => {
-            const label = this.el.querySelector("span");
-            if (label) {
-              const original = label.textContent;
-              label.textContent = "Copied!";
-              setTimeout(() => { label.textContent = original; }, 2000);
-            }
-          });
+          navigator.clipboard.writeText(text).then(() => showToast("Link copied to clipboard."));
         });
       }
     },
     NativeShare: {
       mounted() {
-        this.el.addEventListener("click", () => {
+        this.el.addEventListener("click", (e) => {
+          e.stopPropagation();
           const url = this.el.getAttribute("data-share-url");
           const title = this.el.getAttribute("data-share-title") || "";
           if (navigator.share) {
-            navigator.share({ title, url }).catch(() => {});
-          } else {
-            // Fallback: copy to clipboard
-            navigator.clipboard.writeText(url).then(() => {
-              const label = this.el.querySelector("span");
-              if (label) {
-                const original = label.textContent;
-                label.textContent = "Copied!";
-                setTimeout(() => { label.textContent = original; }, 2000);
+            navigator.share({ title, url }).catch((err) => {
+              if (err.name !== "AbortError") {
+                navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard."));
               }
             });
+          } else {
+            navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard."));
           }
         });
       }
@@ -206,6 +205,8 @@ window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
+
+window.addEventListener("phx:show-toast", (e) => showToast(e.detail.message))
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()

@@ -71,14 +71,15 @@ defmodule InstagrainWeb.CoreComponents do
         role="dialog"
         aria-modal="true"
         tabindex="0"
+        id={"#{@id}-overlay"}
+        phx-click={JS.exec("data-cancel", to: "##{@id}")}
       >
         <div class="flex min-h-full items-center justify-center">
-          <div class="p-4 sm:p-6 lg:py-8">
+          <div class="p-4 sm:p-6 lg:py-8" phx-click={%JS{}}>
             <.focus_wrap
               id={"#{@id}-container"}
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
               class={[
                 "shadow-zinc-700/10 ring-zinc-700/10 h-full hidden bg-white shadow-lg ring-1 transition",
                 @corner_style == :sm && "rounded-sm",
