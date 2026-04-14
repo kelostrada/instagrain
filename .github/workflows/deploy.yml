@@ -91,4 +91,5 @@ jobs:
             sudo sed -i 's/^VERSION_HASH=.*/VERSION_HASH=${VERSION_HASH}/' .env
             docker pull ghcr.io/kelostrada/instagrain:${VERSION}-${VERSION_HASH}
             docker compose up -d
+            docker exec instamelinakrzemowapl-web-1 /app/bin/migrate
           DEPLOY
