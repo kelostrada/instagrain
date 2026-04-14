@@ -70,36 +70,63 @@ defmodule Instagrain.Feed do
   end
 
   defp feed_query(current_user_id, seed, followed?) do
-    from(p in Post,
-      left_join: l in Like,
-      on: l.post_id == p.id and l.user_id == ^current_user_id,
-      left_join: s in Save,
-      on: s.post_id == p.id and s.user_id == ^current_user_id,
-      join: f in "follows",
-      on: f.follow_id == p.user_id and f.user_id == ^current_user_id,
-      left_join: imp in Impression,
-      on: imp.post_id == p.id and imp.user_id == ^current_user_id,
-      where: p.user_id != ^current_user_id,
-      order_by: [
+    base =
+      from(p in Post,
+        left_join: l in Like,
+        on: l.post_id == p.id and l.user_id == ^current_user_id,
+        left_join: s in Save,
+        on: s.post_id == p.id and s.user_id == ^current_user_id,
+        join: f in "follows",
+        on: f.follow_id == p.user_id and f.user_id == ^current_user_id,
+        left_join: imp in Impression,
+        on: imp.post_id == p.id and imp.user_id == ^current_user_id,
+        where: p.user_id != ^current_user_id,
+        select: %{
+          p
+          | liked_by_current_user?: not is_nil(l.post_id),
+            saved_by_current_user?: not is_nil(s.post_id)
+        }
+      )
+
+    if followed? do
+      # Followed: prioritize recency, moderate engagement, less randomness
+      order_by(base, [p, _l, _s, _f, imp],
         desc:
           fragment(
             """
-            (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * 20)
-            - (COALESCE(?, 0) * 3)
+            (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * 10)
             + (EXTRACT(EPOCH FROM (? - NOW())) / 86400.0 + 7) * 3
+            + LEAST(LN(GREATEST(? + COALESCE((SELECT COUNT(*) FROM post_comments WHERE post_id = ?), 0), 1) + 1) * 2, 8)
+            - (COALESCE(?, 0) * 3)
             """,
             p.id,
             ^seed,
-            imp.view_count,
-            p.inserted_at
+            p.inserted_at,
+            p.likes,
+            p.id,
+            imp.view_count
           )
-      ],
-      select: %{
-        p
-        | liked_by_current_user?: not is_nil(l.post_id),
-          saved_by_current_user?: not is_nil(s.post_id)
-      }
-    )
+      )
+    else
+      # Discovery: engagement matters more, more randomness, less recency weight
+      order_by(base, [p, _l, _s, _f, imp],
+        desc:
+          fragment(
+            """
+            (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * 15)
+            + (EXTRACT(EPOCH FROM (? - NOW())) / 86400.0 + 7) * 2
+            + LEAST(LN(GREATEST(? + COALESCE((SELECT COUNT(*) FROM post_comments WHERE post_id = ?), 0), 1) + 1) * 3, 12)
+            - (COALESCE(?, 0) * 3)
+            """,
+            p.id,
+            ^seed,
+            p.inserted_at,
+            p.likes,
+            p.id,
+            imp.view_count
+          )
+      )
+    end
     |> then(fn query ->
       if followed? do
         query
