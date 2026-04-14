@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: instagrain
   web:
-    image: registry.melinakrzemowa.pl/instagrain:${VERSION}-${VERSION_HASH}
+    image: ghcr.io/kelostrada/instagrain:${VERSION}-${VERSION_HASH}
     restart: unless-stopped
     volumes:
       - ./volumes/instagrain_uploads:/app/lib/instagrain-${VERSION}/priv/static/uploads
