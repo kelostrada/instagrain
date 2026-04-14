@@ -11,6 +11,7 @@ defmodule InstagrainWeb.PostComponents do
   attr :post, Post, required: true
   attr :current_user, User, required: true
   attr :following_user_ids, :list, default: []
+  attr :show_go_to_post, :boolean, default: true
 
   def menu(assigns) do
     ~H"""
@@ -39,6 +40,7 @@ defmodule InstagrainWeb.PostComponents do
             <% end %>
           <% end %>
           <div
+            :if={@show_go_to_post}
             class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer"
             phx-click={JS.patch(~p"/p/#{@post.id}")}
           >

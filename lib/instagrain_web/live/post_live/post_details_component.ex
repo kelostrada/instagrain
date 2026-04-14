@@ -18,6 +18,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
             modal_id={"post-details-menu-mobile-#{@post.id}"}
             post={@post}
             following_user_ids={@following_user_ids}
+            show_go_to_post={Map.get(assigns, :show_go_to_post, true)}
           />
         </div>
       </div>
