@@ -8,7 +8,9 @@ defmodule InstagrainWeb.PostLiveTest do
 
   describe "Index" do
     test "renders the feed", %{conn: conn, user: user} do
-      post = post_fixture(%{user: user, caption: "Hello world"})
+      author = Instagrain.AccountsFixtures.user_fixture()
+      Instagrain.Profiles.follow_user(user.id, author.id)
+      post = post_fixture(%{user: author, caption: "Hello world"})
 
       {:ok, _live, html} = live(conn, ~p"/")
 

@@ -10,10 +10,12 @@ defmodule Instagrain.FeedTest do
   import Instagrain.FeedFixtures
 
   describe "posts" do
-    test "list_posts/1 returns all posts for user" do
-      user = user_fixture()
-      post = post_fixture(%{user: user})
-      posts = Feed.list_posts(user.id)
+    test "list_posts/1 returns followed users' posts in feed" do
+      viewer = user_fixture()
+      author = user_fixture()
+      Instagrain.Profiles.follow_user(viewer.id, author.id)
+      post = post_fixture(%{user: author})
+      posts = Feed.list_posts(viewer.id)
       assert length(posts) == 1
       assert hd(posts).id == post.id
     end
