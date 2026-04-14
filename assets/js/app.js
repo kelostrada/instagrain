@@ -176,6 +176,49 @@ let liveSocket = new LiveSocket("/live", Socket, {
         }
       }
     },
+    EmojiPicker: {
+      mounted() {
+        const trigger = this.el.querySelector("[data-emoji-trigger]");
+        const popup = this.el.querySelector("[data-emoji-popup]");
+        const targetId = this.el.dataset.target;
+
+        const positionPopup = () => {
+          const rect = trigger.getBoundingClientRect();
+          popup.style.left = `${rect.left}px`;
+          popup.style.bottom = `${window.innerHeight - rect.top + 6}px`;
+        };
+
+        trigger.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const opening = popup.classList.contains("hidden");
+          popup.classList.toggle("hidden");
+          if (opening) positionPopup();
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!this.el.contains(e.target) && !popup.contains(e.target)) {
+            popup.classList.add("hidden");
+          }
+        });
+
+        popup.addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-emoji]");
+          if (!btn) return;
+          const emoji = btn.dataset.emoji;
+          const target = document.getElementById(targetId);
+          if (!target) return;
+
+          const start = target.selectionStart;
+          const end = target.selectionEnd;
+          const value = target.value;
+          target.value = value.slice(0, start) + emoji + value.slice(end);
+          target.selectionStart = target.selectionEnd = start + emoji.length;
+          target.focus();
+          target.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+      }
+    },
     AdjustmentSlider: {
       mounted() {
         this.el.addEventListener("input", () => {

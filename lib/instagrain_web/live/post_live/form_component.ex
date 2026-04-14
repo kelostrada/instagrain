@@ -283,7 +283,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                 </div>
                 <div class="flex items-center justify-between border-b border-neutral-300">
                   <div class="p-2.5">
-                    <.icon name="hero-face-smile" class="h-6 w-6 text-neutral-500" />
+                    <InstagrainWeb.EmojiPicker.emoji_picker id="post-emoji-picker" target_id="post_caption" />
                   </div>
                   <div class="p-2.5">
                     <span class={"text-xs #{if @form[:caption].errors != [], do: "text-rose-600", else: "text-neutral-350"}"}>
