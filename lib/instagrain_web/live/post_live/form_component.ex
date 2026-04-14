@@ -19,7 +19,11 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       phx-change="validate"
       phx-submit="save"
       phx-drop-target={@uploads.file.ref}
-      class={"#{if @step in [:edit, :final], do: "wide-modal", else: "square-modal"}"}
+      class={cond do
+        @step == :edit -> "wide-modal edit-step"
+        @step == :final -> "wide-modal"
+        true -> "square-modal"
+      end}
     >
       <.live_file_input id="post-form-upload" upload={@uploads.file} class="hidden" />
 
@@ -53,7 +57,10 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <% end %>
         </div>
 
-        <div class="flex-auto flex h-[calc(100%-2.625rem)] divide-x divide-solid divide-neutral-300">
+        <div class={[
+          "flex-auto flex min-h-0",
+          if(@step == :edit, do: "max-sm:flex-col sm:divide-x sm:divide-solid sm:divide-neutral-300", else: "divide-x divide-solid divide-neutral-300")
+        ]}>
           <%= if @step == :create do %>
             <div class="h-full w-full flex flex-col items-center justify-center">
               <.upload_icon />
@@ -70,7 +77,12 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <% end %>
 
           <%= if @step != :create do %>
-            <div class={"grow h-full bg-neutral-50 #{if @step in [:edit, :final], do: "max-sm:hidden"} relative overflow-hidden border-[0.5px] shadow-sm"}>
+            <div class={[
+              "bg-neutral-50 relative overflow-hidden border-[0.5px] shadow-sm",
+              if(@step == :final, do: "grow h-full max-sm:hidden"),
+              if(@step == :edit, do: "max-sm:shrink-0 max-sm:grow max-sm:min-h-0 sm:grow sm:h-full"),
+              if(@step not in [:edit, :final], do: "grow h-full")
+            ]}>
               <div class={[
                 "w-full h-full flex transition-transform duration-500 items-center",
                 translate_full(@selected_item)
@@ -145,8 +157,12 @@ defmodule InstagrainWeb.PostLive.FormComponent do
             </div>
 
             <%= if @step == :edit do %>
-              <div class="flex-none max-sm:w-full md:w-85 overflow-auto">
-                <div class="flex border-b border-neutral-200">
+              <% current_entry = Enum.at(@uploads.file.entries, @selected_item) %>
+              <% current_settings = get_image_settings(@image_filters, current_entry && current_entry.ref) %>
+
+              <div class="max-sm:min-h-0 max-sm:shrink sm:flex-none sm:w-85 overflow-auto flex flex-col">
+                <%!-- Tab bar --%>
+                <div class="flex border-b border-neutral-200 shrink-0">
                   <button
                     type="button"
                     phx-click="edit-tab"
@@ -168,9 +184,34 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                 </div>
 
                 <%= if @edit_tab == :filters do %>
-                  <% current_entry = Enum.at(@uploads.file.entries, @selected_item) %>
-                  <% current_settings = get_image_settings(@image_filters, current_entry && current_entry.ref) %>
-                  <div class="grid grid-cols-3 gap-2 p-4">
+                  <%!-- Mobile: horizontal scrollable strip --%>
+                  <div class="sm:hidden flex overflow-x-auto gap-3 px-4 py-3 scrollbar-hide">
+                    <div
+                      :for={{filter_id, filter_name} <- ImageFilters.filters()}
+                      phx-click="select-filter"
+                      phx-value-filter={filter_id}
+                      phx-target={@myself}
+                      class="cursor-pointer text-center flex-shrink-0"
+                    >
+                      <p class={"text-xs mb-1 #{if current_settings.filter == filter_id, do: "text-sky-500 font-semibold", else: "text-neutral-600"}"}>
+                        <%= filter_name %>
+                      </p>
+                      <div
+                        class={"w-[5.5rem] h-[5.5rem] overflow-hidden rounded-sm border-2 #{if current_settings.filter == filter_id, do: "border-sky-500", else: "border-transparent"}"}
+                        style={ImageFilters.preset_style(filter_id)}
+                      >
+                        <.live_img_preview
+                          :if={current_entry}
+                          entry={current_entry}
+                          id={"filter-thumb-mobile-#{filter_id}"}
+                          class="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <%!-- Desktop: 3-column grid --%>
+                  <div class="max-sm:hidden grid grid-cols-3 gap-2 p-4 overflow-auto">
                     <div
                       :for={{filter_id, filter_name} <- ImageFilters.filters()}
                       phx-click="select-filter"
@@ -197,9 +238,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                 <% end %>
 
                 <%= if @edit_tab == :adjustments do %>
-                  <% current_entry = Enum.at(@uploads.file.entries, @selected_item) %>
-                  <% current_settings = get_image_settings(@image_filters, current_entry && current_entry.ref) %>
-                  <div class="px-6 py-4 space-y-5">
+                  <div class="px-6 py-4 space-y-5 overflow-auto min-h-0 flex-1">
                     <div
                       :for={{key, label, min, max} <- ImageFilters.adjustment_options()}
                       class="space-y-1"
@@ -522,7 +561,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       {:noreply,
        socket
        |> put_flash(:info, "Post created successfully")
-       |> push_navigate(to: ~p"/")}
+       |> push_navigate(to: ~p"/p/#{post.id}")}
     else
       _ ->
         {:noreply,

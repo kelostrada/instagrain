@@ -29,7 +29,7 @@
         max-width: calc(100vw - 10vw - 21.25rem);
         max-height: calc(100vh - 10vh + 2.625rem + 1px);
     }
-    
+
     .wide-modal {
         width: calc(100vw - 10vw);
         height: calc(100vw - 10vw - 21.25rem + 2.625rem + 1px);
@@ -37,6 +37,26 @@
         max-height: 100%;
     }
 }
+
+/* Post creation modal: nearly full screen on mobile */
+@media (max-width: 640px) {
+    .wide-modal {
+        width: calc(100vw - 2rem);
+        height: calc(100dvh - 3rem);
+        max-width: calc(100vw - 2rem);
+        max-height: calc(100dvh - 3rem);
+        min-height: unset;
+    }
+
+    /* Hide the modal X button on mobile (form has its own back button) */
+    #new-post-modal > div:nth-child(2) {
+        display: none;
+    }
+}
+
+/* Hide scrollbar for horizontal filter strip */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 .outline-clear:focus {
     outline: none;
