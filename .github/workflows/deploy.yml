@@ -86,9 +86,9 @@ jobs:
 
           ssh ${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl << DEPLOY
             sudo mv /home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/docker-compose.yml /var/www/insta.melinakrzemowa.pl/docker-compose.yml
-            export VERSION=${VERSION}
-            export VERSION_HASH=${VERSION_HASH}
             cd /var/www/insta.melinakrzemowa.pl
-            docker pull ghcr.io/kelostrada/instagrain:\${VERSION}
+            sudo sed -i 's/^VERSION=.*/VERSION=${VERSION}/' .env
+            sudo sed -i 's/^VERSION_HASH=.*/VERSION_HASH=${VERSION_HASH}/' .env
+            docker pull ghcr.io/kelostrada/instagrain:${VERSION}-${VERSION_HASH}
             docker compose up -d
           DEPLOY
