@@ -134,6 +134,7 @@ defmodule InstagrainWeb.SearchComponent do
                     <img
                       src={~p"/uploads/#{hd(item.resources).file}"}
                       class="w-full h-full object-cover"
+                      style={InstagrainWeb.ImageFilters.resource_filter_style(hd(item.resources))}
                     />
                   <% end %>
                 </div>

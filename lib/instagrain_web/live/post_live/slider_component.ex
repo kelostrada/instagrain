@@ -1,6 +1,8 @@
 defmodule InstagrainWeb.PostLive.SliderComponent do
   use InstagrainWeb, :live_component
 
+  alias InstagrainWeb.ImageFilters
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -11,12 +13,18 @@ defmodule InstagrainWeb.PostLive.SliderComponent do
       data-count={length(@resources)}
     >
       <div class="flex transition-transform duration-300 ease-out items-center" data-slider-track>
-        <div :for={resource <- @resources} class="w-full flex-shrink-0">
+        <div :for={resource <- @resources} class="w-full flex-shrink-0 relative">
           <img
             src={~p"/uploads/#{resource.file}"}
             alt={resource.alt}
             class="w-full h-auto md:max-h-[80vh] pointer-events-none"
             draggable="false"
+            style={ImageFilters.resource_filter_style(resource)}
+          />
+          <div
+            :if={ImageFilters.resource_vignette_style(resource)}
+            class="absolute inset-0 pointer-events-none"
+            style={ImageFilters.resource_vignette_style(resource)}
           />
         </div>
       </div>

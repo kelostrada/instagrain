@@ -155,7 +155,7 @@
       </.modal>
 
       <.link phx-click={show_modal("post-details-modal-#{post.id}")} class="max-sm:hidden">
-        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" />
+        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">
             <div :if={!post.hide_likes} class="text-white">
@@ -176,7 +176,7 @@
       </.link>
 
       <.link navigate={~p"/p/#{post.id}"} class="sm:hidden">
-        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" />
+        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">
             <div :if={!post.hide_likes} class="text-white">

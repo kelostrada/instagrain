@@ -176,6 +176,19 @@ let liveSocket = new LiveSocket("/live", Socket, {
         }
       }
     },
+    AdjustmentSlider: {
+      mounted() {
+        this.el.addEventListener("input", () => {
+          this.pushEventTo(this.el, "adjust", {
+            name: this.el.getAttribute("data-name"),
+            value: parseInt(this.el.value)
+          });
+        });
+      },
+      updated() {
+        // Sync slider value when server updates (e.g., switching between images)
+      }
+    },
     SubmitOnEnter: {
       resize() {
         this.el.style.height = 'auto';

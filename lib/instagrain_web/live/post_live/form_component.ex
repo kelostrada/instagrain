@@ -6,6 +6,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   alias Instagrain.Feed
   alias Instagrain.Feed.Post
+  alias InstagrainWeb.ImageFilters
 
   @impl true
   def render(assigns) do
@@ -18,7 +19,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       phx-change="validate"
       phx-submit="save"
       phx-drop-target={@uploads.file.ref}
-      class={"#{if @step == :final, do: "wide-modal", else: "square-modal"}"}
+      class={"#{if @step in [:edit, :final], do: "wide-modal", else: "square-modal"}"}
     >
       <.live_file_input id="post-form-upload" upload={@uploads.file} class="hidden" />
 
@@ -32,7 +33,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <div class="grow text-center font-bold text-base leading-10 py-px">
             <%= step_to_title(@step) %>
           </div>
-          <%= if @step == :preview do %>
+          <%= if @step in [:preview, :edit] do %>
             <div
               class="flex-1 cursor-pointer text-right font-bold text-sm text-sky-500 leading-10 pr-4"
               phx-click="next-step"
@@ -69,7 +70,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           <% end %>
 
           <%= if @step != :create do %>
-            <div class={"grow h-full bg-neutral-50 #{if @step == :final, do: "max-sm:hidden"} relative overflow-hidden border-[0.5px] shadow-sm"}>
+            <div class={"grow h-full bg-neutral-50 #{if @step in [:edit, :final], do: "max-sm:hidden"} relative overflow-hidden border-[0.5px] shadow-sm"}>
               <div class={[
                 "w-full h-full flex transition-transform duration-500 items-center",
                 translate_full(@selected_item)
@@ -78,13 +79,26 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                   :for={entry <- @uploads.file.entries}
                   class="relative w-full h-full flex-shrink-0"
                 >
-                  <.live_img_preview
-                    entry={entry}
-                    id={"preview-#{entry.ref}"}
-                    class="w-full h-full object-contain"
+                  <% settings = get_image_settings(@image_filters, entry.ref) %>
+                  <div
+                    class="w-full h-full"
+                    style={if @step in [:edit, :final], do: ImageFilters.compute_filter_css(settings.filter, settings.adjustments)}
+                  >
+                    <.live_img_preview
+                      entry={entry}
+                      id={"preview-#{entry.ref}"}
+                      class="w-full h-full object-contain"
+                    />
+                  </div>
+
+                  <div
+                    :if={@step in [:edit, :final] && ImageFilters.vignette_style(settings.adjustments)}
+                    class="absolute inset-0 pointer-events-none"
+                    style={ImageFilters.vignette_style(settings.adjustments)}
                   />
 
                   <button
+                    :if={@step == :preview}
                     type="button"
                     phx-click="cancel-upload"
                     phx-value-ref={entry.ref}
@@ -129,6 +143,88 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                 <.right_chevron_icon class="text-white" />
               </div>
             </div>
+
+            <%= if @step == :edit do %>
+              <div class="flex-none max-sm:w-full md:w-85 overflow-auto">
+                <div class="flex border-b border-neutral-200">
+                  <button
+                    type="button"
+                    phx-click="edit-tab"
+                    phx-value-tab="filters"
+                    phx-target={@myself}
+                    class={"flex-1 py-3 text-center font-semibold text-sm border-b #{if @edit_tab == :filters, do: "text-black border-black", else: "text-neutral-400 border-transparent"}"}
+                  >
+                    Filters
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="edit-tab"
+                    phx-value-tab="adjustments"
+                    phx-target={@myself}
+                    class={"flex-1 py-3 text-center font-semibold text-sm border-b #{if @edit_tab == :adjustments, do: "text-black border-black", else: "text-neutral-400 border-transparent"}"}
+                  >
+                    Adjustments
+                  </button>
+                </div>
+
+                <%= if @edit_tab == :filters do %>
+                  <% current_entry = Enum.at(@uploads.file.entries, @selected_item) %>
+                  <% current_settings = get_image_settings(@image_filters, current_entry && current_entry.ref) %>
+                  <div class="grid grid-cols-3 gap-2 p-4">
+                    <div
+                      :for={{filter_id, filter_name} <- ImageFilters.filters()}
+                      phx-click="select-filter"
+                      phx-value-filter={filter_id}
+                      phx-target={@myself}
+                      class="cursor-pointer text-center"
+                    >
+                      <div
+                        class={"w-full aspect-square overflow-hidden rounded-sm border-2 #{if current_settings.filter == filter_id, do: "border-sky-500", else: "border-transparent"}"}
+                        style={ImageFilters.preset_style(filter_id)}
+                      >
+                        <.live_img_preview
+                          :if={current_entry}
+                          entry={current_entry}
+                          id={"filter-thumb-#{filter_id}"}
+                          class="w-full h-full object-cover"
+                        />
+                      </div>
+                      <p class={"text-xs mt-1 #{if current_settings.filter == filter_id, do: "text-sky-500 font-semibold", else: "text-neutral-600"}"}>
+                        <%= filter_name %>
+                      </p>
+                    </div>
+                  </div>
+                <% end %>
+
+                <%= if @edit_tab == :adjustments do %>
+                  <% current_entry = Enum.at(@uploads.file.entries, @selected_item) %>
+                  <% current_settings = get_image_settings(@image_filters, current_entry && current_entry.ref) %>
+                  <div class="px-6 py-4 space-y-5">
+                    <div
+                      :for={{key, label, min, max} <- ImageFilters.adjustment_options()}
+                      class="space-y-1"
+                    >
+                      <div class="flex justify-between items-center">
+                        <span class="font-semibold text-base"><%= label %></span>
+                        <span class="text-neutral-500 text-base tabular-nums w-8 text-right">
+                          <%= current_settings.adjustments[key] || 0 %>
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={min}
+                        max={max}
+                        value={current_settings.adjustments[key] || 0}
+                        data-name={key}
+                        phx-hook="AdjustmentSlider"
+                        id={"adjustment-#{key}"}
+                        class="w-full adjustment-slider"
+                      />
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
 
             <%= if @step == :final do %>
               <div class="flex-none max-sm:w-full md:w-85 overflow-auto">
@@ -271,7 +367,10 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     {:ok,
      assign(socket,
        previewed?: false,
+       edited?: false,
        selected_item: 0,
+       edit_tab: :filters,
+       image_filters: %{},
        tabs: %{accessibility: false, advanced: false}
      )}
   end
@@ -294,12 +393,16 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
-  def handle_event("validate", %{"_target" => ["file"]}, socket) do
+  def handle_event("validate", _params, socket) do
     {:noreply, socket}
   end
 
   def handle_event("next-step", _, socket) do
-    {:noreply, assign(socket, previewed?: true)}
+    case current_step(socket.assigns) do
+      :preview -> {:noreply, assign(socket, previewed?: true)}
+      :edit -> {:noreply, assign(socket, edited?: true)}
+      _ -> {:noreply, socket}
+    end
   end
 
   def handle_event("back", _, socket) do
@@ -310,10 +413,13 @@ defmodule InstagrainWeb.PostLive.FormComponent do
             cancel_upload(socket, :file, entry.ref)
           end)
 
-        {:noreply, assign(socket, selected_item: 0)}
+        {:noreply, assign(socket, selected_item: 0, image_filters: %{})}
+
+      :edit ->
+        {:noreply, assign(socket, previewed?: false)}
 
       :final ->
-        {:noreply, assign(socket, previewed?: false)}
+        {:noreply, assign(socket, edited?: false)}
     end
   end
 
@@ -323,6 +429,50 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   def handle_event("previous-item", _, socket) do
     {:noreply, assign(socket, selected_item: socket.assigns.selected_item - 1)}
+  end
+
+  def handle_event("edit-tab", %{"tab" => tab}, socket) do
+    {:noreply, assign(socket, edit_tab: String.to_existing_atom(tab))}
+  end
+
+  def handle_event("select-filter", %{"filter" => filter}, socket) do
+    entry = Enum.at(socket.assigns.uploads.file.entries, socket.assigns.selected_item)
+
+    if entry do
+      image_filters =
+        Map.update(
+          socket.assigns.image_filters,
+          entry.ref,
+          %{filter: filter, adjustments: ImageFilters.default_adjustments()},
+          &%{&1 | filter: filter}
+        )
+
+      {:noreply, assign(socket, image_filters: image_filters)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("adjust", %{"name" => name, "value" => value}, socket) do
+    entry = Enum.at(socket.assigns.uploads.file.entries, socket.assigns.selected_item)
+
+    if entry do
+      value = if is_integer(value), do: value, else: elem(Integer.parse(value), 0)
+
+      image_filters =
+        Map.update(
+          socket.assigns.image_filters,
+          entry.ref,
+          %{filter: "original", adjustments: Map.put(ImageFilters.default_adjustments(), name, value)},
+          fn settings ->
+            %{settings | adjustments: Map.put(settings.adjustments, name, value)}
+          end
+        )
+
+      {:noreply, assign(socket, image_filters: image_filters)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("tabs-click", %{"tab" => tab}, socket) do
@@ -335,6 +485,8 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   end
 
   def handle_event("save", %{"post" => post_params}, socket) do
+    image_filters = socket.assigns.image_filters
+
     uploaded_files =
       consume_uploaded_entries(socket, :file, fn %{path: path}, entry ->
         filename = Path.basename(path) <> Path.extname(entry.client_name)
@@ -342,10 +494,18 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
         File.cp!(path, dest)
 
+        settings =
+          Map.get(image_filters, entry.ref, %{
+            filter: "original",
+            adjustments: ImageFilters.default_adjustments()
+          })
+
         {:ok,
          %{
            filename: filename,
-           entry: entry
+           entry: entry,
+           filter: settings.filter,
+           adjustments: settings.adjustments
          }}
       end)
 
@@ -385,7 +545,9 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                post_id: post.id,
                file: file.filename,
                type: :photo,
-               alt: alts[file.entry.ref]
+               alt: alts[file.entry.ref],
+               filter: file.filter,
+               adjustments: file.adjustments
              }) do
           {:ok, _resource} ->
             {:ok, if(image == "", do: file.filename, else: image)}
@@ -399,16 +561,25 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     end)
   end
 
+  defp get_image_settings(image_filters, entry_ref) do
+    Map.get(image_filters, entry_ref, %{
+      filter: "original",
+      adjustments: ImageFilters.default_adjustments()
+    })
+  end
+
   defp current_step(assigns) do
     case assigns do
       %{uploads: %{file: %{entries: []}}} -> :create
       %{previewed?: false} -> :preview
+      %{edited?: false} -> :edit
       _ -> :final
     end
   end
 
   defp step_to_title(:create), do: "Create new post"
   defp step_to_title(:preview), do: "Preview"
+  defp step_to_title(:edit), do: "Edit"
   defp step_to_title(:final), do: "Create new post"
 
   defp upload_icon(assigns) do

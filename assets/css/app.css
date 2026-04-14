@@ -42,3 +42,33 @@
     outline: none;
     box-shadow: none;
 }
+
+/* Adjustment slider styling */
+.adjustment-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    background: #dbdbdb;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.adjustment-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #262626;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.adjustment-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #262626;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
