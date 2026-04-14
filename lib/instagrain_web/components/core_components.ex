@@ -712,10 +712,10 @@ defmodule InstagrainWeb.CoreComponents do
     <div class="sm:hidden flex items-center">
       <div class="cursor-pointer text-left px-4">
         <.link :if={@navigate} navigate={@navigate}>
-          <.icon name="hero-chevron-left" class="h-7 w-7" />
+          <.icon name="hero-arrow-left" class="h-6 w-6" />
         </.link>
         <.link :if={!@navigate} onclick="history.back()">
-          <.icon name="hero-chevron-left" class="h-7 w-7" />
+          <.icon name="hero-arrow-left" class="h-6 w-6" />
         </.link>
       </div>
       <div class="grow text-center font-bold text-base leading-10 py-px">
