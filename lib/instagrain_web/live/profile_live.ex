@@ -13,6 +13,10 @@ defmodule InstagrainWeb.ProfileLive do
     current_user = Repo.preload(socket.assigns.current_user, [:followers, :followings])
     current_user_profile? = profile.id == current_user.id
 
+    base_url = InstagrainWeb.Endpoint.url()
+    og_image = if profile.avatar, do: "#{base_url}/uploads/avatars/#{profile.avatar}"
+    og_desc = profile.description || "#{profile.full_name || profile.username}'s profile on Instagrain"
+
     {:noreply,
      socket
      |> assign(
@@ -22,7 +26,13 @@ defmodule InstagrainWeb.ProfileLive do
        end_reached?: false,
        current_user_profile?: current_user_profile?,
        share_post_id: nil,
-       following_user_ids: Enum.map(current_user.followings, & &1.id)
+       following_user_ids: Enum.map(current_user.followings, & &1.id),
+       page_title: "#{profile.full_name || profile.username} (@#{profile.username})",
+       og_title: "#{profile.full_name || profile.username} (@#{profile.username})",
+       og_description: og_desc,
+       og_image: og_image,
+       og_url: "#{base_url}/#{profile.username}",
+       og_type: "profile"
      )
      |> stream(:posts, [], reset: true)
      |> fetch_posts()}

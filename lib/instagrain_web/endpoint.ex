@@ -53,5 +53,6 @@ defmodule InstagrainWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+  plug InstagrainWeb.OgMetaPlug
   plug InstagrainWeb.Router
 end

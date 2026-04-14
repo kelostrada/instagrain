@@ -7,6 +7,17 @@
     <.live_title prefix={"Instagrain #{if assigns[:page_title], do: " · "}"}>
       <%= assigns[:page_title] %>
     </.live_title>
+    <%!-- Open Graph / Social Media Preview --%>
+    <meta property="og:site_name" content="Instagrain" />
+    <meta property="og:type" content={assigns[:og_type] || "website"} />
+    <meta property="og:title" content={assigns[:og_title] || "Instagrain"} />
+    <meta property="og:description" content={assigns[:og_description] || "Share your moments"} />
+    <meta :if={assigns[:og_image]} property="og:image" content={assigns[:og_image]} />
+    <meta :if={assigns[:og_url]} property="og:url" content={assigns[:og_url]} />
+    <%!-- Twitter Card --%>
+    <meta name="twitter:card" content={if assigns[:og_image], do: "summary_large_image", else: "summary"} />
+    <meta name="twitter:title" content={assigns[:og_title] || "Instagrain"} />
+    <meta name="twitter:description" content={assigns[:og_description] || "Share your moments"} />
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>

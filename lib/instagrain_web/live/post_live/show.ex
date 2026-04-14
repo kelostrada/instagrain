@@ -26,9 +26,19 @@ defmodule InstagrainWeb.PostLive.Show do
     # Direct post view has weight 3 (higher impact than feed scroll)
     Feed.record_impressions(socket.assigns.current_user.id, [post.id], 3)
 
+    base_url = InstagrainWeb.Endpoint.url()
+    og_image = if post.resources != [], do: "#{base_url}/uploads/#{hd(post.resources).file}"
+    caption = post.caption || ""
+    og_desc = if String.length(caption) > 200, do: String.slice(caption, 0, 197) <> "...", else: caption
+
     {:noreply,
      socket
-     |> assign(:page_title, page_title(socket.assigns.live_action))
+     |> assign(:page_title, "#{post.user.username} on Instagrain")
+     |> assign(:og_title, "#{post.user.full_name || post.user.username} on Instagrain")
+     |> assign(:og_description, if(og_desc == "", do: "View this post on Instagrain", else: og_desc))
+     |> assign(:og_image, og_image)
+     |> assign(:og_url, "#{base_url}/p/#{post.id}")
+     |> assign(:og_type, "article")
      |> assign(:post, post)
      |> assign(:other_posts, Feed.list_other_posts(post))}
   end
@@ -61,6 +71,4 @@ defmodule InstagrainWeb.PostLive.Show do
     {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
   end
 
-  defp page_title(:show), do: "Show Post"
-  defp page_title(:edit), do: "Edit Post"
 end
