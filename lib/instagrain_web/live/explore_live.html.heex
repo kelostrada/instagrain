@@ -46,6 +46,22 @@
             </div>
           </.link>
         <% end %>
+        <%= if type == :location do %>
+          <.link
+            navigate={~p"/explore/locations/#{item.id}"}
+            class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50"
+          >
+            <div class="w-11 h-11 rounded-full bg-neutral-100 flex-shrink-0 flex items-center justify-center">
+              <.icon name="hero-map-pin" class="w-5 h-5 text-neutral-600" />
+            </div>
+            <div class="min-w-0">
+              <p class="font-semibold text-sm truncate"><%= item.name %></p>
+              <p class="text-sm text-neutral-500 truncate">
+                <%= format_number(item.post_count) %> posts
+              </p>
+            </div>
+          </.link>
+        <% end %>
         <%= if type == :user do %>
           <.link
             navigate={~p"/#{item.username}"}
@@ -98,10 +114,21 @@
   </div>
 
   <%!-- Tag header --%>
-  <div :if={@tag} class="py-6 px-4 border-b mb-2">
+  <div :if={@tag} class={["py-6 px-4 border-b mb-2", @searching? && "max-sm:hidden"]}>
     <h1 class="text-2xl font-bold">#<%= @tag %></h1>
     <p :if={@hashtag} class="text-neutral-500 text-sm mt-1">
       <%= format_number(@hashtag.post_count) %> posts
+    </p>
+  </div>
+
+  <%!-- Location header --%>
+  <div :if={@location} class={["py-6 px-4 border-b mb-2", @searching? && "max-sm:hidden"]}>
+    <div class="flex items-center gap-2">
+      <.icon name="hero-map-pin" class="w-6 h-6 text-neutral-700" />
+      <h1 class="text-2xl font-bold"><%= @location.name %></h1>
+    </div>
+    <p :if={@location.address} class="text-neutral-500 text-sm mt-1">
+      <%= @location.address %>
     </p>
   </div>
 

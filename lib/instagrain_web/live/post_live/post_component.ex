@@ -23,8 +23,13 @@ defmodule InstagrainWeb.PostLive.PostComponent do
           <.avatar user={@post.user} />
 
           <div>
-            <.username user={@post.user} />
-            <.time prefix="• " datetime={@post.inserted_at} />
+            <div class="flex items-center gap-1">
+              <.username user={@post.user} />
+              <.time prefix="• " datetime={@post.inserted_at} />
+            </div>
+            <p :if={@post.location} class="text-xs text-neutral-500 leading-tight">
+              <%= @post.location.name %>
+            </p>
           </div>
         </div>
         <div>

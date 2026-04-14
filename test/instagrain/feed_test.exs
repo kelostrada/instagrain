@@ -500,4 +500,83 @@ defmodule Instagrain.FeedTest do
       assert {:error, :not_found} = Feed.remove_save_post(post.id, user.id)
     end
   end
+
+  describe "locations" do
+    test "find_or_create_location/1 creates a new location" do
+      assert {:ok, location} =
+               Feed.find_or_create_location(%{
+                 name: "Gdansk, Poland",
+                 address: "Pomeranian Voivodeship",
+                 lat: 54.35,
+                 lng: 18.65
+               })
+
+      assert location.name == "Gdansk, Poland"
+      assert location.address == "Pomeranian Voivodeship"
+      assert location.lat == 54.35
+    end
+
+    test "find_or_create_location/1 returns existing location on duplicate name" do
+      {:ok, loc1} = Feed.find_or_create_location(%{name: "Unique Place"})
+      {:ok, loc2} = Feed.find_or_create_location(%{name: "Unique Place"})
+      assert loc1.id == loc2.id
+    end
+
+    test "find_or_create_location/1 returns nil for empty name" do
+      assert {:ok, nil} = Feed.find_or_create_location(%{name: ""})
+      assert {:ok, nil} = Feed.find_or_create_location(%{})
+    end
+
+    test "search_locations_db/2 returns locations with post counts" do
+      user = user_fixture()
+      location = location_fixture(%{name: "Warsaw, Poland"})
+
+      # Create posts at this location
+      post_fixture(%{user: user, location_id: location.id})
+      post_fixture(%{user: user, location_id: location.id})
+
+      results = Feed.search_locations_db("Warsaw")
+      assert length(results) == 1
+      assert hd(results).name == "Warsaw, Poland"
+      assert hd(results).post_count == 2
+    end
+
+    test "search_locations_db/2 excludes locations with zero posts" do
+      _location = location_fixture(%{name: "Empty Place"})
+
+      results = Feed.search_locations_db("Empty")
+      assert results == []
+    end
+
+    test "search_locations_db/2 requires at least 2 characters" do
+      assert Feed.search_locations_db("a") == []
+    end
+
+    test "list_posts_by_location/3 returns posts for a location" do
+      user = user_fixture()
+      location = location_fixture(%{name: "Berlin, Germany"})
+
+      post = post_fixture(%{user: user, location_id: location.id})
+      _other = post_fixture(%{user: user})
+
+      posts = Feed.list_posts_by_location(location.id, user.id)
+      assert length(posts) == 1
+      assert hd(posts).id == post.id
+    end
+
+    test "get_location/1 returns location or nil" do
+      location = location_fixture(%{name: "Tokyo, Japan"})
+      assert Feed.get_location(location.id).name == "Tokyo, Japan"
+      assert Feed.get_location(-1) == nil
+    end
+
+    test "posts preload location association" do
+      user = user_fixture()
+      location = location_fixture(%{name: "Paris, France"})
+      post = post_fixture(%{user: user, location_id: location.id})
+
+      fetched = Feed.get_post!(post.id, user.id)
+      assert fetched.location.name == "Paris, France"
+    end
+  end
 end

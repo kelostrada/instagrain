@@ -63,4 +63,21 @@ defmodule Instagrain.FeedFixtures do
 
     comment
   end
+
+  @doc """
+  Generate a location.
+  """
+  def location_fixture(attrs \\ %{}) do
+    {:ok, location} =
+      attrs
+      |> Enum.into(%{
+        name: "Test City, Country #{System.unique_integer([:positive])}",
+        address: "Some Region",
+        lat: 54.35,
+        lng: 18.65
+      })
+      |> Instagrain.Feed.find_or_create_location()
+
+    location
+  end
 end

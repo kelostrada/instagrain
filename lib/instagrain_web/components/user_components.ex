@@ -47,6 +47,7 @@ defmodule InstagrainWeb.UserComponents do
   attr :user, User, required: true
   attr :current_user, User, required: true
   attr :size, :atom, values: [:xs, :sm], default: :xs
+  attr :location, :any, default: nil
 
   def user_post_header(assigns) do
     ~H"""
@@ -56,6 +57,9 @@ defmodule InstagrainWeb.UserComponents do
       </div>
       <div>
         <.username user={@user} />
+        <p :if={@location} class="text-xs text-neutral-500 leading-tight">
+          <%= @location.name %>
+        </p>
       </div>
     </div>
     """

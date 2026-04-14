@@ -10,7 +10,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
     <div class="flex max-md:flex-col min-h-[400px] md:max-h-[80vh]">
       <div class="flex items-center md:hidden">
         <div class="flex-1 py-2.5">
-          <.user_post_header user={@post.user} current_user={@current_user} size={:sm} />
+          <.user_post_header user={@post.user} current_user={@current_user} size={:sm} location={@post.location} />
         </div>
         <div class="flex justify-end px-4">
           <.menu
@@ -31,7 +31,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
       <div class="md:w-85 max-md:w-full flex flex-col">
         <div class="flex items-center border-b max-md:hidden">
           <div class="flex-1 pt-3.5 pb-2.5">
-            <.user_post_header user={@post.user} current_user={@current_user} size={:sm} />
+            <.user_post_header user={@post.user} current_user={@current_user} size={:sm} location={@post.location} />
           </div>
           <div class="flex justify-end px-4">
             <.menu

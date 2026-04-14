@@ -33,6 +33,7 @@ defmodule InstagrainWeb.Router do
 
       live "/explore", ExploreLive, :index
       live "/explore/tags/:tag", ExploreLive, :tag
+      live "/explore/locations/:location_id", ExploreLive, :location
 
       live "/:username", ProfileLive, :posts
       live "/:username/saved", ProfileLive, :saved

@@ -295,21 +295,56 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                 </div>
 
                 <div class="border-b border-neutral-300">
-                  <div class="flex justify-between items-center py-[7px] px-4">
-                    <div class="">
-                      <.input
-                        field={@form[:location]}
-                        type="text"
-                        placeholder="Add Location"
-                        class={[
-                          "block w-full h-7.5 p-0 border-0 outline-none outline-clear",
-                          "placeholder:font-medium placeholder:text-neutral-500 text-black font-medium"
-                        ]}
-                      />
+                  <div class="relative">
+                    <div class="flex justify-between items-center py-[7px] px-4">
+                      <div class="flex-1">
+                        <input
+                          type="text"
+                          value={@selected_location && @selected_location.name}
+                          placeholder="Add Location"
+                          phx-keyup="location-search"
+                          phx-debounce="300"
+                          phx-target={@myself}
+                          autocomplete="off"
+                          class={[
+                            "block w-full h-7.5 p-0 border-0 outline-none outline-clear",
+                            "placeholder:font-medium placeholder:text-neutral-500 text-black font-medium"
+                          ]}
+                        />
+                      </div>
+                      <div>
+                        <%= if @selected_location do %>
+                          <button
+                            type="button"
+                            phx-click="clear-location"
+                            phx-target={@myself}
+                            class="cursor-pointer"
+                          >
+                            <.icon name="hero-x-mark" class="h-5 w-5 text-neutral-400 hover:text-black" />
+                          </button>
+                        <% else %>
+                          <.icon name="hero-map-pin" class="h-5 w-5 text-black" />
+                        <% end %>
+                      </div>
                     </div>
-                    <div>
-                      <.icon name="hero-map-pin" class="h-5 w-5 text-black" />
-                    </div>
+
+                    <%= if @location_results != [] do %>
+                      <div class="absolute left-0 right-0 bg-white shadow-lg rounded-b-lg border border-neutral-200 border-t-0 z-50 max-h-48 overflow-y-auto">
+                        <div
+                          :for={result <- @location_results}
+                          phx-click="select-location"
+                          phx-value-name={result.name}
+                          phx-value-address={result.address}
+                          phx-value-lat={result.lat}
+                          phx-value-lng={result.lng}
+                          phx-target={@myself}
+                          class="px-4 py-3 cursor-pointer hover:bg-neutral-50 border-b border-neutral-100 last:border-b-0"
+                        >
+                          <p class="font-semibold text-sm"><%= result.name %></p>
+                          <p :if={result.address} class="text-xs text-neutral-500"><%= result.address %></p>
+                        </div>
+                      </div>
+                    <% end %>
                   </div>
 
                   <details open={@tabs.accessibility} class="group font-medium px-4">
@@ -410,6 +445,8 @@ defmodule InstagrainWeb.PostLive.FormComponent do
        selected_item: 0,
        edit_tab: :filters,
        image_filters: %{},
+       location_results: [],
+       selected_location: nil,
        tabs: %{accessibility: false, advanced: false}
      )}
   end
@@ -514,6 +551,26 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     end
   end
 
+  def handle_event("location-search", %{"value" => query}, socket) do
+    results = if String.length(query) >= 2, do: Feed.search_locations(query), else: []
+    {:noreply, assign(socket, location_results: results, selected_location: nil)}
+  end
+
+  def handle_event("select-location", params, socket) do
+    location = %{
+      name: params["name"],
+      address: params["address"],
+      lat: parse_float(params["lat"]),
+      lng: parse_float(params["lng"])
+    }
+
+    {:noreply, assign(socket, selected_location: location, location_results: [])}
+  end
+
+  def handle_event("clear-location", _, socket) do
+    {:noreply, assign(socket, selected_location: nil, location_results: [])}
+  end
+
   def handle_event("tabs-click", %{"tab" => tab}, socket) do
     tab = String.to_existing_atom(tab)
     {:noreply, assign(socket, tabs: Map.update!(socket.assigns.tabs, tab, &(!&1)))}
@@ -548,7 +605,17 @@ defmodule InstagrainWeb.PostLive.FormComponent do
          }}
       end)
 
-    location_id = find_location(post_params["location"])
+    location_id =
+      case socket.assigns.selected_location do
+        %{name: name} = loc when is_binary(name) and name != "" ->
+          case Feed.find_or_create_location(loc) do
+            {:ok, %{id: id}} -> id
+            _ -> nil
+          end
+
+        _ ->
+          nil
+      end
 
     post_params =
       post_params
@@ -571,8 +638,15 @@ defmodule InstagrainWeb.PostLive.FormComponent do
     end
   end
 
-  defp find_location(_location) do
-    1
+  defp parse_float(nil), do: nil
+  defp parse_float(""), do: nil
+  defp parse_float(val) when is_float(val), do: val
+
+  defp parse_float(val) when is_binary(val) do
+    case Float.parse(val) do
+      {f, _} -> f
+      :error -> nil
+    end
   end
 
   defp save_resources(post, post_params, uploaded_files) do

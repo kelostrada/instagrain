@@ -26,9 +26,11 @@ defmodule InstagrainWeb.SearchComponent do
         end
 
       users = Accounts.search_users(query, 20)
+      locations = Feed.search_locations_db(query, 5)
 
       results =
         Enum.map(hashtags, fn h -> {:hashtag, h} end) ++
+          Enum.map(locations, fn l -> {:location, l} end) ++
           Enum.map(users, fn u -> {:user, u} end)
 
       results =
@@ -95,6 +97,22 @@ defmodule InstagrainWeb.SearchComponent do
                 </div>
                 <div class="min-w-0">
                   <p class="font-semibold text-sm truncate">#<%= item.name %></p>
+                  <p class="text-sm text-neutral-500 truncate">
+                    <%= format_count(item.post_count) %> posts
+                  </p>
+                </div>
+              </.link>
+            <% end %>
+            <%= if type == :location do %>
+              <.link
+                navigate={~p"/explore/locations/#{item.id}"}
+                class="flex items-center gap-3 px-6 py-3 hover:bg-neutral-50"
+              >
+                <div class="w-11 h-11 rounded-full bg-neutral-100 flex-shrink-0 flex items-center justify-center">
+                  <.icon name="hero-map-pin" class="w-5 h-5 text-neutral-600" />
+                </div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-sm truncate"><%= item.name %></p>
                   <p class="text-sm text-neutral-500 truncate">
                     <%= format_count(item.post_count) %> posts
                   </p>

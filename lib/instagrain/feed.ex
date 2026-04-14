@@ -16,6 +16,7 @@ defmodule Instagrain.Feed do
   alias Instagrain.Feed.Post.Impression
   alias Instagrain.Feed.PostHashtag
   alias Instagrain.Feed.Post.Save
+  alias Instagrain.Feed.Location
 
   @doc """
   Returns the list of posts.
@@ -185,7 +186,7 @@ defmodule Instagrain.Feed do
       }
     )
     |> Repo.one!()
-    |> Repo.preload([:user, :resources, comments: [:user, :comment_likes]])
+    |> Repo.preload([:user, :resources, :location, comments: [:user, :comment_likes]])
     |> then(fn post ->
       comments =
         Enum.map(post.comments, fn comment ->
@@ -230,7 +231,7 @@ defmodule Instagrain.Feed do
       limit: ^limit
     )
     |> Repo.all()
-    |> Repo.preload([:resources, :user, comments: [:user, :comment_likes]])
+    |> Repo.preload([:resources, :user, :location, comments: [:user, :comment_likes]])
     |> Enum.map(fn post ->
       comments =
         Enum.map(post.comments, fn comment ->
@@ -274,7 +275,7 @@ defmodule Instagrain.Feed do
       limit: ^limit
     )
     |> Repo.all()
-    |> Repo.preload([:resources, :user, comments: [:user, :comment_likes]])
+    |> Repo.preload([:resources, :user, :location, comments: [:user, :comment_likes]])
     |> Enum.map(fn post ->
       comments =
         Enum.map(post.comments, fn comment ->
@@ -318,7 +319,7 @@ defmodule Instagrain.Feed do
       limit: ^limit
     )
     |> Repo.all()
-    |> Repo.preload([:resources, :user, comments: [:user, :comment_likes]])
+    |> Repo.preload([:resources, :user, :location, comments: [:user, :comment_likes]])
   end
 
   def list_explore_posts(current_user_id, seed, page \\ 0, limit \\ 18) do
@@ -742,7 +743,7 @@ defmodule Instagrain.Feed do
 
   defp preload_and_process(posts, current_user_id) when is_list(posts) do
     posts
-    |> Repo.preload([:user, :resources, comments: [:user, :comment_likes]])
+    |> Repo.preload([:user, :resources, :location, comments: [:user, :comment_likes]])
     |> Enum.map(fn post ->
       comments =
         Enum.map(post.comments, fn comment ->
@@ -851,4 +852,67 @@ defmodule Instagrain.Feed do
       {:ok, hashtags}
     end
   end
+
+  # --- Locations ---
+
+  def search_locations(query) do
+    Instagrain.Feed.LocationSearch.search(query)
+  end
+
+  def search_locations_db(query, limit \\ 10)
+  def search_locations_db(query, _limit) when byte_size(query) < 2, do: []
+
+  def search_locations_db(query, limit) do
+    query_str = "%#{String.trim(query)}%"
+
+    from(l in Location,
+      left_join: p in Post,
+      on: p.location_id == l.id,
+      where: ilike(l.name, ^query_str),
+      group_by: l.id,
+      select: %{id: l.id, name: l.name, address: l.address, post_count: count(p.id)},
+      order_by: [desc: count(p.id)],
+      having: count(p.id) > 0,
+      limit: ^limit
+    )
+    |> Repo.all()
+  end
+
+  def list_posts_by_location(location_id, current_user_id, page \\ 0, limit \\ 18) do
+    offset = limit * page
+
+    from(p in Post,
+      left_join: l in Like,
+      on: l.post_id == p.id and l.user_id == ^current_user_id,
+      left_join: s in Save,
+      on: s.post_id == p.id and s.user_id == ^current_user_id,
+      where: p.location_id == ^location_id,
+      select: %{
+        p
+        | liked_by_current_user?: not is_nil(l.post_id),
+          saved_by_current_user?: not is_nil(s.post_id)
+      },
+      order_by: [desc: p.inserted_at],
+      offset: ^offset,
+      limit: ^limit
+    )
+    |> Repo.all()
+    |> preload_and_process(current_user_id)
+  end
+
+  def get_location(id), do: Repo.get(Location, id)
+
+  def find_or_create_location(%{name: name} = attrs) when is_binary(name) and name != "" do
+    case Repo.get_by(Location, name: name) do
+      nil ->
+        %Location{}
+        |> Location.changeset(Map.take(attrs, [:name, :address, :lat, :lng]))
+        |> Repo.insert()
+
+      location ->
+        {:ok, location}
+    end
+  end
+
+  def find_or_create_location(_), do: {:ok, nil}
 end

@@ -19,7 +19,9 @@ defmodule InstagrainWeb.ExploreLive do
        share_post_id: nil,
        following_user_ids: following_ids,
        tag: nil,
-       hashtag: nil
+       hashtag: nil,
+       location: nil,
+       location_id: nil
      )}
   end
 
@@ -41,6 +43,25 @@ defmodule InstagrainWeb.ExploreLive do
      |> fetch_posts()}
   end
 
+  def handle_params(%{"location_id" => location_id}, _url, socket) do
+    location = Feed.get_location(location_id)
+
+    {:noreply,
+     socket
+     |> assign(
+       page: 0,
+       end_reached?: false,
+       tag: nil,
+       hashtag: nil,
+       location: location,
+       location_id: String.to_integer(location_id),
+       searching?: false,
+       search_query: ""
+     )
+     |> stream(:posts, [], reset: true)
+     |> fetch_posts()}
+  end
+
   def handle_params(_params, _url, socket) do
     {:noreply,
      socket
@@ -49,6 +70,8 @@ defmodule InstagrainWeb.ExploreLive do
        end_reached?: false,
        tag: nil,
        hashtag: nil,
+       location: nil,
+       location_id: nil,
        seed: :rand.uniform(1_000_000) |> to_string()
      )
      |> stream(:posts, [], reset: true)
@@ -118,9 +141,11 @@ defmodule InstagrainWeb.ExploreLive do
         end
 
       users = Accounts.search_users(query, 20)
+      locations = Feed.search_locations_db(query, 5)
 
       results =
         Enum.map(hashtags, fn h -> {:hashtag, h} end) ++
+          Enum.map(locations, fn l -> {:location, l} end) ++
           Enum.map(users, fn u -> {:user, u} end)
 
       results =
@@ -137,6 +162,22 @@ defmodule InstagrainWeb.ExploreLive do
 
   def handle_event("clear-search", _, socket) do
     {:noreply, assign(socket, search_query: "", search_results: [], searching?: false)}
+  end
+
+  defp fetch_posts(%{assigns: %{location_id: loc_id}} = socket) when not is_nil(loc_id) do
+    posts =
+      Feed.list_posts_by_location(
+        loc_id,
+        socket.assigns.current_user.id,
+        socket.assigns.page
+      )
+
+    if posts == [] do
+      assign(socket, end_reached?: true)
+    else
+      Feed.record_impressions(socket.assigns.current_user.id, Enum.map(posts, & &1.id))
+      socket |> assign(page: socket.assigns.page + 1) |> stream(:posts, posts, at: -1)
+    end
   end
 
   defp fetch_posts(%{assigns: %{tag: tag}} = socket) when not is_nil(tag) do
