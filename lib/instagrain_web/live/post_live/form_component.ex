@@ -19,6 +19,8 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       phx-change="validate"
       phx-submit="save"
       phx-drop-target={@uploads.file.ref}
+      phx-hook="PostModalGuard"
+      data-has-content={"#{@step != :create}"}
       class={cond do
         @step == :edit -> "wide-modal edit-step"
         @step == :final -> "wide-modal"
@@ -578,6 +580,24 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
     {:noreply, cancel_upload(socket, :file, ref)}
+  end
+
+  def handle_event("discard-post", _, socket) do
+    socket =
+      Enum.reduce(socket.assigns.uploads.file.entries, socket, fn entry, socket ->
+        cancel_upload(socket, :file, entry.ref)
+      end)
+
+    {:noreply,
+     assign(socket,
+       previewed?: false,
+       edited?: false,
+       selected_item: 0,
+       image_filters: %{},
+       location_results: [],
+       selected_location: nil,
+       form: to_form(Feed.change_post(%Post{}, %{user_id: socket.assigns.current_user.id}))
+     )}
   end
 
   def handle_event("save", %{"post" => post_params}, socket) do

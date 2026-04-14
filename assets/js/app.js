@@ -176,6 +176,90 @@ let liveSocket = new LiveSocket("/live", Socket, {
         }
       }
     },
+    PostModalGuard: {
+      mounted() {
+        this.modalId = "new-post-modal";
+        this.modal = document.getElementById(this.modalId);
+        if (!this.modal) return;
+
+        // Build confirmation dialog
+        this.overlay = document.createElement("div");
+        this.overlay.className = "fixed inset-0 z-[60] flex items-center justify-center bg-black/65 hidden";
+        this.overlay.innerHTML = `
+          <div class="bg-white rounded-2xl w-96 max-w-[90vw] overflow-hidden text-center">
+            <div class="px-8 pt-8 pb-4">
+              <h2 class="text-xl font-medium">Discard post?</h2>
+              <p class="text-sm text-neutral-500 mt-2">If you leave, your edits won't be saved.</p>
+            </div>
+            <div class="divide-y">
+              <button data-action="discard" class="w-full py-3.5 text-sm font-semibold text-red-500 cursor-pointer">Discard</button>
+              <button data-action="cancel" class="w-full py-3.5 text-sm font-medium cursor-pointer">Cancel</button>
+            </div>
+          </div>`;
+        document.body.appendChild(this.overlay);
+
+        // Prevent clicks inside dialog from closing it
+        this.overlay.querySelector(".bg-white").addEventListener("click", e => e.stopPropagation());
+        this.overlay.addEventListener("click", () => this.hideConfirm());
+
+        this.overlay.querySelector("[data-action='discard']").addEventListener("click", () => {
+          this.hideConfirm();
+          // Close the modal
+          liveSocket.execJS(this.modal, this.modal.getAttribute("phx-remove"));
+          // Reset the form component (target the component, not the parent LiveView)
+          this.pushEventTo(this.el, "discard-post", {});
+        });
+
+        this.overlay.querySelector("[data-action='cancel']").addEventListener("click", () => {
+          this.hideConfirm();
+        });
+
+        // Intercept close triggers in capture phase
+        const intercept = (e) => {
+          if (this.el.dataset.hasContent === "true") {
+            e.stopPropagation();
+            e.preventDefault();
+            this.showConfirm();
+          }
+        };
+
+        // X button
+        const xBtn = this.modal.querySelector("button[aria-label='close']");
+        if (xBtn) xBtn.addEventListener("click", intercept, true);
+
+        // Overlay background click (outside modal content)
+        const overlayEl = document.getElementById(`${this.modalId}-overlay`);
+        const modalContainer = document.getElementById(`${this.modalId}-container`);
+        if (overlayEl) {
+          overlayEl.addEventListener("click", (e) => {
+            if (modalContainer && !modalContainer.contains(e.target) && this.el.dataset.hasContent === "true") {
+              e.stopPropagation();
+              e.preventDefault();
+              this.showConfirm();
+            }
+          }, true);
+        }
+
+        // Escape key
+        const container = document.getElementById(`${this.modalId}-container`);
+        if (container) {
+          container.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && this.el.dataset.hasContent === "true") {
+              e.stopPropagation();
+              e.preventDefault();
+              this.showConfirm();
+            }
+          }, true);
+        }
+      },
+
+      showConfirm() { this.overlay.classList.remove("hidden"); },
+      hideConfirm() { this.overlay.classList.add("hidden"); },
+
+      destroyed() {
+        if (this.overlay) this.overlay.remove();
+      }
+    },
     EmojiPicker: {
       mounted() {
         const trigger = this.el.querySelector("[data-emoji-trigger]");
