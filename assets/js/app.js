@@ -176,6 +176,45 @@ let liveSocket = new LiveSocket("/live", Socket, {
         }
       }
     },
+    DoubleTapLike: {
+      mounted() {
+        let lastTap = 0;
+        const heart = this.el.querySelector("[data-heart-overlay]");
+
+        this.el.addEventListener("touchend", (e) => {
+          const now = Date.now();
+          if (now - lastTap < 300) {
+            e.preventDefault();
+            this.doLike(heart);
+          }
+          lastTap = now;
+        });
+
+        // Also support double-click on desktop
+        this.el.addEventListener("dblclick", (e) => {
+          e.preventDefault();
+          this.doLike(heart);
+        });
+      },
+
+      doLike(heart) {
+        // Only like if not already liked
+        if (this.el.dataset.liked !== "true") {
+          const targetId = this.el.dataset.target;
+          this.pushEventTo(`#${targetId}`, "like", {});
+        }
+
+        // Always show heart animation
+        heart.style.transition = "none";
+        heart.style.opacity = "1";
+        heart.style.transform = "scale(0.5)";
+        requestAnimationFrame(() => {
+          heart.style.transition = "transform 0.3s ease-out, opacity 0.4s ease-in 0.6s";
+          heart.style.transform = "scale(1)";
+          heart.style.opacity = "0";
+        });
+      }
+    },
     PostModalGuard: {
       mounted() {
         this.modalId = "new-post-modal";

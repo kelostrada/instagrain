@@ -4,7 +4,7 @@ defmodule InstagrainWeb.PostLive.IconsComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="grid grid-cols-2">
+    <div class="grid grid-cols-2" id={"#{@id}-root"}>
       <div class="flex gap-4 py-3">
         <%= if @post.liked_by_current_user? do %>
           <span phx-click="unlike" phx-target={@myself}>
