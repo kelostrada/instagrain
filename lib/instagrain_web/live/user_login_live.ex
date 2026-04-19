@@ -4,6 +4,9 @@ defmodule InstagrainWeb.UserLoginLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
+      <div class="flex justify-center mb-8">
+        <img src={~p"/images/logo.svg"} alt="Instagrain" class="h-12" />
+      </div>
       <.header class="text-center">
         Log in to account
         <:subtitle>

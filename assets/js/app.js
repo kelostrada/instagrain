@@ -181,7 +181,10 @@ let liveSocket = new LiveSocket("/live", Socket, {
         let lastTap = 0;
         const heart = this.el.querySelector("[data-heart-overlay]");
 
+        const isNavButton = (el) => !!el.closest("[data-slider-prev], [data-slider-next]");
+
         this.el.addEventListener("touchend", (e) => {
+          if (isNavButton(e.target)) return;
           const now = Date.now();
           if (now - lastTap < 300) {
             e.preventDefault();
@@ -192,6 +195,7 @@ let liveSocket = new LiveSocket("/live", Socket, {
 
         // Also support double-click on desktop
         this.el.addEventListener("dblclick", (e) => {
+          if (isNavButton(e.target)) return;
           e.preventDefault();
           this.doLike(heart);
         });
