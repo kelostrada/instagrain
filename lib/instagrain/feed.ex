@@ -30,53 +30,111 @@ defmodule Instagrain.Feed do
   def list_posts(current_user_id, page \\ 0, seed \\ nil) do
     page_size = 3
     seed = seed || (:rand.uniform() |> Float.to_string())
-
-    # Every 5th post (positions 4, 9, 14, ...) is a discovery post from non-followed users
     total_before = page * page_size
-    slots = Enum.map(0..(page_size - 1), fn i -> rem(total_before + i, 5) == 4 end)
-    discovery_on_page = Enum.count(slots, & &1)
-    followed_on_page = page_size - discovery_on_page
 
-    # Count how many of each type were shown on previous pages
-    discovery_before = div(total_before, 5)
-    followed_before = total_before - discovery_before
+    following_ids = following_user_ids(current_user_id)
+    {liked_tag_ids, liked_location_ids} = interest_signals(current_user_id)
 
-    followed = feed_query(current_user_id, seed, true) |> offset(^followed_before) |> limit(^followed_on_page) |> Repo.all()
-    discovery = feed_query(current_user_id, seed, false) |> offset(^discovery_before) |> limit(^discovery_on_page) |> Repo.all()
+    if following_ids == [] do
+      # Cold-start: user follows no one → feed is pure discovery, with interest boost
+      feed_query(current_user_id, seed, :discovery, liked_tag_ids, liked_location_ids)
+      |> offset(^total_before)
+      |> limit(^page_size)
+      |> Repo.all()
+      |> preload_and_process(current_user_id)
+    else
+      # Every 5th post is a discovery post from non-followed users
+      slots = Enum.map(0..(page_size - 1), fn i -> rem(total_before + i, 5) == 4 end)
+      discovery_on_page = Enum.count(slots, & &1)
+      followed_on_page = page_size - discovery_on_page
 
-    # Interleave according to slot pattern
+      discovery_before = div(total_before, 5)
+      followed_before = total_before - discovery_before
+
+      followed =
+        feed_query(current_user_id, seed, :followed, liked_tag_ids, liked_location_ids)
+        |> offset(^followed_before)
+        |> limit(^followed_on_page)
+        |> Repo.all()
+
+      discovery =
+        feed_query(current_user_id, seed, :discovery, liked_tag_ids, liked_location_ids)
+        |> offset(^discovery_before)
+        |> limit(^discovery_on_page)
+        |> Repo.all()
+
+      interleave(slots, followed, discovery)
+      |> preload_and_process(current_user_id)
+    end
+  end
+
+  defp interleave(slots, followed, discovery) do
     {result, _, _} =
       Enum.reduce(slots, {[], followed, discovery}, fn is_discovery?, {acc, f, d} ->
-        if is_discovery? do
-          case d do
-            [post | rest] -> {[post | acc], f, rest}
-            [] -> case f do
-              [post | rest] -> {[post | acc], rest, d}
-              [] -> {acc, f, d}
-            end
-          end
-        else
-          case f do
-            [post | rest] -> {[post | acc], rest, d}
-            [] -> case d do
-              [post | rest] -> {[post | acc], f, rest}
-              [] -> {acc, f, d}
-            end
-          end
+        {primary, fallback} = if is_discovery?, do: {d, f}, else: {f, d}
+
+        case {primary, fallback} do
+          {[post | rest], _} ->
+            if is_discovery?, do: {[post | acc], f, rest}, else: {[post | acc], rest, d}
+
+          {[], [post | rest]} ->
+            if is_discovery?, do: {[post | acc], rest, d}, else: {[post | acc], f, rest}
+
+          {[], []} ->
+            {acc, f, d}
         end
       end)
 
-    result |> Enum.reverse() |> preload_and_process(current_user_id)
+    Enum.reverse(result)
   end
 
-  defp feed_query(current_user_id, seed, followed?) do
+  defp following_user_ids(current_user_id) do
+    Repo.all(from f in "follows", where: f.user_id == ^current_user_id, select: f.follow_id)
+  end
+
+  # Pulls hashtag + location ids from the user's most recently liked posts, to seed
+  # content-similarity boosts in the discovery feed. Capped to keep the IN-list short.
+  defp interest_signals(current_user_id) do
+    recent_liked_post_ids =
+      from(l in Like,
+        where: l.user_id == ^current_user_id,
+        order_by: [desc: l.inserted_at],
+        limit: 50,
+        select: l.post_id
+      )
+      |> Repo.all()
+
+    if recent_liked_post_ids == [] do
+      {[], []}
+    else
+      tag_ids =
+        from(ph in PostHashtag,
+          where: ph.post_id in ^recent_liked_post_ids,
+          select: ph.hashtag_id,
+          distinct: true
+        )
+        |> Repo.all()
+
+      location_ids =
+        from(p in Post,
+          where: p.id in ^recent_liked_post_ids and not is_nil(p.location_id),
+          select: p.location_id,
+          distinct: true
+        )
+        |> Repo.all()
+
+      {tag_ids, location_ids}
+    end
+  end
+
+  defp feed_query(current_user_id, seed, source, liked_tag_ids, liked_location_ids) do
     base =
       from(p in Post,
         left_join: l in Like,
         on: l.post_id == p.id and l.user_id == ^current_user_id,
         left_join: s in Save,
         on: s.post_id == p.id and s.user_id == ^current_user_id,
-        join: f in "follows",
+        left_join: f in "follows",
         on: f.follow_id == p.user_id and f.user_id == ^current_user_id,
         left_join: imp in Impression,
         on: imp.post_id == p.id and imp.user_id == ^current_user_id,
@@ -88,59 +146,64 @@ defmodule Instagrain.Feed do
         }
       )
 
-    if followed? do
-      # Followed: prioritize recency, moderate engagement, less randomness
-      order_by(base, [p, _l, _s, _f, imp],
-        desc:
-          fragment(
-            """
-            (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * 10)
-            + (EXTRACT(EPOCH FROM (? - NOW())) / 86400.0 + 7) * 3
-            + LEAST(LN(GREATEST(? + COALESCE((SELECT COUNT(*) FROM post_comments WHERE post_id = ?), 0), 1) + 1) * 2, 8)
-            - (COALESCE(?, 0) * 3)
-            """,
-            p.id,
-            ^seed,
-            p.inserted_at,
-            p.likes,
-            p.id,
-            imp.view_count
-          )
-      )
-    else
-      # Discovery: engagement matters more, more randomness, less recency weight
-      order_by(base, [p, _l, _s, _f, imp],
-        desc:
-          fragment(
-            """
-            (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * 15)
-            + (EXTRACT(EPOCH FROM (? - NOW())) / 86400.0 + 7) * 2
-            + LEAST(LN(GREATEST(? + COALESCE((SELECT COUNT(*) FROM post_comments WHERE post_id = ?), 0), 1) + 1) * 3, 12)
-            - (COALESCE(?, 0) * 3)
-            """,
-            p.id,
-            ^seed,
-            p.inserted_at,
-            p.likes,
-            p.id,
-            imp.view_count
-          )
-      )
-    end
-    |> then(fn query ->
-      if followed? do
-        query
-      else
-        # Discovery: posts from users NOT followed
-        query
-        |> exclude(:join)
-        |> join(:left, [p], l in Like, on: l.post_id == p.id and l.user_id == ^current_user_id)
-        |> join(:left, [p, _l], s in Save, on: s.post_id == p.id and s.user_id == ^current_user_id)
-        |> join(:left, [p, _l, _s], f in "follows", on: f.follow_id == p.user_id and f.user_id == ^current_user_id)
-        |> join(:left, [p, _l, _s, _f], imp in Impression, on: imp.post_id == p.id and imp.user_id == ^current_user_id)
-        |> where([_p, _l, _s, f, _imp], is_nil(f.follow_id))
+    base =
+      case source do
+        :followed -> from([_p, _l, _s, f, _imp] in base, where: not is_nil(f.follow_id))
+        :discovery -> from([_p, _l, _s, f, _imp] in base, where: is_nil(f.follow_id))
       end
-    end)
+
+    apply_scoring(base, seed, source, liked_tag_ids, liked_location_ids)
+  end
+
+  # Score formula combines: deterministic randomness (per-user seed), recency,
+  # engagement (likes + comments), impression-penalty, and a content-interest
+  # boost (matching hashtags + location) when the user has liked things before.
+  defp apply_scoring(query, seed, source, liked_tag_ids, liked_location_ids) do
+    {rand_weight, recency_weight, engagement_weight, engagement_cap} =
+      case source do
+        :followed -> {10, 3, 2, 8}
+        :discovery -> {15, 2, 3, 12}
+      end
+
+    # Interest boost: only meaningful for discovery; for followed we already trust the follow signal
+    {tag_boost, location_boost} =
+      case source do
+        :discovery -> {4, 6}
+        :followed -> {2, 2}
+      end
+
+    tag_ids = if liked_tag_ids == [], do: [-1], else: liked_tag_ids
+    loc_ids = if liked_location_ids == [], do: [-1], else: liked_location_ids
+
+    order_by(query, [p, _l, _s, _f, imp],
+      desc:
+        fragment(
+          """
+          (('x' || left(md5(CAST(? AS text) || ?), 8))::bit(32)::int::float / 2147483647.0 * ?)
+          + (EXTRACT(EPOCH FROM (? - NOW())) / 86400.0 + 7) * ?
+          + LEAST(LN(GREATEST(? + COALESCE((SELECT COUNT(*) FROM post_comments WHERE post_id = ?), 0), 1) + 1) * ?, ?)
+          - (COALESCE(?, 0) * 3)
+          + LEAST(COALESCE((SELECT COUNT(*) FROM post_hashtags WHERE post_id = ? AND hashtag_id = ANY(?)), 0), 3) * ?
+          + (CASE WHEN ? = ANY(?) THEN 1 ELSE 0 END) * ?
+          """,
+          p.id,
+          ^seed,
+          ^rand_weight,
+          p.inserted_at,
+          ^recency_weight,
+          p.likes,
+          p.id,
+          ^engagement_weight,
+          ^engagement_cap,
+          imp.view_count,
+          p.id,
+          ^tag_ids,
+          ^tag_boost,
+          p.location_id,
+          ^loc_ids,
+          ^location_boost
+        )
+    )
   end
 
   @doc """

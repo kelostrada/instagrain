@@ -359,6 +359,27 @@ let liveSocket = new LiveSocket("/live", Socket, {
         // Sync slider value when server updates (e.g., switching between images)
       }
     },
+    FlashAutoDismiss: {
+      mounted() {
+        this.delay = 5000;
+        this.start();
+        this.el.addEventListener("mouseenter", () => this.clear());
+        this.el.addEventListener("mouseleave", () => this.start());
+      },
+      start() {
+        this.clear();
+        this.timer = setTimeout(() => this.el.click(), this.delay);
+      },
+      clear() {
+        if (this.timer) {
+          clearTimeout(this.timer);
+          this.timer = null;
+        }
+      },
+      destroyed() {
+        this.clear();
+      }
+    },
     SubmitOnEnter: {
       resize() {
         this.el.style.height = 'auto';
