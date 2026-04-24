@@ -66,7 +66,9 @@ defmodule InstagrainWeb.MessagesLive do
        details_group_name: "",
        add_member_search: "",
        add_member_results: [],
-       show_add_member: false
+       show_add_member: false,
+       conversation_search: "",
+       conversation_search_users: []
      )}
   end
 
@@ -163,6 +165,36 @@ defmodule InstagrainWeb.MessagesLive do
     )
 
     {:noreply, assign(socket, message: "")}
+  end
+
+  def handle_event("conversation-search", %{"query" => query}, socket) do
+    query = String.trim(query)
+
+    users =
+      if query == "" do
+        []
+      else
+        participant_ids = participant_ids_of(socket.assigns.conversations, socket.assigns.current_user.id)
+
+        Accounts.search_users(query, 20)
+        |> Enum.reject(&(&1.id == socket.assigns.current_user.id or &1.id in participant_ids))
+      end
+
+    {:noreply, assign(socket, conversation_search: query, conversation_search_users: users)}
+  end
+
+  def handle_event("clear-conversation-search", _params, socket) do
+    {:noreply, assign(socket, conversation_search: "", conversation_search_users: [])}
+  end
+
+  def handle_event("start-conversation-with", %{"id" => id}, socket) do
+    user_id = String.to_integer(id)
+    conversation = Conversations.create_conversation(socket.assigns.current_user.id, [user_id])
+
+    {:noreply,
+     socket
+     |> assign(conversation_search: "", conversation_search_users: [])
+     |> push_patch(to: ~p"/messages/#{conversation.id}")}
   end
 
   def handle_event("open-new-message", _params, socket) do
@@ -416,5 +448,27 @@ defmodule InstagrainWeb.MessagesLive do
 
     color = if(is_own, do: "bg-sky-500", else: "bg-neutral-200")
     [radius, color, "py-2 px-3 [overflow-wrap:anywhere]"]
+  end
+
+  defp participant_ids_of(conversations, current_user_id) do
+    conversations
+    |> Map.values()
+    |> Enum.flat_map(fn c -> Enum.map(c.participants, & &1.id) end)
+    |> Enum.reject(&(&1 == current_user_id))
+    |> Enum.uniq()
+  end
+
+  def matches_conversation_search?(conversation, query) do
+    needle = String.downcase(query)
+
+    name_match? = conversation.name && String.contains?(String.downcase(conversation.name), needle)
+
+    participant_match? =
+      Enum.any?(conversation.participants, fn user ->
+        String.contains?(String.downcase(user.username || ""), needle) or
+          String.contains?(String.downcase(user.full_name || ""), needle)
+      end)
+
+    name_match? or participant_match?
   end
 end

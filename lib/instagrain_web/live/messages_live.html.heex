@@ -3,7 +3,7 @@
     "sm:border-r max-sm:w-full md:w-96 overflow-y-auto",
     @conversation_id && "max-sm:hidden"
   ]}>
-    <div class="max-sm:p-4 sm:p-6 flex justify-between sm:max-md:justify-center w-full">
+    <div class="max-sm:p-4 sm:p-6 pb-3 flex justify-between sm:max-md:justify-center w-full">
       <div class="sm:max-md:hidden">
         <h1 class="text-base font-extrabold">Messages</h1>
       </div>
@@ -22,6 +22,114 @@
         </button>
       </div>
     </div>
+
+    <%!-- Search input --%>
+    <div class="max-sm:px-4 sm:px-6 pb-3 sm:max-md:hidden">
+      <form phx-change="conversation-search" class="flex items-center gap-2">
+        <button
+          :if={@conversation_search != ""}
+          type="button"
+          phx-click="clear-conversation-search"
+          class="cursor-pointer shrink-0"
+        >
+          <.icon name="hero-arrow-left" class="h-5 w-5" />
+        </button>
+        <div class="relative grow">
+          <.icon
+            :if={@conversation_search == ""}
+            name="hero-magnifying-glass"
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400"
+          />
+          <input
+            type="text"
+            name="query"
+            value={@conversation_search}
+            phx-debounce="200"
+            autocomplete="off"
+            placeholder="Search"
+            class={[
+              "w-full rounded-lg bg-neutral-100 border-0 py-2 pr-10 text-sm placeholder:text-neutral-400 focus:ring-0",
+              if(@conversation_search == "", do: "pl-10", else: "pl-3")
+            ]}
+          />
+          <button
+            :if={@conversation_search != ""}
+            type="button"
+            phx-click="clear-conversation-search"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+          >
+            <.icon name="hero-x-circle-solid" class="w-5 h-5" />
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <%= if @conversation_search != "" do %>
+      <% matching_conversations =
+        @conversations
+        |> Enum.filter(fn {_, c} ->
+          InstagrainWeb.MessagesLive.matches_conversation_search?(c, @conversation_search)
+        end)
+        |> Enum.sort_by(fn {_, c} -> if c.last_message_at, do: DateTime.to_unix(c.last_message_at), else: 0 end, :desc) %>
+
+      <%= if matching_conversations == [] and @conversation_search_users == [] do %>
+        <p class="max-sm:px-4 sm:px-6 py-8 text-sm text-neutral-500 text-center">
+          No accounts found.
+        </p>
+      <% end %>
+
+      <div
+        :for={{id, conversation} <- matching_conversations}
+        class={[
+          "max-sm:px-4 sm:px-6 py-2 flex gap-3 hover:bg-neutral-100/50 cursor-pointer",
+          @conversation_id == conversation.id && "bg-neutral-100"
+        ]}
+        phx-click={JS.push("clear-conversation-search") |> JS.patch(~p"/messages/#{id}")}
+      >
+        <%= if length(conversation.participants) == 1 do %>
+          <div class="flex-shrink-0">
+            <.avatar size={:lg} user={List.first(conversation.participants)} />
+          </div>
+        <% else %>
+          <div class="relative w-[58px] h-[58px] flex-shrink-0">
+            <% [user1, user2 | _] = conversation.participants %>
+            <.avatar size={:md} user={user1} class="absolute top-0 left-0" />
+            <.avatar size={:md} user={user2} class="absolute bottom-0 right-0 border-white border-2" />
+          </div>
+        <% end %>
+        <div class="grow flex flex-col justify-center min-w-0">
+          <div class="text-sm font-semibold truncate"><%= conversation.name %></div>
+          <div class="text-xs text-neutral-500 truncate">
+            <%= conversation.participants
+                |> Enum.map(&(&1.username))
+                |> Enum.join(", ") %>
+          </div>
+        </div>
+      </div>
+
+      <%= if @conversation_search_users != [] do %>
+        <h2 class="max-sm:px-4 sm:px-6 pt-4 pb-2 text-base font-extrabold">More accounts</h2>
+        <div
+          :for={user <- @conversation_search_users}
+          class="max-sm:px-4 sm:px-6 py-2 flex gap-3 hover:bg-neutral-100/50 cursor-pointer"
+          phx-click="start-conversation-with"
+          phx-value-id={user.id}
+        >
+          <div class="flex-shrink-0">
+            <.avatar size={:lg} user={user} />
+          </div>
+          <div class="grow flex flex-col justify-center min-w-0">
+            <div class="text-sm font-semibold truncate">
+              <%= user.full_name || user.username %>
+            </div>
+            <div class="text-xs text-neutral-500 truncate">
+              <%= user.username %>
+              <%= if user.full_name && user.description, do: " · #{user.description}" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
 
     <div
       :for={{id, conversation} <- Enum.sort_by(@conversations, fn {_, c} -> if c.last_message_at, do: DateTime.to_unix(c.last_message_at), else: 0 end, :desc)}
@@ -73,6 +181,7 @@
         class="self-center w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0 sm:max-md:hidden"
       />
     </div>
+    <% end %>
   </div>
   <%= if @conversation_id do %>
     <div class="grow flex">
