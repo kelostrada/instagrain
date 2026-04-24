@@ -15,7 +15,13 @@ defmodule InstagrainWeb.ProfileLive do
     current_user_profile? = profile.id == current_user.id
 
     base_url = InstagrainWeb.Endpoint.url()
-    og_image = if profile.avatar, do: "#{base_url}/uploads/avatars/#{profile.avatar}"
+
+    {og_image, og_image_type} =
+      case profile.avatar do
+        nil -> {nil, nil}
+        file -> {"#{base_url}/uploads/avatars/#{file}", image_mime(file)}
+      end
+
     og_desc = profile.description || "#{profile.full_name || profile.username}'s profile on Instagrain"
 
     {:noreply,
@@ -33,6 +39,7 @@ defmodule InstagrainWeb.ProfileLive do
        og_title: "#{profile.full_name || profile.username} (@#{profile.username})",
        og_description: og_desc,
        og_image: og_image,
+       og_image_type: og_image_type,
        og_url: "#{base_url}/#{profile.username}",
        og_type: "profile"
      )
@@ -143,5 +150,16 @@ defmodule InstagrainWeb.ProfileLive do
     socket
     |> assign(profile: profile, current_user: current_user, following_user_ids: following_ids)
     |> stream(:posts, posts, reset: true)
+  end
+
+  defp image_mime(filename) do
+    case filename |> Path.extname() |> String.downcase() do
+      ".jpg" -> "image/jpeg"
+      ".jpeg" -> "image/jpeg"
+      ".png" -> "image/png"
+      ".gif" -> "image/gif"
+      ".webp" -> "image/webp"
+      _ -> nil
+    end
   end
 end

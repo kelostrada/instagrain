@@ -29,7 +29,13 @@ defmodule InstagrainWeb.PostLive.Show do
     Feed.record_impressions(socket.assigns.current_user.id, [post.id], 3)
 
     base_url = InstagrainWeb.Endpoint.url()
-    og_image = if post.resources != [], do: "#{base_url}/uploads/#{hd(post.resources).file}"
+
+    {og_image, og_image_type} =
+      case post.resources do
+        [%{file: file} | _] -> {"#{base_url}/uploads/#{file}", image_mime(file)}
+        _ -> {nil, nil}
+      end
+
     caption = post.caption || ""
     og_desc = if String.length(caption) > 200, do: String.slice(caption, 0, 197) <> "...", else: caption
 
@@ -39,10 +45,22 @@ defmodule InstagrainWeb.PostLive.Show do
      |> assign(:og_title, "#{post.user.full_name || post.user.username} on Instagrain")
      |> assign(:og_description, if(og_desc == "", do: "View this post on Instagrain", else: og_desc))
      |> assign(:og_image, og_image)
+     |> assign(:og_image_type, og_image_type)
      |> assign(:og_url, "#{base_url}/p/#{post.id}")
      |> assign(:og_type, "article")
      |> assign(:post, post)
      |> assign(:other_posts, Feed.list_other_posts(post))}
+  end
+
+  defp image_mime(filename) do
+    case filename |> Path.extname() |> String.downcase() do
+      ".jpg" -> "image/jpeg"
+      ".jpeg" -> "image/jpeg"
+      ".png" -> "image/png"
+      ".gif" -> "image/gif"
+      ".webp" -> "image/webp"
+      _ -> nil
+    end
   end
 
   @impl true

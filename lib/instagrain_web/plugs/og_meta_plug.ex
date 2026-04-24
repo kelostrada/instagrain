@@ -32,12 +32,17 @@ defmodule InstagrainWeb.OgMetaPlug do
     with {id, _} <- Integer.parse(id),
          post when not is_nil(post) <- safe_get_post(id) do
       base_url = InstagrainWeb.Endpoint.url()
-      image = if post.resources != [], do: "#{base_url}/uploads/#{hd(post.resources).file}"
+      {image, image_type} =
+        case post.resources do
+          [%{file: file} | _] -> {"#{base_url}/uploads/#{file}", image_mime(file)}
+          _ -> {nil, nil}
+        end
+
       caption = post.caption || ""
       desc = if String.length(caption) > 200, do: String.slice(caption, 0, 197) <> "...", else: caption
       title = "#{post.user.full_name || post.user.username} on Instagrain"
 
-      {:ok, send_og_html(conn, title, desc, image, "#{base_url}/p/#{post.id}")}
+      {:ok, send_og_html(conn, title, desc, image, image_type, "#{base_url}/p/#{post.id}", "article")}
     else
       _ -> :pass
     end
@@ -54,11 +59,17 @@ defmodule InstagrainWeb.OgMetaPlug do
 
         profile ->
           base_url = InstagrainWeb.Endpoint.url()
-          image = if profile.avatar, do: "#{base_url}/uploads/avatars/#{profile.avatar}"
+
+          {image, image_type} =
+            case profile.avatar do
+              nil -> {nil, nil}
+              file -> {"#{base_url}/uploads/avatars/#{file}", image_mime(file)}
+            end
+
           desc = profile.description || "#{profile.full_name || profile.username}'s profile"
           title = "#{profile.full_name || profile.username} (@#{profile.username})"
 
-          {:ok, send_og_html(conn, title, desc, image, "#{base_url}/#{profile.username}")}
+          {:ok, send_og_html(conn, title, desc, image, image_type, "#{base_url}/#{profile.username}", "profile")}
       end
     end
   end
@@ -78,8 +89,22 @@ defmodule InstagrainWeb.OgMetaPlug do
     _ -> nil
   end
 
-  defp send_og_html(conn, title, description, image, url) do
-    image_tag = if image, do: ~s(<meta property="og:image" content="#{image}" />), else: ""
+  defp send_og_html(conn, title, description, image, image_type, url, og_type) do
+    image_tags =
+      if image do
+        type_tag = if image_type, do: ~s(<meta property="og:image:type" content="#{image_type}" />), else: ""
+
+        """
+        <meta property="og:image" content="#{image}" />
+        <meta property="og:image:secure_url" content="#{image}" />
+        <meta property="og:image:alt" content="#{escape(title)}" />
+        #{type_tag}
+        <meta name="twitter:image" content="#{image}" />
+        <meta name="twitter:image:alt" content="#{escape(title)}" />
+        """
+      else
+        ""
+      end
 
     html = """
     <!DOCTYPE html>
@@ -87,10 +112,10 @@ defmodule InstagrainWeb.OgMetaPlug do
     <head>
       <meta charset="utf-8" />
       <meta property="og:site_name" content="Instagrain" />
-      <meta property="og:type" content="website" />
+      <meta property="og:type" content="#{og_type}" />
       <meta property="og:title" content="#{escape(title)}" />
       <meta property="og:description" content="#{escape(description)}" />
-      #{image_tag}
+      #{image_tags}
       <meta property="og:url" content="#{url}" />
       <meta name="twitter:card" content="#{if image, do: "summary_large_image", else: "summary"}" />
       <meta name="twitter:title" content="#{escape(title)}" />
@@ -104,6 +129,17 @@ defmodule InstagrainWeb.OgMetaPlug do
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, html)
+  end
+
+  defp image_mime(filename) do
+    case filename |> Path.extname() |> String.downcase() do
+      ".jpg" -> "image/jpeg"
+      ".jpeg" -> "image/jpeg"
+      ".png" -> "image/png"
+      ".gif" -> "image/gif"
+      ".webp" -> "image/webp"
+      _ -> nil
+    end
   end
 
   defp escape(nil), do: ""
