@@ -230,24 +230,18 @@ defmodule InstagrainWeb.UserAuth do
           end
         )
         |> Phoenix.LiveView.attach_hook(
-          :notifications_panel_events,
+          :notifications_mark_seen,
           :handle_event,
           fn
-            "toggle_notifications_panel", _params, socket ->
+            "mark_notifications_seen", _params, socket ->
+              Instagrain.Notifications.mark_all_seen(socket.assigns.current_user.id)
+
               Phoenix.LiveView.send_update(InstagrainWeb.NotificationsComponent,
                 id: "notifications-panel",
-                action: :open
+                action: :refresh
               )
 
               {:halt, Phoenix.Component.assign(socket, unseen_notifications_count: 0)}
-
-            "close_notifications_panel", _params, socket ->
-              Phoenix.LiveView.send_update(InstagrainWeb.NotificationsComponent,
-                id: "notifications-panel",
-                action: :close
-              )
-
-              {:halt, socket}
 
             _event, _params, socket ->
               {:cont, socket}

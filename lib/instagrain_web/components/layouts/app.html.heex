@@ -106,7 +106,7 @@
       <%!-- Desktop: heart toggles notifications panel --%>
       <.nav_button
         class="max-sm:hidden"
-        phx-click={JS.push("toggle_notifications_panel")}
+        phx-click={toggle_notifications_panel() |> JS.push("mark_notifications_seen")}
         icon_name="hero-heart"
         icon_name_solid="hero-heart-solid"
         label="Notifications"

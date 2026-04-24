@@ -13,26 +13,10 @@ defmodule InstagrainWeb.NotificationsComponent do
     {:ok,
      assign(socket,
        filter: :all,
-       open?: false,
        suggestions: nil,
        notifications: [],
        following_user_ids: []
      )}
-  end
-
-  def update(%{action: :open}, socket) do
-    current_user = socket.assigns.current_user
-    Notifications.mark_all_seen(current_user.id)
-
-    {:ok,
-     assign(socket,
-       open?: true,
-       notifications: Notifications.list_for_user(current_user.id)
-     )}
-  end
-
-  def update(%{action: :close}, socket) do
-    {:ok, assign(socket, open?: false)}
   end
 
   def update(%{action: :refresh}, socket) do
@@ -47,13 +31,10 @@ defmodule InstagrainWeb.NotificationsComponent do
     following_ids = Profiles.list_following(current_user.id) |> Enum.map(& &1.id)
     notifications = Notifications.list_for_user(current_user.id)
 
-    force_open? = Map.get(assigns, :variant, :panel) == :full_page
-
     {:ok,
      assign(socket,
        id: assigns.id,
        variant: Map.get(assigns, :variant, :panel),
-       open?: force_open? or socket.assigns.open?,
        current_user: current_user,
        following_user_ids: following_ids,
        notifications: notifications,
@@ -119,12 +100,8 @@ defmodule InstagrainWeb.NotificationsComponent do
     ~H"""
     <div
       id={@id}
-      class={[
-        "fixed top-0 left-0 bottom-0 w-[400px] bg-white border-r border-neutral-200 shadow-xl z-40 overflow-y-auto",
-        "transition-transform duration-300",
-        if(@open?, do: "flex flex-col translate-x-0", else: "hidden -translate-x-full")
-      ]}
-      phx-click-away={JS.push("close_notifications_panel")}
+      class="fixed top-0 left-0 bottom-0 w-[400px] bg-white border-r border-neutral-200 shadow-xl z-40 overflow-y-auto flex-col hidden -translate-x-full transition-transform duration-300"
+      phx-click-away={hide_notifications_panel()}
     >
       <div class="p-6 pb-3">
         <h2 class="text-2xl font-bold mb-5">Notifications</h2>
@@ -453,6 +430,11 @@ defmodule InstagrainWeb.NotificationsComponent do
   end
 
   defp hide_notifications_panel do
-    Phoenix.LiveView.JS.push(%Phoenix.LiveView.JS{}, "close_notifications_panel")
+    %Phoenix.LiveView.JS{}
+    |> Phoenix.LiveView.JS.hide(
+      to: "#notifications-panel",
+      transition:
+        {"transition-transform duration-300", "translate-x-0", "-translate-x-full"}
+    )
   end
 end
