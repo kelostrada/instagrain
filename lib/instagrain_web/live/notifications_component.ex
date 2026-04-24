@@ -5,23 +5,58 @@ defmodule InstagrainWeb.NotificationsComponent do
   import InstagrainWeb.UserComponents
 
   alias Instagrain.Accounts.User
+  alias Instagrain.Notifications
   alias Instagrain.Profiles
   alias Instagrain.Repo
 
   def mount(socket) do
-    {:ok, assign(socket, filter: :all, suggestions: nil, following_user_ids: [])}
+    {:ok,
+     assign(socket,
+       filter: :all,
+       open?: false,
+       suggestions: nil,
+       notifications: [],
+       following_user_ids: []
+     )}
+  end
+
+  def update(%{action: :open}, socket) do
+    current_user = socket.assigns.current_user
+    Notifications.mark_all_seen(current_user.id)
+
+    {:ok,
+     assign(socket,
+       open?: true,
+       notifications: Notifications.list_for_user(current_user.id)
+     )}
+  end
+
+  def update(%{action: :close}, socket) do
+    {:ok, assign(socket, open?: false)}
+  end
+
+  def update(%{action: :refresh}, socket) do
+    current_user = socket.assigns.current_user
+
+    {:ok,
+     assign(socket, notifications: Notifications.list_for_user(current_user.id))}
   end
 
   def update(assigns, socket) do
     current_user = assigns.current_user
     following_ids = Profiles.list_following(current_user.id) |> Enum.map(& &1.id)
+    notifications = Notifications.list_for_user(current_user.id)
+
+    force_open? = Map.get(assigns, :variant, :panel) == :full_page
 
     {:ok,
      assign(socket,
        id: assigns.id,
        variant: Map.get(assigns, :variant, :panel),
+       open?: force_open? or socket.assigns.open?,
        current_user: current_user,
        following_user_ids: following_ids,
+       notifications: notifications,
        suggestions: socket.assigns.suggestions || suggested_users(current_user.id, following_ids)
      )}
   end
@@ -46,8 +81,6 @@ defmodule InstagrainWeb.NotificationsComponent do
      )}
   end
 
-  # Mocked "Suggested for you" — picks users the current user doesn't follow.
-  # Will be replaced with a real recommender once the UI is approved.
   defp suggested_users(current_user_id, following_ids) do
     exclude_ids = [current_user_id | following_ids]
 
@@ -86,8 +119,12 @@ defmodule InstagrainWeb.NotificationsComponent do
     ~H"""
     <div
       id={@id}
-      class="fixed top-0 left-0 bottom-0 w-[400px] bg-white border-r border-neutral-200 shadow-xl z-40 flex-col hidden overflow-y-auto"
-      phx-click-away={hide_notifications_panel()}
+      class={[
+        "fixed top-0 left-0 bottom-0 w-[400px] bg-white border-r border-neutral-200 shadow-xl z-40 overflow-y-auto",
+        "transition-transform duration-300",
+        if(@open?, do: "flex flex-col translate-x-0", else: "hidden -translate-x-full")
+      ]}
+      phx-click-away={JS.push("close_notifications_panel")}
     >
       <div class="p-6 pb-3">
         <h2 class="text-2xl font-bold mb-5">Notifications</h2>
@@ -96,6 +133,8 @@ defmodule InstagrainWeb.NotificationsComponent do
 
       <div class="border-t border-neutral-200 flex-1">
         <.notifications_body
+          filter={@filter}
+          notifications={@notifications}
           suggestions={@suggestions}
           following_user_ids={@following_user_ids}
           target={@myself}
@@ -120,6 +159,8 @@ defmodule InstagrainWeb.NotificationsComponent do
 
       <div class="sm:border-t sm:border-neutral-200">
         <.notifications_body
+          filter={@filter}
+          notifications={@notifications}
           suggestions={@suggestions}
           following_user_ids={@following_user_ids}
           target={@myself}
@@ -164,14 +205,33 @@ defmodule InstagrainWeb.NotificationsComponent do
     """
   end
 
+  attr :filter, :atom, required: true
+  attr :notifications, :list, required: true
   attr :suggestions, :list, required: true
   attr :following_user_ids, :list, required: true
   attr :target, :any, required: true
   attr :on_navigate, :any, default: nil
 
   defp notifications_body(assigns) do
+    visible = filter_notifications(assigns.notifications, assigns.filter)
+    groups = Notifications.group_for_display(visible)
+    assigns = assign(assigns, visible: visible, groups: groups)
+
     ~H"""
-    <div class="flex flex-col items-center text-center py-10 px-6">
+    <div :if={@groups != []} class="px-6 pt-4 pb-6">
+      <h3 class="text-base font-bold mb-2">Today</h3>
+      <ul>
+        <.notification_row
+          :for={group <- @groups}
+          group={group}
+          following_user_ids={@following_user_ids}
+          target={@target}
+          on_navigate={@on_navigate}
+        />
+      </ul>
+    </div>
+
+    <div :if={@groups == []} class="flex flex-col items-center text-center py-10 px-6">
       <div class="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center mb-4">
         <.icon name="hero-heart" class="w-8 h-8" />
       </div>
@@ -181,7 +241,7 @@ defmodule InstagrainWeb.NotificationsComponent do
       </p>
     </div>
 
-    <div :if={@suggestions != []} class="px-6 pb-8">
+    <div :if={@suggestions != [] and @filter == :all} class="px-6 pb-8 border-t border-neutral-100 pt-4">
       <h3 class="text-base font-bold mb-2">Suggested for you</h3>
 
       <ul class="divide-y divide-neutral-100">
@@ -227,11 +287,172 @@ defmodule InstagrainWeb.NotificationsComponent do
     """
   end
 
-  defp hide_notifications_panel do
-    %Phoenix.LiveView.JS{}
-    |> Phoenix.LiveView.JS.hide(
-      to: "#notifications-panel",
-      transition: {"transition-transform duration-300", "translate-x-0", "-translate-x-full"}
+  defp filter_notifications(notifications, :all), do: notifications
+
+  defp filter_notifications(notifications, :comments),
+    do: Enum.filter(notifications, &(&1.type in ["comment", "like_comment"]))
+
+  attr :group, :map, required: true
+  attr :following_user_ids, :list, required: true
+  attr :target, :any, required: true
+  attr :on_navigate, :any, default: nil
+
+  defp notification_row(assigns) do
+    ~H"""
+    <li class="flex items-center gap-3 py-3">
+      <.actor_avatars actors={@group.actors} on_navigate={@on_navigate} />
+      <div class="flex-1 min-w-0 text-sm leading-snug">
+        <%= render_notification_text(assigns) %>
+        <span class="text-neutral-400 text-xs ml-1">
+          · <%= relative_time(@group.inserted_at) %>
+        </span>
+      </div>
+
+      <%= if @group.type == "follow" do %>
+        <.follow_back_button
+          actor={hd(@group.actors)}
+          following_user_ids={@following_user_ids}
+          target={@target}
+        />
+      <% else %>
+        <.post_thumb :if={@group.post} post={@group.post} on_navigate={@on_navigate} />
+      <% end %>
+    </li>
+    """
+  end
+
+  attr :actors, :list, required: true
+  attr :on_navigate, :any, default: nil
+
+  # Single actor → plain avatar. Two or more → the second avatar sits on the
+  # bottom-right of the first, like the overlapping avatars on group messages.
+  defp actor_avatars(%{actors: [_single]} = assigns) do
+    ~H"""
+    <.link navigate={~p"/#{hd(@actors).username}"} phx-click={@on_navigate} class="shrink-0">
+      <.avatar user={hd(@actors)} size={:md} />
+    </.link>
+    """
+  end
+
+  defp actor_avatars(%{actors: [first, second | _]} = assigns) do
+    assigns = assign(assigns, first: first, second: second)
+
+    ~H"""
+    <div class="relative w-11 h-11 shrink-0">
+      <.link navigate={~p"/#{@first.username}"} phx-click={@on_navigate}>
+        <.avatar user={@first} size={:sm} class="absolute top-0 left-0" />
+      </.link>
+      <.link navigate={~p"/#{@second.username}"} phx-click={@on_navigate}>
+        <.avatar
+          user={@second}
+          size={:sm}
+          class="absolute bottom-0 right-0 border-white border-2"
+        />
+      </.link>
+    </div>
+    """
+  end
+
+  defp render_notification_text(%{group: %{type: type, actors: actors, count: count}} = assigns) do
+    assigns = assign(assigns, actors: actors, count: count, type: type)
+
+    ~H"""
+    <%= actor_names(@actors, @count) %>
+    <span class="text-neutral-500"><%= action_text(@type, @count) %></span>
+    """
+  end
+
+  attr :actor, :map, required: true
+  attr :following_user_ids, :list, required: true
+  attr :target, :any, required: true
+
+  defp follow_back_button(assigns) do
+    ~H"""
+    <button
+      :if={@actor.id not in @following_user_ids}
+      phx-click="follow"
+      phx-value-user-id={@actor.id}
+      phx-target={@target}
+      class="px-4 py-1.5 text-sm font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+    >
+      Follow Back
+    </button>
+    <button
+      :if={@actor.id in @following_user_ids}
+      phx-click="unfollow"
+      phx-value-user-id={@actor.id}
+      phx-target={@target}
+      class="px-4 py-1.5 text-sm font-semibold rounded-lg bg-neutral-200 hover:bg-neutral-300 text-black"
+    >
+      Following
+    </button>
+    """
+  end
+
+  attr :post, :map, required: true
+  attr :on_navigate, :any, default: nil
+
+  defp post_thumb(assigns) do
+    ~H"""
+    <.link navigate={~p"/p/#{@post.id}"} phx-click={@on_navigate} class="shrink-0">
+      <%= if resource = List.first(@post.resources || []) do %>
+        <img
+          src={~p"/uploads/#{resource.file}"}
+          class="w-11 h-11 object-cover rounded"
+          style={InstagrainWeb.ImageFilters.resource_filter_style(resource)}
+        />
+      <% else %>
+        <div class="w-11 h-11 bg-neutral-200 rounded" />
+      <% end %>
+    </.link>
+    """
+  end
+
+  defp actor_names([a], _count), do: Phoenix.HTML.raw("<span class=\"font-semibold\">#{a.username}</span>")
+
+  defp actor_names([a, b], 2),
+    do:
+      Phoenix.HTML.raw(
+        "<span class=\"font-semibold\">#{a.username}</span>, <span class=\"font-semibold\">#{b.username}</span>"
+      )
+
+  defp actor_names([a, b | _rest], count) when count > 2 do
+    others = count - 2
+    suffix = if others == 1, do: "other", else: "others"
+
+    Phoenix.HTML.raw(
+      "<span class=\"font-semibold\">#{a.username}</span>, <span class=\"font-semibold\">#{b.username}</span> and #{others} #{suffix}"
     )
+  end
+
+  defp actor_names([a], count) when count > 1 do
+    others = count - 1
+    suffix = if others == 1, do: "other", else: "others"
+
+    Phoenix.HTML.raw(
+      "<span class=\"font-semibold\">#{a.username}</span> and #{others} #{suffix}"
+    )
+  end
+
+  defp action_text("follow", _), do: " started following you."
+  defp action_text("like", 1), do: " liked your photo."
+  defp action_text("like", _), do: " liked your photo."
+  defp action_text("comment", _), do: " commented on your photo."
+  defp action_text("like_comment", _), do: " liked your comment."
+
+  defp relative_time(datetime) do
+    seconds = DateTime.utc_now() |> DateTime.diff(datetime)
+
+    cond do
+      seconds < 60 -> "#{seconds}s"
+      seconds < 3_600 -> "#{div(seconds, 60)}m"
+      seconds < 86_400 -> "#{div(seconds, 3_600)}h"
+      seconds < 604_800 -> "#{div(seconds, 86_400)}d"
+      true -> "#{div(seconds, 604_800)}w"
+    end
+  end
+
+  defp hide_notifications_panel do
+    Phoenix.LiveView.JS.push(%Phoenix.LiveView.JS{}, "close_notifications_panel")
   end
 end

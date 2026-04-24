@@ -17,6 +17,7 @@ defmodule Instagrain.Feed do
   alias Instagrain.Feed.PostHashtag
   alias Instagrain.Feed.Post.Save
   alias Instagrain.Feed.Location
+  alias Instagrain.Notifications
 
   @doc """
   Returns the list of posts.
@@ -648,6 +649,13 @@ defmodule Instagrain.Feed do
     |> Repo.transaction()
     |> case do
       {:ok, %{post: post}} ->
+        Notifications.create(%{
+          user_id: post.user_id,
+          actor_id: user_id,
+          type: "like",
+          post_id: post.id
+        })
+
         {:ok, %{post | liked_by_current_user?: true}}
 
       error ->
@@ -670,6 +678,7 @@ defmodule Instagrain.Feed do
     |> Repo.transaction()
     |> case do
       {:ok, %{post: post}} ->
+        Notifications.delete(post.user_id, user_id, "like", post_id: post.id)
         {:ok, %{post | liked_by_current_user?: false}}
 
       error ->
@@ -719,9 +728,28 @@ defmodule Instagrain.Feed do
 
   """
   def create_comment(attrs \\ %{}) do
-    %Comment{}
-    |> Comment.changeset(attrs)
-    |> Repo.insert()
+    case %Comment{} |> Comment.changeset(attrs) |> Repo.insert() do
+      {:ok, comment} = ok ->
+        notify_new_comment(comment)
+        ok
+
+      error ->
+        error
+    end
+  end
+
+  defp notify_new_comment(comment) do
+    post = Repo.get(Post, comment.post_id)
+
+    if post do
+      Notifications.create(%{
+        user_id: post.user_id,
+        actor_id: comment.user_id,
+        type: "comment",
+        post_id: post.id,
+        comment_id: comment.id
+      })
+    end
   end
 
   @doc """
@@ -789,6 +817,14 @@ defmodule Instagrain.Feed do
     |> Repo.transaction()
     |> case do
       {:ok, %{comment: comment}} ->
+        Notifications.create(%{
+          user_id: comment.user_id,
+          actor_id: user_id,
+          type: "like_comment",
+          post_id: comment.post_id,
+          comment_id: comment.id
+        })
+
         {:ok, %{comment | liked_by_current_user?: true}}
 
       error ->
@@ -811,6 +847,7 @@ defmodule Instagrain.Feed do
     |> Repo.transaction()
     |> case do
       {:ok, %{comment: comment}} ->
+        Notifications.delete(comment.user_id, user_id, "like_comment", comment_id: comment.id)
         {:ok, %{comment | liked_by_current_user?: false}}
 
       error ->

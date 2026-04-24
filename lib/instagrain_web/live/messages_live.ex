@@ -48,6 +48,7 @@ defmodule InstagrainWeb.MessagesLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    Conversations.mark_all_read(socket.assigns.current_user.id)
     conversations = Conversations.link_and_list_conversations(socket.assigns.current_user.id)
     suggested_users = Profiles.list_following(socket.assigns.current_user.id)
 

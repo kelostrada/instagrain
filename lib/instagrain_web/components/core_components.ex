@@ -656,6 +656,7 @@ defmodule InstagrainWeb.CoreComponents do
   attr :selected?, :boolean, default: false
   attr :size, :atom, values: [:small, :regular], default: :regular
   attr :label, :string, required: true
+  attr :badge_count, :integer, default: 0
 
   attr :rest, :global,
     include: ~w(patch navigate),
@@ -672,41 +673,52 @@ defmodule InstagrainWeb.CoreComponents do
       ]}
       {@rest}
     >
-      <%= if @icon_image do %>
-        <div class={[
-          "rounded-full",
-          "group-hover:scale-110 transition-transform",
-          @selected? && "border-2 border-black",
-          @selected? && @size == :small && "w-6 h-6",
-          @selected? && @size == :regular && "w-7 h-7"
-        ]}>
-          <img
-            src={@icon_image}
+      <div class="relative">
+        <%= if @icon_image do %>
+          <div class={[
+            "rounded-full",
+            "group-hover:scale-110 transition-transform",
+            @selected? && "border-2 border-black",
+            @selected? && @size == :small && "w-6 h-6",
+            @selected? && @size == :regular && "w-7 h-7"
+          ]}>
+            <img
+              src={@icon_image}
+              class={[
+                "object-cover rounded-full",
+                @selected? && @size == :small && "w-5 h-5",
+                @selected? && @size == :regular && "w-6 h-6",
+                !@selected? && @size == :small && "w-6 h-6",
+                !@selected? && @size == :regular && "w-7 h-7"
+              ]}
+            />
+          </div>
+        <% else %>
+          <.icon
+            name={if @selected?, do: @icon_name_solid, else: @icon_name}
             class={[
-              "object-cover rounded-full",
-              @selected? && @size == :small && "w-5 h-5",
-              @selected? && @size == :regular && "w-6 h-6",
-              !@selected? && @size == :small && "w-6 h-6",
-              !@selected? && @size == :regular && "w-7 h-7"
+              "group-hover:scale-110 transition-transform",
+              @size == :small && "w-6 h-6",
+              @size == :regular && "w-7 h-7"
             ]}
           />
-        </div>
-      <% else %>
-        <.icon
-          name={if @selected?, do: @icon_name_solid, else: @icon_name}
-          class={[
-            "group-hover:scale-110 transition-transform",
-            @size == :small && "w-6 h-6",
-            @size == :regular && "w-7 h-7"
-          ]}
-        />
-      <% end %>
+        <% end %>
+        <span
+          :if={@badge_count > 0}
+          class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-[5px] rounded-full bg-red-500 text-white text-[10px] font-semibold leading-[18px] text-center ring-2 ring-white"
+        >
+          <%= format_badge(@badge_count) %>
+        </span>
+      </div>
       <span class={["max-lg:hidden pl-4", @selected? && "font-bold", !@selected? && "font-medium"]}>
         <%= @label %>
       </span>
     </.link>
     """
   end
+
+  defp format_badge(n) when n > 99, do: "99+"
+  defp format_badge(n), do: to_string(n)
 
   attr :navigate, :any, default: nil
   attr :title, :any, default: ""
@@ -910,16 +922,6 @@ defmodule InstagrainWeb.CoreComponents do
     js
     |> JS.toggle(
       to: "#search-panel",
-      in: {"transition-transform duration-300", "-translate-x-full", "translate-x-0"},
-      out: {"transition-transform duration-300", "translate-x-0", "-translate-x-full"},
-      display: "flex"
-    )
-  end
-
-  def toggle_notifications_panel(js \\ %JS{}) do
-    js
-    |> JS.toggle(
-      to: "#notifications-panel",
       in: {"transition-transform duration-300", "-translate-x-full", "translate-x-0"},
       out: {"transition-transform duration-300", "translate-x-0", "-translate-x-full"},
       display: "flex"

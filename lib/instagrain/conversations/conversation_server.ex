@@ -52,6 +52,8 @@ defmodule Instagrain.Conversations.ConversationServer do
       send(pid, {:conversations_update, format_conversations(conversations, state.user_id)})
     end)
 
+    Instagrain.Conversations.broadcast_messages_changed(state.user_id)
+
     {:noreply, Map.put(state, :conversations, conversations)}
   end
 

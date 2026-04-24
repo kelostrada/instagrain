@@ -89,6 +89,7 @@
         icon_name_solid="hero-pencil-square-solid"
         selected?={@socket.view == InstagrainWeb.MessagesLive}
         label="Messages"
+        badge_count={@unread_messages_count}
       />
 
       <%!-- Mobile: heart goes to full notifications page --%>
@@ -99,15 +100,17 @@
         icon_name_solid="hero-heart-solid"
         selected?={@socket.view == InstagrainWeb.NotificationsLive}
         label="Notifications"
+        badge_count={@unseen_notifications_count}
       />
 
       <%!-- Desktop: heart toggles notifications panel --%>
       <.nav_button
         class="max-sm:hidden"
-        phx-click={toggle_notifications_panel()}
+        phx-click={JS.push("toggle_notifications_panel")}
         icon_name="hero-heart"
         icon_name_solid="hero-heart-solid"
         label="Notifications"
+        badge_count={@unseen_notifications_count}
       />
 
       <.nav_button

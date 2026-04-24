@@ -3,8 +3,13 @@ defmodule InstagrainWeb.NotificationsLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if user = socket.assigns[:current_user] do
+      Instagrain.Notifications.mark_all_seen(user.id)
+    end
+
     top_nav = mobile_nav_header(%{title: "Notifications", navigate: ~p"/"})
-    {:ok, assign(socket, top_nav: top_nav)}
+
+    {:ok, assign(socket, top_nav: top_nav, unseen_notifications_count: 0)}
   end
 
   @impl true

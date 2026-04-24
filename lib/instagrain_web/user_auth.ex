@@ -146,14 +146,15 @@ defmodule InstagrainWeb.UserAuth do
       end
   """
   def on_mount(:mount_current_user, _params, session, socket) do
-    {:cont, mount_current_user(socket, session)}
+    socket = mount_current_user(socket, session)
+    {:cont, mount_notifications_badge(socket)}
   end
 
   def on_mount(:ensure_authenticated, _params, session, socket) do
     socket = mount_current_user(socket, session)
 
     if socket.assigns.current_user do
-      {:cont, socket}
+      {:cont, mount_notifications_badge(socket)}
     else
       socket =
         socket
@@ -180,6 +181,82 @@ defmodule InstagrainWeb.UserAuth do
         Accounts.get_user_by_session_token(user_token)
       end
     end)
+  end
+
+  # Subscribes to the notifications + messages PubSub topics for the current
+  # user and attaches hooks so any LiveView picks up the unread-count badge
+  # updates without explicitly knowing about either subsystem.
+  defp mount_notifications_badge(socket) do
+    case socket.assigns[:current_user] do
+      %{id: user_id} = _user ->
+        if Phoenix.LiveView.connected?(socket) do
+          Instagrain.Notifications.subscribe(user_id)
+          Instagrain.Conversations.subscribe_to_messages(user_id)
+        end
+
+        socket
+        |> Phoenix.Component.assign_new(
+          :unseen_notifications_count,
+          fn -> Instagrain.Notifications.unseen_count(user_id) end
+        )
+        |> Phoenix.Component.assign_new(
+          :unread_messages_count,
+          fn -> Instagrain.Conversations.unread_conversation_count(user_id) end
+        )
+        |> Phoenix.LiveView.attach_hook(
+          :badge_info_hooks,
+          :handle_info,
+          fn
+            {:notification_changed, _uid}, socket ->
+              {:halt,
+               Phoenix.Component.assign(socket,
+                 unseen_notifications_count:
+                   Instagrain.Notifications.unseen_count(socket.assigns.current_user.id)
+               )}
+
+            {:messages_changed, _uid}, socket ->
+              {:halt,
+               Phoenix.Component.assign(socket,
+                 unread_messages_count:
+                   Instagrain.Conversations.unread_conversation_count(
+                     socket.assigns.current_user.id
+                   )
+               )}
+
+            _other, socket ->
+              {:cont, socket}
+          end
+        )
+        |> Phoenix.LiveView.attach_hook(
+          :notifications_panel_events,
+          :handle_event,
+          fn
+            "toggle_notifications_panel", _params, socket ->
+              Phoenix.LiveView.send_update(InstagrainWeb.NotificationsComponent,
+                id: "notifications-panel",
+                action: :open
+              )
+
+              {:halt, Phoenix.Component.assign(socket, unseen_notifications_count: 0)}
+
+            "close_notifications_panel", _params, socket ->
+              Phoenix.LiveView.send_update(InstagrainWeb.NotificationsComponent,
+                id: "notifications-panel",
+                action: :close
+              )
+
+              {:halt, socket}
+
+            _event, _params, socket ->
+              {:cont, socket}
+          end
+        )
+
+      _ ->
+        socket
+        |> Phoenix.Component.assign_new(:unseen_notifications_count, fn -> 0 end)
+        |> Phoenix.Component.assign_new(:unread_messages_count, fn -> 0 end)
+    end
   end
 
   @doc """

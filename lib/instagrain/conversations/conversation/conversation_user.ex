@@ -4,6 +4,7 @@ defmodule Instagrain.Conversations.Conversation.ConversationUser do
 
   @primary_key false
   schema "conversations_users" do
+    field :last_read_at, :utc_datetime
     belongs_to :user, Instagrain.Accounts.User
     belongs_to :conversation, Instagrain.Conversations.Conversation
 
@@ -13,7 +14,7 @@ defmodule Instagrain.Conversations.Conversation.ConversationUser do
   @doc false
   def changeset(conversation_user, attrs) do
     conversation_user
-    |> cast(attrs, [:user_id, :conversation_id])
+    |> cast(attrs, [:user_id, :conversation_id, :last_read_at])
     |> validate_required([:user_id, :conversation_id])
     |> unique_constraint([:user_id, :conversation_id])
   end

@@ -8,6 +8,7 @@ defmodule Instagrain.Profiles do
 
   # alias Instagrain.Feed.Post
   alias Instagrain.Accounts.User
+  alias Instagrain.Notifications
   alias Instagrain.Profiles.Follow
 
   def get_profile(username) do
@@ -29,9 +30,16 @@ defmodule Instagrain.Profiles do
 
   """
   def follow_user(user_id, follow_id) do
-    %Follow{}
-    |> Follow.changeset(%{user_id: user_id, follow_id: follow_id})
-    |> Repo.insert()
+    result =
+      %Follow{}
+      |> Follow.changeset(%{user_id: user_id, follow_id: follow_id})
+      |> Repo.insert()
+
+    with {:ok, _follow} <- result do
+      Notifications.create(%{user_id: follow_id, actor_id: user_id, type: "follow"})
+    end
+
+    result
   end
 
   @doc """
@@ -49,8 +57,12 @@ defmodule Instagrain.Profiles do
   def unfollow_user(user_id, follow_id) do
     case from(f in Follow, where: f.user_id == ^user_id and f.follow_id == ^follow_id)
          |> Repo.delete_all() do
-      {1, _} -> :ok
-      _ -> {:error, :not_found}
+      {1, _} ->
+        Notifications.delete(follow_id, user_id, "follow")
+        :ok
+
+      _ ->
+        {:error, :not_found}
     end
   end
 
