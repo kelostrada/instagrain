@@ -717,8 +717,20 @@ defmodule InstagrainWeb.CoreComponents do
     """
   end
 
-  defp format_badge(n) when n > 99, do: "99+"
-  defp format_badge(n), do: to_string(n)
+  # 0-999 → plain, 1k–999k / 1M+ → compact, keeping one decimal only when the
+  # leading digit would otherwise lose precision (e.g. 1100 → "1.1k", 1000 → "1k").
+  defp format_badge(n) when n < 1_000, do: to_string(n)
+  defp format_badge(n) when n < 10_000, do: short(n, 1_000, "k")
+  defp format_badge(n) when n < 1_000_000, do: "#{div(n, 1_000)}k"
+  defp format_badge(n) when n < 10_000_000, do: short(n, 1_000_000, "M")
+  defp format_badge(n), do: "#{div(n, 1_000_000)}M"
+
+  defp short(n, unit, suffix) do
+    tenths = div(n, div(unit, 10))
+    whole = div(tenths, 10)
+    frac = rem(tenths, 10)
+    if frac == 0, do: "#{whole}#{suffix}", else: "#{whole}.#{frac}#{suffix}"
+  end
 
   attr :navigate, :any, default: nil
   attr :title, :any, default: ""
