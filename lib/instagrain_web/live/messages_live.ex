@@ -68,6 +68,7 @@ defmodule InstagrainWeb.MessagesLive do
        add_member_results: [],
        show_add_member: false,
        conversation_search: "",
+       conversation_searching?: false,
        conversation_search_users: []
      )}
   end
@@ -180,11 +181,30 @@ defmodule InstagrainWeb.MessagesLive do
         |> Enum.reject(&(&1.id == socket.assigns.current_user.id or &1.id in participant_ids))
       end
 
-    {:noreply, assign(socket, conversation_search: query, conversation_search_users: users)}
+    {:noreply,
+     assign(socket,
+       conversation_search: query,
+       conversation_searching?: true,
+       conversation_search_users: users
+     )}
+  end
+
+  def handle_event("focus-conversation-search", _params, socket) do
+    {:noreply, assign(socket, conversation_searching?: true)}
   end
 
   def handle_event("clear-conversation-search", _params, socket) do
+    # X inside the input: clear text but stay in search mode so input keeps focus.
     {:noreply, assign(socket, conversation_search: "", conversation_search_users: [])}
+  end
+
+  def handle_event("exit-conversation-search", _params, socket) do
+    {:noreply,
+     assign(socket,
+       conversation_search: "",
+       conversation_searching?: false,
+       conversation_search_users: []
+     )}
   end
 
   def handle_event("start-conversation-with", %{"id" => id}, socket) do
@@ -193,7 +213,11 @@ defmodule InstagrainWeb.MessagesLive do
 
     {:noreply,
      socket
-     |> assign(conversation_search: "", conversation_search_users: [])
+     |> assign(
+       conversation_search: "",
+       conversation_searching?: false,
+       conversation_search_users: []
+     )
      |> push_patch(to: ~p"/messages/#{conversation.id}")}
   end
 

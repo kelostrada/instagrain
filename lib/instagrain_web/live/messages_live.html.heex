@@ -23,40 +23,47 @@
       </div>
     </div>
 
-    <%!-- Search input --%>
+    <%!-- Search input. The sibling buttons/icons use `hidden` toggled by a
+         class so the input element itself never moves during renders —
+         this keeps its focus across server updates. --%>
     <div class="max-sm:px-4 sm:px-6 pb-3 sm:max-md:hidden">
       <form phx-change="conversation-search" class="flex items-center gap-2">
         <button
-          :if={@conversation_search != ""}
           type="button"
-          phx-click="clear-conversation-search"
-          class="cursor-pointer shrink-0"
+          phx-click="exit-conversation-search"
+          class={["cursor-pointer shrink-0", not @conversation_searching? && "hidden"]}
         >
           <.icon name="hero-arrow-left" class="h-5 w-5" />
         </button>
         <div class="relative grow">
           <.icon
-            :if={@conversation_search == ""}
             name="hero-magnifying-glass"
-            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400"
+            class={[
+              "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none",
+              (@conversation_searching? || @conversation_search != "") && "hidden"
+            ]}
           />
           <input
+            id="conversation-search-input"
             type="text"
             name="query"
             value={@conversation_search}
             phx-debounce="200"
+            phx-focus="focus-conversation-search"
             autocomplete="off"
             placeholder="Search"
             class={[
               "w-full rounded-lg bg-neutral-100 border-0 py-2 pr-10 text-sm placeholder:text-neutral-400 focus:ring-0",
-              if(@conversation_search == "", do: "pl-10", else: "pl-3")
+              if(@conversation_searching?, do: "pl-3", else: "pl-10")
             ]}
           />
           <button
-            :if={@conversation_search != ""}
             type="button"
             phx-click="clear-conversation-search"
-            class="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+            class={[
+              "absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer",
+              @conversation_search == "" && "hidden"
+            ]}
           >
             <.icon name="hero-x-circle-solid" class="w-5 h-5" />
           </button>
@@ -64,7 +71,7 @@
       </form>
     </div>
 
-    <%= if @conversation_search != "" do %>
+    <%= if @conversation_searching? do %>
       <% matching_conversations =
         @conversations
         |> Enum.filter(fn {_, c} ->
@@ -84,7 +91,7 @@
           "max-sm:px-4 sm:px-6 py-2 flex gap-3 hover:bg-neutral-100/50 cursor-pointer",
           @conversation_id == conversation.id && "bg-neutral-100"
         ]}
-        phx-click={JS.push("clear-conversation-search") |> JS.patch(~p"/messages/#{id}")}
+        phx-click={JS.push("exit-conversation-search") |> JS.patch(~p"/messages/#{id}")}
       >
         <%= if length(conversation.participants) == 1 do %>
           <div class="flex-shrink-0">
