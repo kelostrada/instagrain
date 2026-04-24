@@ -1,5 +1,6 @@
 defmodule InstagrainWeb.ProfileLive do
   use InstagrainWeb, :live_view
+  use InstagrainWeb.PostLive.MenuHandlers
 
   alias Instagrain.Feed
   alias Instagrain.Profiles
@@ -26,6 +27,7 @@ defmodule InstagrainWeb.ProfileLive do
        end_reached?: false,
        current_user_profile?: current_user_profile?,
        share_post_id: nil,
+       editing_post: nil,
        following_user_ids: Enum.map(current_user.followings, & &1.id),
        page_title: "#{profile.full_name || profile.username} (@#{profile.username})",
        og_title: "#{profile.full_name || profile.username} (@#{profile.username})",

@@ -1,5 +1,6 @@
 defmodule InstagrainWeb.ExploreLive do
   use InstagrainWeb, :live_view
+  use InstagrainWeb.PostLive.MenuHandlers
 
   alias Instagrain.Accounts
   alias Instagrain.Feed
@@ -17,6 +18,7 @@ defmodule InstagrainWeb.ExploreLive do
        search_results: [],
        searching?: false,
        share_post_id: nil,
+       editing_post: nil,
        following_user_ids: following_ids,
        tag: nil,
        hashtag: nil,
