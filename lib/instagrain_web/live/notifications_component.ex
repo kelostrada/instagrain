@@ -100,7 +100,7 @@ defmodule InstagrainWeb.NotificationsComponent do
     ~H"""
     <div
       id={@id}
-      class="fixed top-0 left-0 bottom-0 w-[400px] bg-white border-r border-neutral-200 shadow-xl z-40 overflow-y-auto flex-col hidden -translate-x-full transition-transform duration-300"
+      class="fixed top-0 left-0 bottom-0 w-[400px] bg-white border-r border-neutral-200 shadow-xl z-40 flex-col hidden overflow-y-auto"
       phx-click-away={hide_notifications_panel()}
     >
       <div class="p-6 pb-3">
