@@ -25,3 +25,12 @@
   current_user={@current_user}
   post_id={@share_post_id}
 />
+
+<.modal :if={@editing_post} id="edit-post-modal" show on_cancel={JS.push("close-edit-modal")}>
+  <.live_component
+    module={InstagrainWeb.PostLive.EditFormComponent}
+    id={"edit-post-form-component-#{@editing_post.id}"}
+    post={@editing_post}
+    current_user={@current_user}
+  />
+</.modal>

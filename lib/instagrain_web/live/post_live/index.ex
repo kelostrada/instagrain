@@ -23,7 +23,8 @@ defmodule InstagrainWeb.PostLive.Index do
        end_reached?: false,
        share_post_id: nil,
        following_user_ids: following_ids,
-       feed_seed: seed
+       feed_seed: seed,
+       editing_post: nil
      )}
   end
 
@@ -39,6 +40,10 @@ defmodule InstagrainWeb.PostLive.Index do
 
   def handle_info({_, {:post_updated, post}}, socket) do
     {:noreply, stream_insert(socket, :posts, post)}
+  end
+
+  def handle_info({InstagrainWeb.PostLive.EditFormComponent, :close}, socket) do
+    {:noreply, assign(socket, editing_post: nil)}
   end
 
   def handle_info({InstagrainWeb.PostLive.IconsComponent, {:open_share, post_id}}, socket) do
@@ -81,6 +86,39 @@ defmodule InstagrainWeb.PostLive.Index do
     {:noreply, stream_delete(socket, :posts, post)}
   end
 
+  def handle_event("confirm-delete-post", %{"id" => id}, socket) do
+    post = Feed.get_post!(id, socket.assigns.current_user.id)
+
+    if post.user_id == socket.assigns.current_user.id do
+      {:ok, _} = Feed.delete_post(post)
+      {:noreply, socket |> put_flash(:info, "Post deleted.") |> stream_delete(:posts, post)}
+    else
+      {:noreply, put_flash(socket, :error, "You can only delete your own posts.")}
+    end
+  end
+
+  def handle_event("menu-toggle-hide-likes", %{"id" => id}, socket) do
+    {:noreply, toggle_post_field(socket, id, :hide_likes)}
+  end
+
+  def handle_event("menu-toggle-comments", %{"id" => id}, socket) do
+    {:noreply, toggle_post_field(socket, id, :disable_comments)}
+  end
+
+  def handle_event("menu-edit", %{"id" => id}, socket) do
+    post = Feed.get_post!(id, socket.assigns.current_user.id)
+
+    if post.user_id == socket.assigns.current_user.id do
+      {:noreply, assign(socket, editing_post: post)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("close-edit-modal", _, socket) do
+    {:noreply, assign(socket, editing_post: nil)}
+  end
+
   def handle_event("load-more", _, socket) do
     next_page = socket.assigns.page + 1
     posts = Feed.list_posts(socket.assigns.current_user.id, next_page, socket.assigns.feed_seed)
@@ -94,6 +132,18 @@ defmodule InstagrainWeb.PostLive.Index do
        socket
        |> assign(page: next_page)
        |> stream(:posts, posts, at: -1)}
+    end
+  end
+
+  defp toggle_post_field(socket, id, field) do
+    post = Feed.get_post!(id, socket.assigns.current_user.id)
+
+    if post.user_id != socket.assigns.current_user.id do
+      put_flash(socket, :error, "You can only edit your own posts.")
+    else
+      {:ok, updated} = Feed.update_post(post, %{field => !Map.get(post, field)})
+      fresh = Feed.get_post!(updated.id, socket.assigns.current_user.id)
+      stream_insert(socket, :posts, fresh)
     end
   end
 end
