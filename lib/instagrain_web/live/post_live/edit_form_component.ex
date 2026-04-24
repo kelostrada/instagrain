@@ -147,6 +147,7 @@ defmodule InstagrainWeb.PostLive.EditFormComponent do
     >
       <div class="flex flex-col h-full divide-y divide-solid divide-neutral-300">
         <div class="flex items-center">
+          <div class="flex-1"></div>
           <div class="grow text-center font-bold text-base leading-10 py-px">Edit info</div>
           <button
             type="submit"
