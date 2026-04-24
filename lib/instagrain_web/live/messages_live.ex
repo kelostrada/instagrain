@@ -48,15 +48,16 @@ defmodule InstagrainWeb.MessagesLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    Conversations.mark_all_read(socket.assigns.current_user.id)
-    conversations = Conversations.link_and_list_conversations(socket.assigns.current_user.id)
-    suggested_users = Profiles.list_following(socket.assigns.current_user.id)
+    user_id = socket.assigns.current_user.id
+    conversations = Conversations.link_and_list_conversations(user_id)
+    suggested_users = Profiles.list_following(user_id)
 
     {:ok,
      assign(socket,
        raw_layout: "",
        message: "",
        conversations: conversations,
+       unread_conversation_ids: Conversations.unread_conversation_ids(user_id),
        suggested_users: suggested_users,
        new_message_search: "",
        new_message_results: suggested_users,
@@ -71,18 +72,39 @@ defmodule InstagrainWeb.MessagesLive do
 
   @impl true
   def handle_info({:conversations_update, conversations}, socket) do
-    socket = assign(socket, conversations: conversations)
+    user_id = socket.assigns.current_user.id
+
+    socket =
+      assign(socket,
+        conversations: conversations,
+        unread_conversation_ids: Conversations.unread_conversation_ids(user_id)
+      )
 
     socket =
       if socket.assigns.conversation_id &&
            Map.has_key?(conversations, socket.assigns.conversation_id) do
-        conversation = conversations[socket.assigns.conversation_id]
-        assign(socket, top_nav: top_nav(conversation))
+        # Any new inbound message for the currently-open conversation counts as
+        # "seen" immediately — we're actively looking at it.
+        Conversations.mark_conversation_read(user_id, socket.assigns.conversation_id)
+
+        assign(socket,
+          top_nav: top_nav(conversations[socket.assigns.conversation_id]),
+          unread_conversation_ids:
+            MapSet.delete(socket.assigns.unread_conversation_ids, socket.assigns.conversation_id)
+        )
       else
         socket
       end
 
     {:noreply, socket}
+  end
+
+  def handle_info({:messages_changed, _uid}, socket) do
+    {:noreply,
+     assign(socket,
+       unread_conversation_ids:
+         Conversations.unread_conversation_ids(socket.assigns.current_user.id)
+     )}
   end
 
   def handle_info(_, socket) do
@@ -104,9 +126,13 @@ defmodule InstagrainWeb.MessagesLive do
         conversation_id = String.to_integer(params["conversation_id"])
         conversation = socket.assigns.conversations[conversation_id]
 
+        Conversations.mark_conversation_read(socket.assigns.current_user.id, conversation_id)
+
         {:noreply,
          assign(socket,
            conversation_id: conversation_id,
+           unread_conversation_ids:
+             MapSet.delete(socket.assigns.unread_conversation_ids, conversation_id),
            main_no_scroll: true,
            top_nav: top_nav(conversation),
            show_details: false,

@@ -22,10 +22,11 @@ defmodule Instagrain.Conversations do
   end
 
   @doc """
-  Returns the number of conversations that contain a message the user hasn't
-  read yet (i.e. a message from someone else inserted after their last_read_at).
+  Returns a `MapSet` of conversation ids the user hasn't yet caught up on —
+  any conversation with a message from someone else newer than their
+  `last_read_at` counts.
   """
-  def unread_conversation_count(user_id) do
+  def unread_conversation_ids(user_id) do
     from(cu in ConversationUser,
       join: m in ConversationMessage,
       on: m.conversation_id == cu.conversation_id,
@@ -35,18 +36,28 @@ defmodule Instagrain.Conversations do
       select: cu.conversation_id
     )
     |> Repo.all()
-    |> length()
+    |> MapSet.new()
   end
 
   @doc """
-  Marks all of the user's conversations as read up to now.
+  Returns the number of conversations with unread messages.
   """
-  def mark_all_read(user_id) do
+  def unread_conversation_count(user_id) do
+    user_id |> unread_conversation_ids() |> MapSet.size()
+  end
+
+  @doc """
+  Marks a single conversation as read for the user up to now, and broadcasts
+  a messages-changed event so nav badges / conversation-list styling refresh.
+  """
+  def mark_conversation_read(user_id, conversation_id) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
     {count, _} =
       Repo.update_all(
-        from(cu in ConversationUser, where: cu.user_id == ^user_id),
+        from(cu in ConversationUser,
+          where: cu.user_id == ^user_id and cu.conversation_id == ^conversation_id
+        ),
         set: [last_read_at: now, updated_at: now]
       )
 

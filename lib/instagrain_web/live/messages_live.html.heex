@@ -48,15 +48,30 @@
           />
         </div>
       <% end %>
+      <% unread? = MapSet.member?(@unread_conversation_ids, conversation.id) %>
       <div class="grow flex flex-col justify-center sm:max-md:hidden min-w-0">
-        <div class="text-sm font-medium"><%= conversation.name %></div>
+        <div class={["text-sm", if(unread?, do: "font-bold", else: "font-medium")]}>
+          <%= conversation.name %>
+        </div>
         <div class="flex items-center min-w-0">
-          <span class="text-xs text-neutral-500 truncate"><%= conversation.last_message %></span>
-          <span :if={conversation.last_message_at} class="text-xs text-neutral-500 flex-shrink-0">
-            &nbsp;· <.time datetime={conversation.last_message_at} class="text-xs text-neutral-500" />
+          <span class={[
+            "text-xs truncate",
+            if(unread?, do: "text-black font-semibold", else: "text-neutral-500")
+          ]}>
+            <%= conversation.last_message %>
+          </span>
+          <span :if={conversation.last_message_at} class={[
+            "text-xs flex-shrink-0",
+            if(unread?, do: "text-black font-semibold", else: "text-neutral-500")
+          ]}>
+            &nbsp;· <.time datetime={conversation.last_message_at} class={if(unread?, do: "text-xs text-black font-semibold", else: "text-xs text-neutral-500")} />
           </span>
         </div>
       </div>
+      <div
+        :if={unread?}
+        class="self-center w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0 sm:max-md:hidden"
+      />
     </div>
   </div>
   <%= if @conversation_id do %>

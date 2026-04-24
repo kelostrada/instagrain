@@ -215,7 +215,9 @@ defmodule InstagrainWeb.UserAuth do
                )}
 
             {:messages_changed, _uid}, socket ->
-              {:halt,
+              # Don't halt — MessagesLive also needs to handle this to refresh
+              # its per-conversation unread state.
+              {:cont,
                Phoenix.Component.assign(socket,
                  unread_messages_count:
                    Instagrain.Conversations.unread_conversation_count(
