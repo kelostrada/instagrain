@@ -91,6 +91,25 @@
         label="Messages"
       />
 
+      <%!-- Mobile: heart goes to full notifications page --%>
+      <.nav_button
+        class="sm:hidden"
+        patch={~p"/notifications"}
+        icon_name="hero-heart"
+        icon_name_solid="hero-heart-solid"
+        selected?={@socket.view == InstagrainWeb.NotificationsLive}
+        label="Notifications"
+      />
+
+      <%!-- Desktop: heart toggles notifications panel --%>
+      <.nav_button
+        class="max-sm:hidden"
+        phx-click={toggle_notifications_panel()}
+        icon_name="hero-heart"
+        icon_name_solid="hero-heart-solid"
+        label="Notifications"
+      />
+
       <.nav_button
         phx-click={show_modal("new-post-modal")}
         icon_name="hero-plus-circle"
@@ -110,6 +129,12 @@
     <.live_component
       module={InstagrainWeb.SearchComponent}
       id="search-panel"
+      current_user={@current_user}
+    />
+
+    <.live_component
+      module={InstagrainWeb.NotificationsComponent}
+      id="notifications-panel"
       current_user={@current_user}
     />
 
