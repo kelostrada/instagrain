@@ -101,4 +101,21 @@ if config_env() == :prod do
     adapter: Swoosh.Adapters.Mailjet,
     api_key: System.get_env("MAILJET_API_KEY"),
     secret: System.get_env("MAILJET_API_SECRET")
+
+  # Object storage (MinIO over Cloudflare tunnel in prod). Internal endpoint
+  # is the in-cluster `minio` host; public_url is the CDN subdomain that OG
+  # crawlers and browsers fetch from.
+  config :instagrain, Instagrain.Storage,
+    endpoint: System.get_env("S3_ENDPOINT") || raise("environment variable S3_ENDPOINT is missing"),
+    region: System.get_env("S3_REGION") || "us-east-1",
+    access_key_id:
+      System.get_env("S3_ACCESS_KEY_ID") ||
+        raise("environment variable S3_ACCESS_KEY_ID is missing"),
+    secret_access_key:
+      System.get_env("S3_SECRET_ACCESS_KEY") ||
+        raise("environment variable S3_SECRET_ACCESS_KEY is missing"),
+    bucket: System.get_env("S3_BUCKET") || "instagrain",
+    public_url:
+      System.get_env("S3_PUBLIC_URL") ||
+        raise("environment variable S3_PUBLIC_URL is missing")
 end
