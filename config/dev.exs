@@ -56,7 +56,7 @@ config :instagrain, InstagrainWeb.Endpoint,
 config :instagrain, InstagrainWeb.Endpoint,
   live_reload: [
     patterns: [
-      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
       ~r"lib/instagrain_web/(controllers|live|components)/.*(ex|heex)$"
     ]

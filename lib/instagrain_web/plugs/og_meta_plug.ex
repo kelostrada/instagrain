@@ -34,7 +34,7 @@ defmodule InstagrainWeb.OgMetaPlug do
       base_url = InstagrainWeb.Endpoint.url()
       {image, image_type} =
         case post.resources do
-          [resource | _] -> InstagrainWeb.Media.resource_og(resource, base_url)
+          [resource | _] -> InstagrainWeb.Media.resource_og(resource)
           _ -> {nil, nil}
         end
 
@@ -59,7 +59,7 @@ defmodule InstagrainWeb.OgMetaPlug do
 
         profile ->
           base_url = InstagrainWeb.Endpoint.url()
-          {image, image_type} = InstagrainWeb.Media.avatar_og(profile, base_url)
+          {image, image_type} = InstagrainWeb.Media.avatar_og(profile)
 
           desc = profile.description || "#{profile.full_name || profile.username}'s profile"
           title = "#{profile.full_name || profile.username} (@#{profile.username})"

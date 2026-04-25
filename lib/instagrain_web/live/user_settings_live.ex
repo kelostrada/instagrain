@@ -281,36 +281,24 @@ defmodule InstagrainWeb.UserSettingsLive do
 
   def handle_event("update_avatar", _, socket) do
     socket
-    |> consume_uploaded_entries(:avatar, fn %{path: path}, entry ->
-      filename = Path.basename(path) <> Path.extname(entry.client_name)
-      dest = Path.join([:code.priv_dir(:instagrain), "static", "uploads", "avatars", filename])
-
-      File.cp!(path, dest)
-
-      storage_key =
-        case Uploads.upload(dest, "avatars") do
-          {:ok, key} -> key
-          :error -> nil
-        end
-
-      {:ok, %{filename: filename, storage_key: storage_key}}
+    |> consume_uploaded_entries(:avatar, fn %{path: path}, _entry ->
+      {:ok, Uploads.upload(path, "avatars")}
     end)
     |> List.first()
     |> then(fn
-      nil ->
-        {:error, :no_upload}
-
-      %{filename: filename, storage_key: storage_key} ->
+      {:ok, storage_key} ->
         Accounts.update_user_avatar(socket.assigns.current_user, %{
-          avatar: filename,
           avatar_storage_key: storage_key
         })
+
+      _ ->
+        {:error, :upload_failed}
     end)
     |> case do
       {:ok, user} ->
         {:noreply, assign(socket, current_user: user)}
 
-      {:error, _changeset} ->
+      {:error, _} ->
         {:noreply, socket |> put_flash(:error, "Error uploading avatar")}
     end
   end

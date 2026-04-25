@@ -606,31 +606,28 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
     uploaded_files =
       consume_uploaded_entries(socket, :file, fn %{path: path}, entry ->
-        filename = Path.basename(path) <> Path.extname(entry.client_name)
-        dest = Path.join([:code.priv_dir(:instagrain), "static", "uploads", filename])
-
-        File.cp!(path, dest)
-
-        storage_key =
-          case Uploads.upload(dest, "posts") do
-            {:ok, key} -> key
-            :error -> nil
-          end
-
         settings =
           Map.get(image_filters, entry.ref, %{
             filter: "original",
             adjustments: ImageFilters.default_adjustments()
           })
 
-        {:ok,
-         %{
-           filename: filename,
-           storage_key: storage_key,
-           entry: entry,
-           filter: settings.filter,
-           adjustments: settings.adjustments
-         }}
+        result =
+          case Uploads.upload(path, "posts") do
+            {:ok, storage_key} ->
+              {:ok,
+               %{
+                 storage_key: storage_key,
+                 entry: entry,
+                 filter: settings.filter,
+                 adjustments: settings.adjustments
+               }}
+
+            {:error, _reason} = err ->
+              err
+          end
+
+        {:ok, result}
       end)
 
     location_id =
@@ -650,9 +647,9 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       |> Map.put("user_id", socket.assigns.current_user.id)
       |> Map.put("location_id", location_id)
 
-    with {:ok, post} <- Feed.create_post(post_params),
-         {:ok, image} <- save_resources(post, post_params, uploaded_files),
-         {:ok, _post} <- Feed.update_post(post, %{image: image}) do
+    with :ok <- check_uploads(uploaded_files),
+         {:ok, post} <- Feed.create_post(post_params),
+         :ok <- save_resources(post, post_params, uploaded_files) do
       {:noreply,
        socket
        |> put_flash(:info, "Post created successfully")
@@ -663,6 +660,13 @@ defmodule InstagrainWeb.PostLive.FormComponent do
          socket
          |> put_flash(:error, "Post creation failed")
          |> push_navigate(to: ~p"/")}
+    end
+  end
+
+  defp check_uploads(uploaded_files) do
+    case Enum.find(uploaded_files, &match?({:error, _}, &1)) do
+      nil -> :ok
+      err -> err
     end
   end
 
@@ -680,26 +684,18 @@ defmodule InstagrainWeb.PostLive.FormComponent do
   defp save_resources(post, post_params, uploaded_files) do
     alts = post_params["alts"]
 
-    Enum.reduce(uploaded_files, {:ok, ""}, fn
-      file, {:ok, image} ->
-        case Feed.create_resource(%{
-               post_id: post.id,
-               file: file.filename,
-               storage_key: file.storage_key,
-               type: :photo,
-               alt: alts[file.entry.ref],
-               filter: file.filter,
-               adjustments: file.adjustments
-             }) do
-          {:ok, _resource} ->
-            {:ok, if(image == "", do: file.filename, else: image)}
-
-          {:error, error} ->
-            {:error, error}
-        end
-
-      _file, {:error, error} ->
-        {:error, error}
+    Enum.reduce_while(uploaded_files, :ok, fn {:ok, file}, :ok ->
+      case Feed.create_resource(%{
+             post_id: post.id,
+             storage_key: file.storage_key,
+             type: :photo,
+             alt: alts[file.entry.ref],
+             filter: file.filter,
+             adjustments: file.adjustments
+           }) do
+        {:ok, _resource} -> {:cont, :ok}
+        {:error, _} = err -> {:halt, err}
+      end
     end)
   end
 

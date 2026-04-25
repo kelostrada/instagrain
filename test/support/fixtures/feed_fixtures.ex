@@ -36,7 +36,7 @@ defmodule Instagrain.FeedFixtures do
       attrs
       |> Enum.into(%{
         alt: "some alt",
-        file: "some file",
+        storage_key: "posts/test-#{System.unique_integer([:positive])}",
         type: :photo,
         post_id: post.id
       })

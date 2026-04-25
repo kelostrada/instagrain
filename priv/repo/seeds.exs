@@ -12,24 +12,40 @@ alias Instagrain.Accounts.User
 alias Instagrain.Feed
 alias Instagrain.Feed.Post
 alias Instagrain.Profiles
-
-uploads_dir = Path.join([:code.priv_dir(:instagrain), "static", "uploads"])
-avatars_dir = Path.join(uploads_dir, "avatars")
-File.mkdir_p!(uploads_dir)
-File.mkdir_p!(avatars_dir)
+alias Instagrain.Uploads
 
 # --- Helpers ---
 
 defmodule Instagrain.Seeds.Helpers do
-  def download_image(url, dest_path) do
-    case Req.get(url, redirect: true, max_redirects: 5, receive_timeout: 30_000) do
-      {:ok, %{status: 200, body: body}} when is_binary(body) ->
-        File.write!(dest_path, body)
-        :ok
+  @doc """
+  Downloads `url` to a temp file, runs it through the upload pipeline
+  (variants + original to object storage) and returns `{:ok, storage_key}`
+  or `:error`. Cleans up the temp file in either case.
+  """
+  def download_and_upload(url, prefix, ext \\ ".jpg") do
+    temp =
+      Path.join(System.tmp_dir!(), "instagrain-seed-#{System.unique_integer([:positive])}#{ext}")
 
-      other ->
-        IO.puts("  Warning: Failed to download #{url}: #{inspect(other)}")
-        :error
+    try do
+      case Req.get(url, redirect: true, max_redirects: 5, receive_timeout: 30_000) do
+        {:ok, %{status: 200, body: body}} when is_binary(body) ->
+          File.write!(temp, body)
+
+          case Uploads.upload(temp, prefix) do
+            {:ok, key} ->
+              {:ok, key}
+
+            {:error, reason} ->
+              IO.puts("  Warning: upload failed for #{url}: #{inspect(reason)}")
+              :error
+          end
+
+        other ->
+          IO.puts("  Warning: failed to download #{url}: #{inspect(other)}")
+          :error
+      end
+    after
+      File.rm(temp)
     end
   end
 
@@ -184,95 +200,80 @@ users =
 
 IO.puts("Done creating users.\n")
 
-# --- Download Avatars ---
+# --- Upload Avatars ---
 
-IO.puts("Downloading avatars...")
+IO.puts("Uploading avatars to object storage...")
 
 users =
   Enum.map(Enum.with_index(users, 1), fn {user, i} ->
-    filename = "seed_avatar_#{user.id}.jpg"
-    dest = Path.join(avatars_dir, filename)
-
     # Use randomuser.me for realistic portrait avatars
     gender = Enum.random(["men", "women"])
     portrait_id = Enum.random(1..99)
     url = "https://randomuser.me/api/portraits/#{gender}/#{portrait_id}.jpg"
 
-    case Helpers.download_image(url, dest) do
-      :ok ->
+    case Helpers.download_and_upload(url, "avatars") do
+      {:ok, key} ->
         {:ok, user} =
           user
-          |> User.avatar_changeset(%{avatar: filename})
+          |> User.avatar_changeset(%{avatar_storage_key: key})
           |> Repo.update()
 
-        if rem(i, 20) == 0, do: IO.puts("  Downloaded #{i}/100 avatars")
+        if rem(i, 20) == 0, do: IO.puts("  Uploaded #{i}/100 avatars")
         user
 
       :error ->
-        if rem(i, 20) == 0, do: IO.puts("  Downloaded #{i}/100 avatars (some failed)")
+        if rem(i, 20) == 0, do: IO.puts("  Uploaded #{i}/100 avatars (some failed)")
         user
     end
   end)
 
-IO.puts("Done downloading avatars.\n")
+IO.puts("Done uploading avatars.\n")
 
 # --- Create Posts with Images ---
 
 IO.puts("Creating posts with images...")
 
 Enum.reduce(Enum.with_index(users, 1), 0, fn {user, user_idx}, acc ->
-    post_count = Enum.random(5..20)
+  post_count = Enum.random(5..20)
 
-    Enum.each(1..post_count, fn _post_idx ->
-      # Create post
-      {:ok, post} =
-        Feed.create_post(%{
-          caption: Helpers.random_caption(),
-          user_id: user.id,
-          likes: Enum.random(0..500),
-          hide_likes: Enum.random([true, false, false, false, false]),
-          disable_comments: false
-        })
+  Enum.each(1..post_count, fn _post_idx ->
+    # Create post
+    {:ok, post} =
+      Feed.create_post(%{
+        caption: Helpers.random_caption(),
+        user_id: user.id,
+        likes: Enum.random(0..500),
+        hide_likes: Enum.random([true, false, false, false, false]),
+        disable_comments: false
+      })
 
-      # Each post gets 1-4 images
-      image_count = Enum.random(1..4)
+    # Each post gets 1-4 images
+    image_count = Enum.random(1..4)
 
-      filenames =
-        Enum.map(1..image_count, fn img_idx ->
-          filename = "seed_post_#{post.id}_#{img_idx}.jpg"
-          dest = Path.join(uploads_dir, filename)
+    Enum.each(1..image_count, fn img_idx ->
+      # Use picsum.photos for random images (640x640 square like Instagram)
+      seed = post.id * 10 + img_idx
+      url = "https://picsum.photos/seed/#{seed}/640/640.jpg"
 
-          # Use picsum.photos for random images (640x640 square like Instagram)
-          seed = post.id * 10 + img_idx
-          url = "https://picsum.photos/seed/#{seed}/640/640.jpg"
+      case Helpers.download_and_upload(url, "posts") do
+        {:ok, key} ->
+          {:ok, _resource} =
+            Feed.create_resource(%{
+              post_id: post.id,
+              storage_key: key,
+              type: :photo,
+              alt: "Photo #{img_idx}"
+            })
 
-          case Helpers.download_image(url, dest) do
-            :ok ->
-              {:ok, _resource} =
-                Feed.create_resource(%{
-                  post_id: post.id,
-                  file: filename,
-                  type: :photo,
-                  alt: "Photo #{img_idx}"
-                })
-
-              filename
-
-            :error ->
-              nil
-          end
-        end)
-        |> Enum.reject(&is_nil/1)
-
-      # Set thumbnail to first image
-      if first = List.first(filenames) do
-        Feed.update_post(post, %{image: first})
+        :error ->
+          :ok
       end
     end)
-
-    if rem(user_idx, 10) == 0, do: IO.puts("  Processed #{user_idx}/100 users")
-    acc + post_count
   end)
+
+  if rem(user_idx, 10) == 0, do: IO.puts("  Processed #{user_idx}/100 users")
+  acc + post_count
+end)
 
 IO.puts("Done creating posts.\n")
 
@@ -328,5 +329,5 @@ total_posts = length(all_posts)
 IO.puts("Summary:")
 IO.puts("  #{total_users} users")
 IO.puts("  #{total_posts} posts")
-IO.puts("  Images stored in priv/static/uploads/")
+IO.puts("  Images stored in object storage (MinIO)")
 IO.puts("\nRun with: mix run priv/repo/seeds.exs")

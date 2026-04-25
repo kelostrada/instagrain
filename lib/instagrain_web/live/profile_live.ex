@@ -15,7 +15,7 @@ defmodule InstagrainWeb.ProfileLive do
     current_user_profile? = profile.id == current_user.id
 
     base_url = InstagrainWeb.Endpoint.url()
-    {og_image, og_image_type} = InstagrainWeb.Media.avatar_og(profile, base_url)
+    {og_image, og_image_type} = InstagrainWeb.Media.avatar_og(profile)
 
     og_desc = profile.description || "#{profile.full_name || profile.username}'s profile on Instagrain"
 

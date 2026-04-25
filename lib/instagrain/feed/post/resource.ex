@@ -4,7 +4,6 @@ defmodule Instagrain.Feed.Post.Resource do
 
   schema "post_resources" do
     field :type, Ecto.Enum, values: [:photo, :video]
-    field :file, :string
     field :storage_key, :string
     field :alt, :string
     field :filter, :string, default: "original"
@@ -17,7 +16,7 @@ defmodule Instagrain.Feed.Post.Resource do
   @doc false
   def changeset(resource, attrs) do
     resource
-    |> cast(attrs, [:file, :storage_key, :alt, :type, :post_id, :filter, :adjustments])
-    |> validate_required([:file, :type, :post_id])
+    |> cast(attrs, [:storage_key, :alt, :type, :post_id, :filter, :adjustments])
+    |> validate_required([:storage_key, :type, :post_id])
   end
 end

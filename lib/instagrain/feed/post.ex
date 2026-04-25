@@ -3,7 +3,6 @@ defmodule Instagrain.Feed.Post do
   import Ecto.Changeset
 
   schema "posts" do
-    field :image, :string
     field :likes, :integer, default: 0
     field :caption, :string
     belongs_to :location, Instagrain.Feed.Location
@@ -26,7 +25,6 @@ defmodule Instagrain.Feed.Post do
   def changeset(post, attrs) do
     post
     |> cast(attrs, [
-      :image,
       :likes,
       :caption,
       :location_id,

@@ -93,31 +93,32 @@ defmodule Instagrain.FeedTest do
 
     test "create_resource/1 with valid data creates a resource" do
       post = post_fixture()
-      valid_attrs = %{type: :photo, file: "some file", alt: "some alt", post_id: post.id}
+      valid_attrs = %{type: :photo, storage_key: "posts/abc", alt: "some alt", post_id: post.id}
 
       assert {:ok, %Resource{} = resource} = Feed.create_resource(valid_attrs)
       assert resource.type == :photo
-      assert resource.file == "some file"
+      assert resource.storage_key == "posts/abc"
       assert resource.alt == "some alt"
     end
 
     test "create_resource/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Feed.create_resource(%{type: nil, file: nil, alt: nil})
+      assert {:error, %Ecto.Changeset{}} =
+               Feed.create_resource(%{type: nil, storage_key: nil, alt: nil})
     end
 
     test "update_resource/2 with valid data updates the resource" do
       resource = resource_fixture()
-      update_attrs = %{type: :video, file: "updated file", alt: "updated alt"}
+      update_attrs = %{type: :video, storage_key: "posts/updated", alt: "updated alt"}
 
       assert {:ok, %Resource{} = updated} = Feed.update_resource(resource, update_attrs)
       assert updated.type == :video
-      assert updated.file == "updated file"
+      assert updated.storage_key == "posts/updated"
       assert updated.alt == "updated alt"
     end
 
     test "update_resource/2 with invalid data returns error changeset" do
       resource = resource_fixture()
-      assert {:error, %Ecto.Changeset{}} = Feed.update_resource(resource, %{file: nil})
+      assert {:error, %Ecto.Changeset{}} = Feed.update_resource(resource, %{storage_key: nil})
       assert resource == Feed.get_resource!(resource.id)
     end
 

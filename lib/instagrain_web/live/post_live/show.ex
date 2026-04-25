@@ -32,7 +32,7 @@ defmodule InstagrainWeb.PostLive.Show do
 
     {og_image, og_image_type} =
       case post.resources do
-        [resource | _] -> InstagrainWeb.Media.resource_og(resource, base_url)
+        [resource | _] -> InstagrainWeb.Media.resource_og(resource)
         _ -> {nil, nil}
       end
 
