@@ -61,6 +61,13 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Pin ex_aws's HTTP client so a future default change can't silently break
+# uploads. recv_timeout bumped above the 8s default for slow paths through
+# the Cloudflare tunnel on the Pi.
+config :ex_aws,
+  http_client: ExAws.Request.Hackney,
+  hackney_opts: [recv_timeout: 30_000]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
