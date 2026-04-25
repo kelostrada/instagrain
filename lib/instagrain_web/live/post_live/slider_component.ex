@@ -5,6 +5,8 @@ defmodule InstagrainWeb.PostLive.SliderComponent do
 
   @impl true
   def render(assigns) do
+    assigns = assign_new(assigns, :lazy, fn -> false end)
+
     ~H"""
     <div
       id={@id}
@@ -15,8 +17,9 @@ defmodule InstagrainWeb.PostLive.SliderComponent do
       <div class="flex transition-transform duration-300 ease-out items-center" data-slider-track>
         <div :for={resource <- @resources} class="w-full flex-shrink-0 relative">
           <img
-            src={resource_url(resource, :full)}
+            src={resource_url(resource, :medium)}
             alt={resource.alt}
+            loading={if @lazy, do: "lazy", else: "eager"}
             class="w-full h-auto md:max-h-[80vh] pointer-events-none"
             draggable="false"
             style={ImageFilters.resource_filter_style(resource)}

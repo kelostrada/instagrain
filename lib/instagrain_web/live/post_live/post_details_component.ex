@@ -27,6 +27,7 @@ defmodule InstagrainWeb.PostLive.PostDetailsComponent do
           id={"post-details-slider-#{@post.id}"}
           module={InstagrainWeb.PostLive.SliderComponent}
           resources={@post.resources}
+          lazy={true}
         />
       </div>
       <div class="md:w-85 max-md:w-full flex flex-col">
