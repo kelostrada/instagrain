@@ -15,7 +15,7 @@ defmodule InstagrainWeb.PostLive.SliderComponent do
       <div class="flex transition-transform duration-300 ease-out items-center" data-slider-track>
         <div :for={resource <- @resources} class="w-full flex-shrink-0 relative">
           <img
-            src={~p"/uploads/#{resource.file}"}
+            src={resource_url(resource, :full)}
             alt={resource.alt}
             class="w-full h-auto md:max-h-[80vh] pointer-events-none"
             draggable="false"

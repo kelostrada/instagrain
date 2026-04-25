@@ -93,6 +93,8 @@ defmodule InstagrainWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import InstagrainWeb.CoreComponents
+      # Image URL helpers (resource_url/2, avatar_url/2)
+      import InstagrainWeb.Media
       use Gettext, backend: InstagrainWeb.Gettext
 
       # Shortcut for generating JS commands

@@ -34,7 +34,7 @@ defmodule InstagrainWeb.OgMetaPlug do
       base_url = InstagrainWeb.Endpoint.url()
       {image, image_type} =
         case post.resources do
-          [%{file: file} | _] -> {"#{base_url}/uploads/#{file}", image_mime(file)}
+          [resource | _] -> InstagrainWeb.Media.resource_og(resource, base_url)
           _ -> {nil, nil}
         end
 
@@ -59,12 +59,7 @@ defmodule InstagrainWeb.OgMetaPlug do
 
         profile ->
           base_url = InstagrainWeb.Endpoint.url()
-
-          {image, image_type} =
-            case profile.avatar do
-              nil -> {nil, nil}
-              file -> {"#{base_url}/uploads/avatars/#{file}", image_mime(file)}
-            end
+          {image, image_type} = InstagrainWeb.Media.avatar_og(profile, base_url)
 
           desc = profile.description || "#{profile.full_name || profile.username}'s profile"
           title = "#{profile.full_name || profile.username} (@#{profile.username})"
@@ -129,17 +124,6 @@ defmodule InstagrainWeb.OgMetaPlug do
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, html)
-  end
-
-  defp image_mime(filename) do
-    case filename |> Path.extname() |> String.downcase() do
-      ".jpg" -> "image/jpeg"
-      ".jpeg" -> "image/jpeg"
-      ".png" -> "image/png"
-      ".gif" -> "image/gif"
-      ".webp" -> "image/webp"
-      _ -> nil
-    end
   end
 
   defp escape(nil), do: ""

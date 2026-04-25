@@ -374,7 +374,7 @@ defmodule InstagrainWeb.NotificationsComponent do
     <.link navigate={~p"/p/#{@post.id}"} phx-click={@on_navigate} class="shrink-0">
       <%= if resource = List.first(@post.resources || []) do %>
         <img
-          src={~p"/uploads/#{resource.file}"}
+          src={resource_url(resource, :thumb)}
           class="w-11 h-11 object-cover rounded"
           style={InstagrainWeb.ImageFilters.resource_filter_style(resource)}
         />

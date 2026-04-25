@@ -26,11 +26,7 @@ defmodule InstagrainWeb.UserComponents do
     ~H"""
     <div class={["rounded-full border", @class]}>
       <img
-        src={
-          if is_nil(@user.avatar),
-            do: ~p"/images/person.webp",
-            else: ~p"/uploads/avatars/#{@user.avatar}"
-        }
+        src={avatar_url(@user, :thumb) || ~p"/images/person.webp"}
         class={[
           @size == :xxs && "h-5 w-5",
           @size == :xs && "h-7 w-7",

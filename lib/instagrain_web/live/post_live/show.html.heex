@@ -22,7 +22,7 @@
   <div class="grid grid-cols-3 gap-1 p-1 ">
     <div :for={%{resources: [resource | _]} = post <- @other_posts} class="relative group">
       <.link navigate={~p"/p/#{post.id}"}>
-        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+        <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">
             <div :if={!post.hide_likes} class="text-white">

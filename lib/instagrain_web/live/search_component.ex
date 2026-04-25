@@ -127,7 +127,7 @@ defmodule InstagrainWeb.SearchComponent do
                 <div class="w-11 h-11 rounded-full bg-neutral-200 flex-shrink-0 overflow-hidden">
                   <img
                     :if={item.avatar}
-                    src={~p"/uploads/avatars/#{item.avatar}"}
+                    src={avatar_url(item, :thumb)}
                     class="w-full h-full object-cover"
                   />
                   <div :if={!item.avatar} class="w-full h-full flex items-center justify-center">
@@ -150,7 +150,7 @@ defmodule InstagrainWeb.SearchComponent do
                 <div class="w-11 h-11 flex-shrink-0 overflow-hidden rounded">
                   <%= if item.resources != [] do %>
                     <img
-                      src={~p"/uploads/#{hd(item.resources).file}"}
+                      src={resource_url(hd(item.resources), :thumb)}
                       class="w-full h-full object-cover"
                       style={InstagrainWeb.ImageFilters.resource_filter_style(hd(item.resources))}
                     />

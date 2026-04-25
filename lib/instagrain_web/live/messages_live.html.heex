@@ -286,7 +286,7 @@
                       <%= if idx == total - 1 do %>
                         <.link navigate={~p"/#{user.username}"}>
                           <img
-                            src={if is_nil(user.avatar), do: ~p"/images/person.webp", else: ~p"/uploads/avatars/#{user.avatar}"}
+                            src={avatar_url(user, :thumb) || ~p"/images/person.webp"}
                             class="w-7 h-7 rounded-full object-cover"
                           />
                         </.link>

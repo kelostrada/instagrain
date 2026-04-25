@@ -70,7 +70,7 @@
             <div class="w-11 h-11 rounded-full bg-neutral-200 flex-shrink-0 overflow-hidden">
               <img
                 :if={item.avatar}
-                src={~p"/uploads/avatars/#{item.avatar}"}
+                src={avatar_url(item, :thumb)}
                 class="w-full h-full object-cover"
               />
               <div :if={!item.avatar} class="w-full h-full flex items-center justify-center">
@@ -93,7 +93,7 @@
             <div class="w-11 h-11 flex-shrink-0 overflow-hidden rounded">
               <%= if item.resources != [] do %>
                 <img
-                  src={~p"/uploads/#{hd(item.resources).file}"}
+                  src={resource_url(hd(item.resources), :thumb)}
                   class="w-full h-full object-cover"
                   style={InstagrainWeb.ImageFilters.resource_filter_style(hd(item.resources))}
                 />
@@ -156,7 +156,7 @@
         </.modal>
 
         <.link phx-click={show_modal("post-details-modal-#{post.id}")} class="max-sm:hidden">
-          <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+          <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
           <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
             <div class="flex max-sm:gap-3 gap-6">
               <div :if={!post.hide_likes} class="text-white">
@@ -177,7 +177,7 @@
         </.link>
 
         <.link navigate={~p"/p/#{post.id}"} class="sm:hidden">
-          <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+          <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
           <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
             <div class="flex max-sm:gap-3 gap-6">
               <div :if={!post.hide_likes} class="text-white">

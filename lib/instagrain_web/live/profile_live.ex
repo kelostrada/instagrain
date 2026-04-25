@@ -15,12 +15,7 @@ defmodule InstagrainWeb.ProfileLive do
     current_user_profile? = profile.id == current_user.id
 
     base_url = InstagrainWeb.Endpoint.url()
-
-    {og_image, og_image_type} =
-      case profile.avatar do
-        nil -> {nil, nil}
-        file -> {"#{base_url}/uploads/avatars/#{file}", image_mime(file)}
-      end
+    {og_image, og_image_type} = InstagrainWeb.Media.avatar_og(profile, base_url)
 
     og_desc = profile.description || "#{profile.full_name || profile.username}'s profile on Instagrain"
 
@@ -152,14 +147,4 @@ defmodule InstagrainWeb.ProfileLive do
     |> stream(:posts, posts, reset: true)
   end
 
-  defp image_mime(filename) do
-    case filename |> Path.extname() |> String.downcase() do
-      ".jpg" -> "image/jpeg"
-      ".jpeg" -> "image/jpeg"
-      ".png" -> "image/png"
-      ".gif" -> "image/gif"
-      ".webp" -> "image/webp"
-      _ -> nil
-    end
-  end
 end

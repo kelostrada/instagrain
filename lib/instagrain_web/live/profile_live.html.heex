@@ -1,11 +1,7 @@
 <div class="flex gap-4 max-w-[935px] mx-auto max-sm:mt-6">
   <div class="rounded-full border m-auto max-sm:max-w-32 max-sm:max-h-32 max-sm:mx-4 sm:w-32 sm:h-32 sm:mx-8 md:h-40 md:w-40 md:mx-16">
     <img
-      src={
-        if is_nil(@profile.avatar),
-          do: ~p"/images/person.webp",
-          else: ~p"/uploads/avatars/#{@profile.avatar}"
-      }
+      src={avatar_url(@profile, :thumb) || ~p"/images/person.webp"}
       class="object-cover rounded-full w-full h-full"
     />
   </div>
@@ -155,7 +151,7 @@
       </.modal>
 
       <.link phx-click={show_modal("post-details-modal-#{post.id}")} class="max-sm:hidden">
-        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+        <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">
             <div :if={!post.hide_likes} class="text-white">
@@ -176,7 +172,7 @@
       </.link>
 
       <.link navigate={~p"/p/#{post.id}"} class="sm:hidden">
-        <img src={~p"/uploads/#{resource.file}"} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+        <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">
             <div :if={!post.hide_likes} class="text-white">

@@ -163,7 +163,7 @@ defmodule InstagrainWeb.PostLive.EditFormComponent do
           <div class="bg-neutral-50 max-sm:hidden grow h-full flex items-center justify-center overflow-hidden">
             <img
               :if={resource = List.first(@post.resources)}
-              src={~p"/uploads/#{resource.file}"}
+              src={resource_url(resource, :medium)}
               class="w-full h-full object-contain"
               style={ImageFilters.resource_filter_style(resource)}
             />
@@ -267,7 +267,7 @@ defmodule InstagrainWeb.PostLive.EditFormComponent do
                   class="flex gap-2 items-start"
                 >
                   <img
-                    src={~p"/uploads/#{resource.file}"}
+                    src={resource_url(resource, :thumb)}
                     class="w-10 h-10 object-cover rounded"
                     style={ImageFilters.resource_filter_style(resource)}
                   />

@@ -37,7 +37,7 @@ defmodule InstagrainWeb.UserSettingsLive do
               />
               <img
                 :if={is_nil(entry) && !is_nil(@current_user.avatar)}
-                src={~p"/uploads/avatars/#{@current_user.avatar}"}
+                src={avatar_url(@current_user, :thumb)}
                 class="w-full h-full object-cover rounded-full"
               />
               <.icon

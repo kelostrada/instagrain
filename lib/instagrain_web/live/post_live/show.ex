@@ -32,7 +32,7 @@ defmodule InstagrainWeb.PostLive.Show do
 
     {og_image, og_image_type} =
       case post.resources do
-        [%{file: file} | _] -> {"#{base_url}/uploads/#{file}", image_mime(file)}
+        [resource | _] -> InstagrainWeb.Media.resource_og(resource, base_url)
         _ -> {nil, nil}
       end
 
@@ -50,17 +50,6 @@ defmodule InstagrainWeb.PostLive.Show do
      |> assign(:og_type, "article")
      |> assign(:post, post)
      |> assign(:other_posts, Feed.list_other_posts(post))}
-  end
-
-  defp image_mime(filename) do
-    case filename |> Path.extname() |> String.downcase() do
-      ".jpg" -> "image/jpeg"
-      ".jpeg" -> "image/jpeg"
-      ".png" -> "image/png"
-      ".gif" -> "image/gif"
-      ".webp" -> "image/webp"
-      _ -> nil
-    end
   end
 
   @impl true
