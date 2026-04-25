@@ -14,7 +14,7 @@ config :instagrain,
 # Configures the endpoint
 config :instagrain, InstagrainWeb.Endpoint,
   url: [host: "localhost"],
-  adapter: Bandit.PhoenixAdapter,
+  adapter: Phoenix.Endpoint.Cowboy2Adapter,
   render_errors: [
     formats: [html: InstagrainWeb.ErrorHTML, json: InstagrainWeb.ErrorJSON],
     layout: false

@@ -72,7 +72,7 @@ defmodule Instagrain.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.4"},
       {:dns_cluster, "~> 0.1.3"},
-      {:bandit, "~> 1.6"},
+      {:plug_cowboy, "~> 2.7"},
       {:image, "~> 0.62"},
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},

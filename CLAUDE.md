@@ -8,7 +8,7 @@ Instagram clone built with Elixir, Phoenix Framework, and Phoenix LiveView.
 - **Framework**: Phoenix 1.7 with Phoenix LiveView
 - **Database**: PostgreSQL (via Ecto)
 - **Assets**: esbuild + Tailwind CSS
-- **HTTP Server**: Bandit
+- **HTTP Server**: Cowboy (via plug_cowboy)
 
 ## Features
 
