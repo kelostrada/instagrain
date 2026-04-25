@@ -8,6 +8,7 @@ defmodule Instagrain.Accounts.User do
     field :full_name, :string
     field :description, :string
     field :avatar, :string
+    field :avatar_storage_key, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
@@ -211,7 +212,7 @@ defmodule Instagrain.Accounts.User do
 
   def avatar_changeset(user, attrs) do
     user
-    |> cast(attrs, [:avatar])
+    |> cast(attrs, [:avatar, :avatar_storage_key])
     |> validate_required([:avatar])
   end
 

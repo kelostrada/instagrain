@@ -6,6 +6,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
   alias Instagrain.Feed
   alias Instagrain.Feed.Post
+  alias Instagrain.Uploads
   alias InstagrainWeb.ImageFilters
 
   @impl true
@@ -610,6 +611,12 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
         File.cp!(path, dest)
 
+        storage_key =
+          case Uploads.upload(dest, "posts") do
+            {:ok, key} -> key
+            :error -> nil
+          end
+
         settings =
           Map.get(image_filters, entry.ref, %{
             filter: "original",
@@ -619,6 +626,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
         {:ok,
          %{
            filename: filename,
+           storage_key: storage_key,
            entry: entry,
            filter: settings.filter,
            adjustments: settings.adjustments
@@ -677,6 +685,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
         case Feed.create_resource(%{
                post_id: post.id,
                file: file.filename,
+               storage_key: file.storage_key,
                type: :photo,
                alt: alts[file.entry.ref],
                filter: file.filter,

@@ -2,6 +2,7 @@ defmodule InstagrainWeb.UserSettingsLive do
   use InstagrainWeb, :live_view
 
   alias Instagrain.Accounts
+  alias Instagrain.Uploads
 
   @impl true
   def render(assigns) do
@@ -286,11 +287,24 @@ defmodule InstagrainWeb.UserSettingsLive do
 
       File.cp!(path, dest)
 
-      {:ok, filename}
+      storage_key =
+        case Uploads.upload(dest, "avatars") do
+          {:ok, key} -> key
+          :error -> nil
+        end
+
+      {:ok, %{filename: filename, storage_key: storage_key}}
     end)
     |> List.first()
-    |> then(fn filename ->
-      Accounts.update_user_avatar(socket.assigns.current_user, %{avatar: filename})
+    |> then(fn
+      nil ->
+        {:error, :no_upload}
+
+      %{filename: filename, storage_key: storage_key} ->
+        Accounts.update_user_avatar(socket.assigns.current_user, %{
+          avatar: filename,
+          avatar_storage_key: storage_key
+        })
     end)
     |> case do
       {:ok, user} ->
