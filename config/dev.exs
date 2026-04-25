@@ -83,3 +83,12 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Local MinIO via docker-compose. Defaults match the docker-compose service.
+config :instagrain, Instagrain.Storage,
+  endpoint: "http://localhost:9000",
+  region: "us-east-1",
+  access_key_id: "minioadmin",
+  secret_access_key: "minioadmin",
+  bucket: "instagrain",
+  public_url: "http://localhost:9000"

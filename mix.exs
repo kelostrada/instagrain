@@ -73,6 +73,11 @@ defmodule Instagrain.MixProject do
       {:jason, "~> 1.4"},
       {:dns_cluster, "~> 0.1.3"},
       {:bandit, "~> 1.6"},
+      {:image, "~> 0.62"},
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:sweet_xml, "~> 0.7"},
+      {:hackney, "~> 1.20"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end

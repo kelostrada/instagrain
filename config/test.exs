@@ -38,3 +38,12 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
+
+# Tests point at a separate bucket so they can be wiped without touching dev data.
+config :instagrain, Instagrain.Storage,
+  endpoint: "http://localhost:9000",
+  region: "us-east-1",
+  access_key_id: "minioadmin",
+  secret_access_key: "minioadmin",
+  bucket: "instagrain-test",
+  public_url: "http://localhost:9000"
