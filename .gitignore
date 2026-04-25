@@ -38,3 +38,6 @@ npm-debug.log
 # Uploaded files and seed-generated images
 /priv/static/uploads/
 
+# Local docker-compose data (postgres, minio, uploads volume mount)
+/volumes/
+
