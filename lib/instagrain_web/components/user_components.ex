@@ -27,6 +27,7 @@ defmodule InstagrainWeb.UserComponents do
     <div class={["rounded-full border", @class]}>
       <img
         src={avatar_url(@user, :thumb) || ~p"/images/person.webp"}
+        loading="lazy"
         class={[
           @size == :xxs && "h-5 w-5",
           @size == :xs && "h-7 w-7",

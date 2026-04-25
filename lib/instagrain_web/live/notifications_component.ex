@@ -375,6 +375,7 @@ defmodule InstagrainWeb.NotificationsComponent do
       <%= if resource = List.first(@post.resources || []) do %>
         <img
           src={resource_url(resource, :thumb)}
+          loading="lazy"
           class="w-11 h-11 object-cover rounded"
           style={InstagrainWeb.ImageFilters.resource_filter_style(resource)}
         />

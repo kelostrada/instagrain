@@ -36,12 +36,12 @@ defmodule InstagrainWeb.UserSettingsLive do
                 class="w-full h-full object-cover rounded-full"
               />
               <img
-                :if={is_nil(entry) && !is_nil(@current_user.avatar)}
+                :if={is_nil(entry) && !is_nil(@current_user.avatar_storage_key)}
                 src={avatar_url(@current_user, :thumb)}
                 class="w-full h-full object-cover rounded-full"
               />
               <.icon
-                :if={is_nil(entry) && is_nil(@current_user.avatar)}
+                :if={is_nil(entry) && is_nil(@current_user.avatar_storage_key)}
                 name="hero-user"
                 class="h-full w-full rounded-full"
               />

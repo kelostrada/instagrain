@@ -33,7 +33,6 @@ function showToast(message) {
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
-  longPollFallbackMs: 5000,
   params: { _csrf_token: csrfToken },
   hooks: {
     TriggerClick: {

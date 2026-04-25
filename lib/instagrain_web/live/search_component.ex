@@ -126,11 +126,12 @@ defmodule InstagrainWeb.SearchComponent do
               >
                 <div class="w-11 h-11 rounded-full bg-neutral-200 flex-shrink-0 overflow-hidden">
                   <img
-                    :if={item.avatar}
+                    :if={item.avatar_storage_key}
                     src={avatar_url(item, :thumb)}
+                    loading="lazy"
                     class="w-full h-full object-cover"
                   />
-                  <div :if={!item.avatar} class="w-full h-full flex items-center justify-center">
+                  <div :if={!item.avatar_storage_key} class="w-full h-full flex items-center justify-center">
                     <.icon name="hero-user" class="w-6 h-6 text-neutral-400" />
                   </div>
                 </div>
@@ -151,6 +152,7 @@ defmodule InstagrainWeb.SearchComponent do
                   <%= if item.resources != [] do %>
                     <img
                       src={resource_url(hd(item.resources), :thumb)}
+                      loading="lazy"
                       class="w-full h-full object-cover"
                       style={InstagrainWeb.ImageFilters.resource_filter_style(hd(item.resources))}
                     />
