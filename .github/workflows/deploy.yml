@@ -85,11 +85,33 @@ jobs:
           scp docker-compose.yml ${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl:/home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/
 
           ssh ${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl << DEPLOY
+            set -e
             sudo mv /home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/docker-compose.yml /var/www/insta.melinakrzemowa.pl/docker-compose.yml
             cd /var/www/insta.melinakrzemowa.pl
             sudo sed -i 's/^VERSION=.*/VERSION=${VERSION}/' .env
             sudo sed -i 's/^VERSION_HASH=.*/VERSION_HASH=${VERSION_HASH}/' .env
             docker pull ghcr.io/kelostrada/instagrain:${VERSION}-${VERSION_HASH}
             docker compose up -d
-            docker exec instamelinakrzemowapl-web-1 /app/bin/migrate
+
+            # Postgres is sometimes still warming up when bin/migrate starts.
+            # Wait until it accepts connections before migrating.
+            for i in \$(seq 1 30); do
+              if docker exec instamelinakrzemowapl-db-1 pg_isready -U postgres -q; then
+                break
+              fi
+              echo "waiting for postgres... (\$i)"
+              sleep 2
+            done
+
+            # Retry migrate a couple of times in case the web release VM is
+            # still starting up when the first attempt fires.
+            for i in 1 2 3; do
+              if docker exec instamelinakrzemowapl-web-1 /app/bin/migrate; then
+                exit 0
+              fi
+              echo "migrate attempt \$i failed, retrying in 5s..."
+              sleep 5
+            done
+            echo "migrate failed after 3 attempts" >&2
+            exit 1
           DEPLOY
