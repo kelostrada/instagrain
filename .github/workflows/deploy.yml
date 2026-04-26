@@ -84,34 +84,36 @@ jobs:
 
           scp docker-compose.yml ${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl:/home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/
 
-          ssh ${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl << DEPLOY
+          SSH_TARGET=${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl
+
+          # Pull image, swap compose, recreate containers — single SSH session.
+          ssh $SSH_TARGET "
             set -e
             sudo mv /home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/docker-compose.yml /var/www/insta.melinakrzemowa.pl/docker-compose.yml
             cd /var/www/insta.melinakrzemowa.pl
-            sudo sed -i 's/^VERSION=.*/VERSION=${VERSION}/' .env
-            sudo sed -i 's/^VERSION_HASH=.*/VERSION_HASH=${VERSION_HASH}/' .env
-            docker pull ghcr.io/kelostrada/instagrain:${VERSION}-${VERSION_HASH}
+            sudo sed -i 's/^VERSION=.*/VERSION=$VERSION/' .env
+            sudo sed -i 's/^VERSION_HASH=.*/VERSION_HASH=$VERSION_HASH/' .env
+            docker pull ghcr.io/kelostrada/instagrain:$VERSION-$VERSION_HASH
             docker compose up -d
+          "
 
-            # Postgres is sometimes still warming up when bin/migrate starts.
-            # Wait until it accepts connections before migrating.
-            for i in \$(seq 1 30); do
-              if docker exec instamelinakrzemowapl-db-1 pg_isready -U postgres -q; then
-                break
-              fi
-              echo "waiting for postgres... (\$i)"
-              sleep 2
-            done
+          # Wait until postgres accepts connections (release startup is slow on the Pi).
+          for i in $(seq 1 30); do
+            if ssh $SSH_TARGET 'docker exec instamelinakrzemowapl-db-1 pg_isready -U postgres -q'; then
+              break
+            fi
+            echo "waiting for postgres... ($i)"
+            sleep 2
+          done
 
-            # Retry migrate a couple of times in case the web release VM is
-            # still starting up when the first attempt fires.
-            for i in 1 2 3; do
-              if docker exec instamelinakrzemowapl-web-1 /app/bin/migrate; then
-                exit 0
-              fi
-              echo "migrate attempt \$i failed, retrying in 5s..."
-              sleep 5
-            done
-            echo "migrate failed after 3 attempts" >&2
-            exit 1
-          DEPLOY
+          # Retry migrate — the web release VM may still be initialising on the first try.
+          for i in 1 2 3; do
+            if ssh $SSH_TARGET 'docker exec instamelinakrzemowapl-web-1 /app/bin/migrate'; then
+              echo "migrate succeeded on attempt $i"
+              exit 0
+            fi
+            echo "migrate attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "migrate failed after 3 attempts" >&2
+          exit 1
