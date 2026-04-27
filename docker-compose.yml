@@ -3,7 +3,7 @@ services:
     image: postgres:13
     restart: unless-stopped
     volumes:
-      - ./volumes/instagrain_db:/var/lib/postgresql/data
+      - instagrain_db:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: instagrain
@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     volumes:
-      - ./volumes/instagrain_minio:/data
+      - instagrain_minio:/data
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -63,3 +63,9 @@ services:
     depends_on:
       - db
       - minio
+
+volumes:
+  instagrain_db:
+    name: instagrain_db
+  instagrain_minio:
+    name: instagrain_minio
