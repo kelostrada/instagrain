@@ -24,10 +24,11 @@ defmodule Instagrain.Uploads do
   @image_exts ~w(.jpg .jpeg .png .webp)
   @video_exts ~w(.mp4 .mov .avi .mpg)
 
-  @spec upload(Path.t(), String.t()) :: {:ok, String.t()} | {:error, term()}
-  def upload(local_path, prefix) when is_binary(local_path) and is_binary(prefix) do
+  @spec upload(Path.t(), String.t(), String.t()) :: {:ok, String.t()} | {:error, term()}
+  def upload(local_path, prefix, original_filename)
+      when is_binary(local_path) and is_binary(prefix) and is_binary(original_filename) do
     storage_key = "#{prefix}/#{Ecto.UUID.generate()}"
-    ext = local_path |> Path.extname() |> String.downcase()
+    ext = original_filename |> Path.extname() |> String.downcase()
 
     try do
       do_upload(local_path, storage_key, ext)

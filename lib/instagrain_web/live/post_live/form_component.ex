@@ -613,7 +613,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
           })
 
         result =
-          case Uploads.upload(path, "posts") do
+          case Uploads.upload(path, "posts", entry.client_name) do
             {:ok, storage_key} ->
               {:ok,
                %{

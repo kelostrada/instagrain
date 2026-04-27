@@ -281,8 +281,8 @@ defmodule InstagrainWeb.UserSettingsLive do
 
   def handle_event("update_avatar", _, socket) do
     socket
-    |> consume_uploaded_entries(:avatar, fn %{path: path}, _entry ->
-      {:ok, Uploads.upload(path, "avatars")}
+    |> consume_uploaded_entries(:avatar, fn %{path: path}, entry ->
+      {:ok, Uploads.upload(path, "avatars", entry.client_name)}
     end)
     |> List.first()
     |> then(fn
