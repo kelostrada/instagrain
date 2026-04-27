@@ -20,10 +20,14 @@ defmodule Instagrain.Imaging do
   @type variant :: %{binary: binary, content_type: String.t(), ext: String.t()}
 
   @variants [
-    {:thumb_jpg, %{max_width: 400, format: :jpeg, quality: 80, content_type: "image/jpeg", ext: "jpg"}},
-    {:thumb, %{max_width: 400, format: :webp, quality: 80, content_type: "image/webp", ext: "webp"}},
-    {:medium, %{max_width: 1080, format: :webp, quality: 85, content_type: "image/webp", ext: "webp"}},
-    {:full, %{max_width: 2048, format: :webp, quality: 90, content_type: "image/webp", ext: "webp"}}
+    {:thumb_jpg,
+     %{max_width: 400, format: :jpeg, quality: 80, content_type: "image/jpeg", ext: "jpg"}},
+    {:thumb,
+     %{max_width: 400, format: :webp, quality: 80, content_type: "image/webp", ext: "webp"}},
+    {:medium,
+     %{max_width: 1080, format: :webp, quality: 85, content_type: "image/webp", ext: "webp"}},
+    {:full,
+     %{max_width: 2048, format: :webp, quality: 90, content_type: "image/webp", ext: "webp"}}
   ]
 
   @spec variants() :: [{variant_name, map}]

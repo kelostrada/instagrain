@@ -37,13 +37,18 @@ defmodule InstagrainWeb.PostLive.Show do
       end
 
     caption = post.caption || ""
-    og_desc = if String.length(caption) > 200, do: String.slice(caption, 0, 197) <> "...", else: caption
+
+    og_desc =
+      if String.length(caption) > 200, do: String.slice(caption, 0, 197) <> "...", else: caption
 
     {:noreply,
      socket
      |> assign(:page_title, "#{post.user.username} on Instagrain")
      |> assign(:og_title, "#{post.user.full_name || post.user.username} on Instagrain")
-     |> assign(:og_description, if(og_desc == "", do: "View this post on Instagrain", else: og_desc))
+     |> assign(
+       :og_description,
+       if(og_desc == "", do: "View this post on Instagrain", else: og_desc)
+     )
      |> assign(:og_image, og_image)
      |> assign(:og_image_type, og_image_type)
      |> assign(:og_url, "#{base_url}/p/#{post.id}")
@@ -77,6 +82,8 @@ defmodule InstagrainWeb.PostLive.Show do
 
   def handle_event("menu-unfollow", %{"post_user_id" => user_id}, socket) do
     Instagrain.Profiles.unfollow_user(socket.assigns.current_user.id, user_id)
-    {:noreply, assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
+
+    {:noreply,
+     assign(socket, following_user_ids: List.delete(socket.assigns.following_user_ids, user_id))}
   end
 end

@@ -88,7 +88,7 @@ defmodule InstagrainWeb.CoreComponents do
               ]}
             >
               <div id={"#{@id}-content"} class="h-full">
-                <%= render_slot(@inner_block) %>
+                {render_slot(@inner_block)}
               </div>
             </.focus_wrap>
           </div>
@@ -135,9 +135,9 @@ defmodule InstagrainWeb.CoreComponents do
       <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
         <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        <%= @title %>
+        {@title}
       </p>
-      <p class="mt-2 text-sm leading-5"><%= msg %></p>
+      <p class="mt-2 text-sm leading-5">{msg}</p>
       <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
       </button>
@@ -169,7 +169,7 @@ defmodule InstagrainWeb.CoreComponents do
         phx-connected={hide("#client-error")}
         hidden
       >
-        <%= gettext("Attempting to reconnect") %>
+        {gettext("Attempting to reconnect")}
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
 
@@ -182,7 +182,7 @@ defmodule InstagrainWeb.CoreComponents do
         phx-connected={hide("#server-error")}
         hidden
       >
-        <%= gettext("Hang in there while we get back on track") %>
+        {gettext("Hang in there while we get back on track")}
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
     </div>
@@ -216,9 +216,9 @@ defmodule InstagrainWeb.CoreComponents do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
       <div class="mt-10 space-y-8 bg-white">
-        <%= render_slot(@inner_block, f) %>
+        {render_slot(@inner_block, f)}
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
-          <%= render_slot(action, f) %>
+          {render_slot(action, f)}
         </div>
       </div>
     </.form>
@@ -253,7 +253,7 @@ defmodule InstagrainWeb.CoreComponents do
       ]}
       {@rest}
     >
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </button>
     """
   end
@@ -342,9 +342,9 @@ defmodule InstagrainWeb.CoreComponents do
         />
         <div class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-4 rtl:peer-checked:after:-translate-x-4 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black">
         </div>
-        <span class="ml-2"><%= @label %></span>
+        <span class="ml-2">{@label}</span>
       </label>
-      <.error :for={msg <- @errors}><%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -352,7 +352,7 @@ defmodule InstagrainWeb.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <select
         id={@id}
         name={@name}
@@ -360,10 +360,10 @@ defmodule InstagrainWeb.CoreComponents do
         multiple={@multiple}
         {@rest}
       >
-        <option :if={@prompt} value=""><%= @prompt %></option>
-        <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
+        <option :if={@prompt} value="">{@prompt}</option>
+        {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
-      <.error :for={msg <- @errors}><%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -371,7 +371,7 @@ defmodule InstagrainWeb.CoreComponents do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <textarea
         id={@id}
         name={@name}
@@ -386,7 +386,7 @@ defmodule InstagrainWeb.CoreComponents do
         }
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textareaa", @value) %></textarea>
-      <.error :for={msg <- @errors}><%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -395,7 +395,7 @@ defmodule InstagrainWeb.CoreComponents do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <input
         type={@type}
         name={@name}
@@ -417,7 +417,7 @@ defmodule InstagrainWeb.CoreComponents do
         }
         {@rest}
       />
-      <.error :for={msg <- @errors}><%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -431,7 +431,7 @@ defmodule InstagrainWeb.CoreComponents do
   def label(assigns) do
     ~H"""
     <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </label>
     """
   end
@@ -445,7 +445,7 @@ defmodule InstagrainWeb.CoreComponents do
     ~H"""
     <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </p>
     """
   end
@@ -464,13 +464,13 @@ defmodule InstagrainWeb.CoreComponents do
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
         <h1 class="text-lg font-semibold leading-8 text-zinc-800">
-          <%= render_slot(@inner_block) %>
+          {render_slot(@inner_block)}
         </h1>
         <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
-          <%= render_slot(@subtitle) %>
+          {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none"><%= render_slot(@actions) %></div>
+      <div class="flex-none">{render_slot(@actions)}</div>
     </header>
     """
   end
@@ -511,9 +511,9 @@ defmodule InstagrainWeb.CoreComponents do
       <table class="w-[40rem] mt-11 sm:w-full">
         <thead class="text-sm text-left leading-6 text-zinc-500">
           <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%= col[:label] %></th>
+            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal">{col[:label]}</th>
             <th :if={@action != []} class="relative p-0 pb-4">
-              <span class="sr-only"><%= gettext("Actions") %></span>
+              <span class="sr-only">{gettext("Actions")}</span>
             </th>
           </tr>
         </thead>
@@ -531,7 +531,7 @@ defmodule InstagrainWeb.CoreComponents do
               <div class="block py-4 pr-6">
                 <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                  <%= render_slot(col, @row_item.(row)) %>
+                  {render_slot(col, @row_item.(row))}
                 </span>
               </div>
             </td>
@@ -542,7 +542,7 @@ defmodule InstagrainWeb.CoreComponents do
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                 >
-                  <%= render_slot(action, @row_item.(row)) %>
+                  {render_slot(action, @row_item.(row))}
                 </span>
               </div>
             </td>
@@ -572,8 +572,8 @@ defmodule InstagrainWeb.CoreComponents do
     <div class="mt-14">
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt class="w-1/4 flex-none text-zinc-500"><%= item.title %></dt>
-          <dd class="text-zinc-700"><%= render_slot(item) %></dd>
+          <dt class="w-1/4 flex-none text-zinc-500">{item.title}</dt>
+          <dd class="text-zinc-700">{render_slot(item)}</dd>
         </div>
       </dl>
     </div>
@@ -598,7 +598,7 @@ defmodule InstagrainWeb.CoreComponents do
         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
       >
         <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
-        <%= render_slot(@inner_block) %>
+        {render_slot(@inner_block)}
       </.link>
     </div>
     """
@@ -707,11 +707,11 @@ defmodule InstagrainWeb.CoreComponents do
           :if={@badge_count > 0}
           class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-[5px] rounded-full bg-red-500 text-white text-[10px] font-semibold leading-[18px] text-center ring-2 ring-white"
         >
-          <%= format_badge(@badge_count) %>
+          {format_badge(@badge_count)}
         </span>
       </div>
       <span class={["max-lg:hidden pl-4", @selected? && "font-bold", !@selected? && "font-medium"]}>
-        <%= @label %>
+        {@label}
       </span>
     </.link>
     """
@@ -747,7 +747,7 @@ defmodule InstagrainWeb.CoreComponents do
         </.link>
       </div>
       <div class="grow text-center font-bold text-base leading-10 py-px">
-        <%= @title %>
+        {@title}
       </div>
       <div class="w-14"></div>
     </div>
@@ -765,7 +765,7 @@ defmodule InstagrainWeb.CoreComponents do
       datetime={@datetime}
       title={DateTime.to_date(@datetime)}
     >
-      <%= @prefix %><%= DateTime.utc_now() |> DateTime.diff(@datetime) |> format_seconds() %>
+      {@prefix}{DateTime.utc_now() |> DateTime.diff(@datetime) |> format_seconds()}
     </time>
     """
   end
@@ -780,7 +780,7 @@ defmodule InstagrainWeb.CoreComponents do
       datetime={@datetime}
       title={DateTime.to_date(@datetime)}
     >
-      <%= DateTime.utc_now() |> DateTime.diff(@datetime) |> format_seconds_ago() %>
+      {DateTime.utc_now() |> DateTime.diff(@datetime) |> format_seconds_ago()}
     </time>
     """
   end
@@ -846,7 +846,7 @@ defmodule InstagrainWeb.CoreComponents do
     <span class={[!@class && "font-medium text-sm", @class]}>
       <%= for {part, i} <- Enum.with_index(@parts) do %>
         <%= for segment <- part do %>
-          <%= segment %>
+          {segment}
         <% end %>
         <br :if={i < @parts_length - 1} />
       <% end %>
@@ -875,28 +875,45 @@ defmodule InstagrainWeb.CoreComponents do
     Regex.split(@url_regex, text, include_captures: true, trim: true)
     |> Enum.map(fn segment ->
       cond do
-        String.starts_with?(segment, "http") -> convert_url(segment, segment, link_class, show_link_icon)
-        String.starts_with?(segment, "www.") -> convert_url("https://#{segment}", segment, link_class, show_link_icon)
-        true -> Phoenix.HTML.html_escape(segment)
+        String.starts_with?(segment, "http") ->
+          convert_url(segment, segment, link_class, show_link_icon)
+
+        String.starts_with?(segment, "www.") ->
+          convert_url("https://#{segment}", segment, link_class, show_link_icon)
+
+        true ->
+          Phoenix.HTML.html_escape(segment)
       end
     end)
   end
 
   defp convert_mention("@" <> username, link_class) do
     assigns = %{username: username, link_class: link_class}
-    ~H(<.link navigate={"/#{@username}"} class={@link_class}>@<%= @username %></.link>)
+    ~H(<.link navigate={"/#{@username}"} class={@link_class}>@{@username}</.link>)
   end
 
   defp convert_hashtag("#" <> tag, link_class) do
     assigns = %{tag: String.downcase(tag), display: "#" <> tag, link_class: link_class}
-    ~H(<.link navigate={"/explore/tags/#{@tag}"} class={@link_class}><%= @display %></.link>)
+    ~H(<.link navigate={"/explore/tags/#{@tag}"} class={@link_class}>{@display}</.link>)
   end
 
   defp convert_url(href, raw, link_class, show_link_icon) do
-    assigns = %{href: href, display: display_url(raw), link_class: link_class, show_link_icon: show_link_icon}
+    assigns = %{
+      href: href,
+      display: display_url(raw),
+      link_class: link_class,
+      show_link_icon: show_link_icon
+    }
 
     ~H"""
-    <a href={@href} target="_blank" rel="noopener noreferrer" class={[@link_class, @show_link_icon && "inline-flex items-center gap-0.5"]}><span :if={@show_link_icon} class="hero-link w-3 h-3 inline-block" /><%= @display %></a>
+    <a
+      href={@href}
+      target="_blank"
+      rel="noopener noreferrer"
+      class={[@link_class, @show_link_icon && "inline-flex items-center gap-0.5"]}
+    >
+      <span :if={@show_link_icon} class="hero-link w-3 h-3 inline-block" />{@display}
+    </a>
     """
   end
 

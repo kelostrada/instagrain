@@ -8,7 +8,7 @@
   <div class="flex flex-col gap-6 h-full">
     <div class="flex max-sm:flex-col max-sm:gap-4 sm:gap-8 sm:items-center">
       <div>
-        <span class="font-medium text-xl"><%= @profile.username %></span>
+        <span class="font-medium text-xl">{@profile.username}</span>
       </div>
       <div>
         <%= if(
@@ -45,36 +45,40 @@
 
     <div class="flex gap-8 items-center max-sm:hidden">
       <div>
-        <span class="font-extrabold text-base"><%= format_number(length(@profile.posts)) %></span>
+        <span class="font-extrabold text-base">{format_number(length(@profile.posts))}</span>
         posts
       </div>
       <div>
         <span class="font-extrabold text-base">
-          <%= format_number(length(@profile.followers)) %>
+          {format_number(length(@profile.followers))}
         </span>
         followers
       </div>
       <div>
         <span class="font-extrabold text-base">
-          <%= format_number(length(@profile.followings)) %>
+          {format_number(length(@profile.followings))}
         </span>
         following
       </div>
     </div>
 
     <div class="font-bold text-sm max-sm:hidden">
-      <%= @profile.full_name %>
+      {@profile.full_name}
     </div>
 
     <div class="max-sm:hidden">
-      <.user_content text={@profile.description} link_class="text-sky-800 font-bold" show_link_icon />
+      <.user_content
+        text={@profile.description}
+        link_class="text-sky-800 font-bold"
+        show_link_icon
+      />
     </div>
   </div>
 </div>
 
 <div class="sm:hidden p-4">
   <div class="font-bold text-sm ">
-    <%= @profile.full_name %>
+    {@profile.full_name}
   </div>
 
   <div class="">
@@ -84,18 +88,18 @@
 
 <div class="mt-4 max-w-[935px] mx-auto border-t sm:hidden flex justify-around p-2">
   <div class="flex flex-col items-center">
-    <span class="font-extrabold text-sm"><%= format_number(length(@profile.posts)) %></span>
+    <span class="font-extrabold text-sm">{format_number(length(@profile.posts))}</span>
     <span class="text-neutral-500 font-medium text-sm">posts</span>
   </div>
   <div class="flex flex-col items-center">
     <span class="font-extrabold text-sm">
-      <%= format_number(length(@profile.followers)) %>
+      {format_number(length(@profile.followers))}
     </span>
     <span class="text-neutral-500 font-medium text-sm">followers</span>
   </div>
   <div class="flex flex-col items-center">
     <span class="font-extrabold text-sm">
-      <%= format_number(length(@profile.followings)) %>
+      {format_number(length(@profile.followings))}
     </span>
     <span class="text-neutral-500 font-medium text-sm">following</span>
   </div>
@@ -151,12 +155,16 @@
       </.modal>
 
       <.link phx-click={show_modal("post-details-modal-#{post.id}")} class="max-sm:hidden">
-        <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+        <img
+          src={resource_url(resource, :thumb)}
+          class="aspect-square object-cover"
+          style={InstagrainWeb.ImageFilters.resource_filter_style(resource)}
+        />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">
             <div :if={!post.hide_likes} class="text-white">
               <.icon name="hero-heart-solid" class="max-sm:w-5 max-sm:h-5 w-7 h-7" />
-              <span class="font-extrabold max-sm:text-sm"><%= format_number(post.likes) %></span>
+              <span class="font-extrabold max-sm:text-sm">{format_number(post.likes)}</span>
             </div>
             <div :if={!post.disable_comments} class="text-white">
               <.icon
@@ -164,7 +172,7 @@
                 class="-scale-x-100 max-sm:w-5 max-sm:h-5 w-7 h-7"
               />
               <span class="font-extrabold max-sm:text-sm">
-                <%= format_number(length(post.comments)) %>
+                {format_number(length(post.comments))}
               </span>
             </div>
           </div>
@@ -172,12 +180,16 @@
       </.link>
 
       <.link navigate={~p"/p/#{post.id}"} class="sm:hidden">
-        <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+        <img
+          src={resource_url(resource, :thumb)}
+          class="aspect-square object-cover"
+          style={InstagrainWeb.ImageFilters.resource_filter_style(resource)}
+        />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">
             <div :if={!post.hide_likes} class="text-white">
               <.icon name="hero-heart-solid" class="max-sm:w-5 max-sm:h-5 w-7 h-7" />
-              <span class="font-extrabold max-sm:text-sm"><%= format_number(post.likes) %></span>
+              <span class="font-extrabold max-sm:text-sm">{format_number(post.likes)}</span>
             </div>
             <div :if={!post.disable_comments} class="text-white">
               <.icon
@@ -185,7 +197,7 @@
                 class="-scale-x-100 max-sm:w-5 max-sm:h-5 w-7 h-7"
               />
               <span class="font-extrabold max-sm:text-sm">
-                <%= format_number(length(post.comments)) %>
+                {format_number(length(post.comments))}
               </span>
             </div>
           </div>

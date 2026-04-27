@@ -39,9 +39,9 @@
               #
             </div>
             <div class="min-w-0">
-              <p class="font-semibold text-sm truncate">#<%= item.name %></p>
+              <p class="font-semibold text-sm truncate">#{item.name}</p>
               <p class="text-sm text-neutral-500 truncate">
-                <%= format_number(item.post_count) %> posts
+                {format_number(item.post_count)} posts
               </p>
             </div>
           </.link>
@@ -55,9 +55,9 @@
               <.icon name="hero-map-pin" class="w-5 h-5 text-neutral-600" />
             </div>
             <div class="min-w-0">
-              <p class="font-semibold text-sm truncate"><%= item.name %></p>
+              <p class="font-semibold text-sm truncate">{item.name}</p>
               <p class="text-sm text-neutral-500 truncate">
-                <%= format_number(item.post_count) %> posts
+                {format_number(item.post_count)} posts
               </p>
             </div>
           </.link>
@@ -74,14 +74,17 @@
                 loading="lazy"
                 class="w-full h-full object-cover"
               />
-              <div :if={!item.avatar_storage_key} class="w-full h-full flex items-center justify-center">
+              <div
+                :if={!item.avatar_storage_key}
+                class="w-full h-full flex items-center justify-center"
+              >
                 <.icon name="hero-user" class="w-6 h-6 text-neutral-400" />
               </div>
             </div>
             <div class="min-w-0">
-              <p class="font-semibold text-sm truncate"><%= item.username %></p>
+              <p class="font-semibold text-sm truncate">{item.username}</p>
               <p :if={item.full_name} class="text-sm text-neutral-500 truncate">
-                <%= item.full_name %>
+                {item.full_name}
               </p>
             </div>
           </.link>
@@ -102,8 +105,8 @@
               <% end %>
             </div>
             <div class="min-w-0">
-              <p class="font-semibold text-sm truncate"><%= item.user.username %></p>
-              <p class="text-sm text-neutral-500 truncate"><%= item.caption %></p>
+              <p class="font-semibold text-sm truncate">{item.user.username}</p>
+              <p class="text-sm text-neutral-500 truncate">{item.caption}</p>
             </div>
           </.link>
         <% end %>
@@ -117,9 +120,9 @@
 
   <%!-- Tag header --%>
   <div :if={@tag} class={["py-6 px-4 border-b mb-2", @searching? && "max-sm:hidden"]}>
-    <h1 class="text-2xl font-bold">#<%= @tag %></h1>
+    <h1 class="text-2xl font-bold">#{@tag}</h1>
     <p :if={@hashtag} class="text-neutral-500 text-sm mt-1">
-      <%= format_number(@hashtag.post_count) %> posts
+      {format_number(@hashtag.post_count)} posts
     </p>
   </div>
 
@@ -127,10 +130,10 @@
   <div :if={@location} class={["py-6 px-4 border-b mb-2", @searching? && "max-sm:hidden"]}>
     <div class="flex items-center gap-2">
       <.icon name="hero-map-pin" class="w-6 h-6 text-neutral-700" />
-      <h1 class="text-2xl font-bold"><%= @location.name %></h1>
+      <h1 class="text-2xl font-bold">{@location.name}</h1>
     </div>
     <p :if={@location.address} class="text-neutral-500 text-sm mt-1">
-      <%= @location.address %>
+      {@location.address}
     </p>
   </div>
 
@@ -158,12 +161,16 @@
         </.modal>
 
         <.link phx-click={show_modal("post-details-modal-#{post.id}")} class="max-sm:hidden">
-          <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+          <img
+            src={resource_url(resource, :thumb)}
+            class="aspect-square object-cover"
+            style={InstagrainWeb.ImageFilters.resource_filter_style(resource)}
+          />
           <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
             <div class="flex max-sm:gap-3 gap-6">
               <div :if={!post.hide_likes} class="text-white">
                 <.icon name="hero-heart-solid" class="max-sm:w-5 max-sm:h-5 w-7 h-7" />
-                <span class="font-extrabold max-sm:text-sm"><%= format_number(post.likes) %></span>
+                <span class="font-extrabold max-sm:text-sm">{format_number(post.likes)}</span>
               </div>
               <div :if={!post.disable_comments} class="text-white">
                 <.icon
@@ -171,7 +178,7 @@
                   class="-scale-x-100 max-sm:w-5 max-sm:h-5 w-7 h-7"
                 />
                 <span class="font-extrabold max-sm:text-sm">
-                  <%= format_number(length(post.comments)) %>
+                  {format_number(length(post.comments))}
                 </span>
               </div>
             </div>
@@ -179,12 +186,16 @@
         </.link>
 
         <.link navigate={~p"/p/#{post.id}"} class="sm:hidden">
-          <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+          <img
+            src={resource_url(resource, :thumb)}
+            class="aspect-square object-cover"
+            style={InstagrainWeb.ImageFilters.resource_filter_style(resource)}
+          />
           <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
             <div class="flex max-sm:gap-3 gap-6">
               <div :if={!post.hide_likes} class="text-white">
                 <.icon name="hero-heart-solid" class="max-sm:w-5 max-sm:h-5 w-7 h-7" />
-                <span class="font-extrabold max-sm:text-sm"><%= format_number(post.likes) %></span>
+                <span class="font-extrabold max-sm:text-sm">{format_number(post.likes)}</span>
               </div>
               <div :if={!post.disable_comments} class="text-white">
                 <.icon
@@ -192,7 +203,7 @@
                   class="-scale-x-100 max-sm:w-5 max-sm:h-5 w-7 h-7"
                 />
                 <span class="font-extrabold max-sm:text-sm">
-                  <%= format_number(length(post.comments)) %>
+                  {format_number(length(post.comments))}
                 </span>
               </div>
             </div>

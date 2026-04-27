@@ -106,7 +106,8 @@ if config_env() == :prod do
   # is the in-cluster `minio` host; public_url is the CDN subdomain that OG
   # crawlers and browsers fetch from.
   config :instagrain, Instagrain.Storage,
-    endpoint: System.get_env("S3_ENDPOINT") || raise("environment variable S3_ENDPOINT is missing"),
+    endpoint:
+      System.get_env("S3_ENDPOINT") || raise("environment variable S3_ENDPOINT is missing"),
     region: System.get_env("S3_REGION") || "us-east-1",
     access_key_id:
       System.get_env("S3_ACCESS_KEY_ID") ||

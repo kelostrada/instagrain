@@ -32,6 +32,7 @@ defmodule InstagrainWeb.OgMetaPlug do
     with {id, _} <- Integer.parse(id),
          post when not is_nil(post) <- safe_get_post(id) do
       base_url = InstagrainWeb.Endpoint.url()
+
       {image, image_type} =
         case post.resources do
           [resource | _] -> InstagrainWeb.Media.resource_og(resource)
@@ -39,10 +40,14 @@ defmodule InstagrainWeb.OgMetaPlug do
         end
 
       caption = post.caption || ""
-      desc = if String.length(caption) > 200, do: String.slice(caption, 0, 197) <> "...", else: caption
+
+      desc =
+        if String.length(caption) > 200, do: String.slice(caption, 0, 197) <> "...", else: caption
+
       title = "#{post.user.full_name || post.user.username} on Instagrain"
 
-      {:ok, send_og_html(conn, title, desc, image, image_type, "#{base_url}/p/#{post.id}", "article")}
+      {:ok,
+       send_og_html(conn, title, desc, image, image_type, "#{base_url}/p/#{post.id}", "article")}
     else
       _ -> :pass
     end
@@ -64,7 +69,16 @@ defmodule InstagrainWeb.OgMetaPlug do
           desc = profile.description || "#{profile.full_name || profile.username}'s profile"
           title = "#{profile.full_name || profile.username} (@#{profile.username})"
 
-          {:ok, send_og_html(conn, title, desc, image, image_type, "#{base_url}/#{profile.username}", "profile")}
+          {:ok,
+           send_og_html(
+             conn,
+             title,
+             desc,
+             image,
+             image_type,
+             "#{base_url}/#{profile.username}",
+             "profile"
+           )}
       end
     end
   end
@@ -87,7 +101,10 @@ defmodule InstagrainWeb.OgMetaPlug do
   defp send_og_html(conn, title, description, image, image_type, url, og_type) do
     image_tags =
       if image do
-        type_tag = if image_type, do: ~s(<meta property="og:image:type" content="#{image_type}" />), else: ""
+        type_tag =
+          if image_type,
+            do: ~s(<meta property="og:image:type" content="#{image_type}" />),
+            else: ""
 
         """
         <meta property="og:image" content="#{image}" />

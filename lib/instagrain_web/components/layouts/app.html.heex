@@ -1,5 +1,5 @@
 <div class="flex sm:flex-row-reverse max-sm:flex-col h-dvh max-sm:divide-y-[1px] overflow-hidden">
-  <%= if Map.has_key?(assigns, :top_nav), do: @top_nav %>
+  {if Map.has_key?(assigns, :top_nav), do: @top_nav}
 
   <%!-- pb-1 is a hack to make infinite scroll work on mobile --%>
   <main class={[
@@ -10,11 +10,11 @@
     !Map.get(assigns, :hide_mobile_nav) && "max-sm:mb-12"
   ]}>
     <.flash_group flash={@flash} />
-    <%= @inner_content %>
+    {@inner_content}
 
     <div :if={!Map.has_key?(assigns, :raw_layout)} class="flex justify-center max-md:hidden my-12">
       <span class="font-medium text-xs text-neutral-500">
-        © 2024 Instagrain from Kelostrada | Build: <%= "#{Instagrain.version()}-#{Instagrain.build_hash()}" %>
+        © 2024 Instagrain from Kelostrada | Build: {"#{Instagrain.version()}-#{Instagrain.build_hash()}"}
       </span>
     </div>
   </main>

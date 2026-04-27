@@ -116,6 +116,7 @@ defmodule InstagrainWeb.PostLive.EditFormComponent do
     |> Enum.with_index()
     |> Enum.each(fn {resource, i} ->
       new_alt = Map.get(alts, "r#{i}")
+
       if is_binary(new_alt) and new_alt != (resource.alt || "") do
         Feed.update_resource(resource, %{alt: new_alt})
       end
@@ -186,7 +187,7 @@ defmodule InstagrainWeb.PostLive.EditFormComponent do
               ><%= Phoenix.HTML.Form.input_value(@form, :caption) %></textarea>
               <div class="flex justify-between text-xs text-neutral-400 mt-1">
                 <span>
-                  <%= String.length(Phoenix.HTML.Form.input_value(@form, :caption) || "") %>/2,200
+                  {String.length(Phoenix.HTML.Form.input_value(@form, :caption) || "")}/2,200
                 </span>
               </div>
             </div>
@@ -198,7 +199,7 @@ defmodule InstagrainWeb.PostLive.EditFormComponent do
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2 text-sm truncate">
                     <.icon name="hero-map-pin" class="w-4 h-4" />
-                    <span class="truncate"><%= @selected_location.name %></span>
+                    <span class="truncate">{@selected_location.name}</span>
                   </div>
                   <button
                     type="button"
@@ -232,9 +233,9 @@ defmodule InstagrainWeb.PostLive.EditFormComponent do
                     phx-value-lng={loc.lng}
                     class="px-3 py-2 text-sm hover:bg-neutral-50 cursor-pointer"
                   >
-                    <div class="font-medium"><%= loc.name %></div>
+                    <div class="font-medium">{loc.name}</div>
                     <div :if={loc.address} class="text-xs text-neutral-500 truncate">
-                      <%= loc.address %>
+                      {loc.address}
                     </div>
                   </li>
                 </ul>

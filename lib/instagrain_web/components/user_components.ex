@@ -12,7 +12,7 @@ defmodule InstagrainWeb.UserComponents do
     ~H"""
     <.link navigate={~p"/#{@user.username}"}>
       <span class={[!@class && "text-black font-bold text-sm", @class]}>
-        <%= @user.username %>
+        {@user.username}
       </span>
     </.link>
     """
@@ -55,7 +55,7 @@ defmodule InstagrainWeb.UserComponents do
       <div>
         <.username user={@user} />
         <p :if={@location} class="text-xs text-neutral-500 leading-tight">
-          <%= @location.name %>
+          {@location.name}
         </p>
       </div>
     </div>

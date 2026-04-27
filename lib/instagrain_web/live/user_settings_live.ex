@@ -53,7 +53,7 @@ defmodule InstagrainWeb.UserSettingsLive do
                 :for={err <- Phoenix.Component.upload_errors(@uploads.avatar, entry)}
                 class="alert alert-danger"
               >
-                Error: <%= err %>
+                Error: {err}
               </p>
             <% end %>
           </form>

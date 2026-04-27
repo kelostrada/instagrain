@@ -78,7 +78,7 @@ defmodule InstagrainWeb.PostLive.CommentsComponent do
         phx-target={@myself}
         phx-value-comment_id={@comment.id}
       >
-        ---- View all <%= length(@comment.replies) %> replies
+        ---- View all {length(@comment.replies)} replies
       </.link>
       <.link
         :if={@comment.id in @replies_shown}

@@ -22,12 +22,16 @@
   <div class="grid grid-cols-3 gap-1 p-1 ">
     <div :for={%{resources: [resource | _]} = post <- @other_posts} class="relative group">
       <.link navigate={~p"/p/#{post.id}"}>
-        <img src={resource_url(resource, :thumb)} class="aspect-square object-cover" style={InstagrainWeb.ImageFilters.resource_filter_style(resource)} />
+        <img
+          src={resource_url(resource, :thumb)}
+          class="aspect-square object-cover"
+          style={InstagrainWeb.ImageFilters.resource_filter_style(resource)}
+        />
         <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
           <div class="flex max-sm:gap-3 gap-6">
             <div :if={!post.hide_likes} class="text-white">
               <.icon name="hero-heart-solid" class="max-sm:w-5 max-sm:h-5 w-7 h-7" />
-              <span class="font-extrabold max-sm:text-sm"><%= format_number(post.likes) %></span>
+              <span class="font-extrabold max-sm:text-sm">{format_number(post.likes)}</span>
             </div>
             <div :if={!post.disable_comments} class="text-white">
               <.icon
@@ -35,7 +39,7 @@
                 class="-scale-x-100 max-sm:w-5 max-sm:h-5 w-7 h-7"
               />
               <span class="font-extrabold max-sm:text-sm">
-                <%= format_number(length(post.comments)) %>
+                {format_number(length(post.comments))}
               </span>
             </div>
           </div>

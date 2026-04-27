@@ -30,7 +30,7 @@ defmodule Instagrain.Feed do
   """
   def list_posts(current_user_id, page \\ 0, seed \\ nil) do
     page_size = 3
-    seed = seed || (:rand.uniform() |> Float.to_string())
+    seed = seed || :rand.uniform() |> Float.to_string()
     total_before = page * page_size
 
     following_ids = following_user_ids(current_user_id)
@@ -491,7 +491,10 @@ defmodule Instagrain.Feed do
 
       if old_hashtag_ids != [] do
         Repo.delete_all(from ph in PostHashtag, where: ph.post_id == ^post.id)
-        Repo.update_all(from(h in Hashtag, where: h.id in ^old_hashtag_ids), inc: [post_count: -1])
+
+        Repo.update_all(from(h in Hashtag, where: h.id in ^old_hashtag_ids),
+          inc: [post_count: -1]
+        )
       end
 
       sync_hashtags(updated_post)

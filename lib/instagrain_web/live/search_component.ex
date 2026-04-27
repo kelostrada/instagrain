@@ -96,9 +96,9 @@ defmodule InstagrainWeb.SearchComponent do
                   #
                 </div>
                 <div class="min-w-0">
-                  <p class="font-semibold text-sm truncate">#<%= item.name %></p>
+                  <p class="font-semibold text-sm truncate">#{item.name}</p>
                   <p class="text-sm text-neutral-500 truncate">
-                    <%= format_count(item.post_count) %> posts
+                    {format_count(item.post_count)} posts
                   </p>
                 </div>
               </.link>
@@ -112,9 +112,9 @@ defmodule InstagrainWeb.SearchComponent do
                   <.icon name="hero-map-pin" class="w-5 h-5 text-neutral-600" />
                 </div>
                 <div class="min-w-0">
-                  <p class="font-semibold text-sm truncate"><%= item.name %></p>
+                  <p class="font-semibold text-sm truncate">{item.name}</p>
                   <p class="text-sm text-neutral-500 truncate">
-                    <%= format_count(item.post_count) %> posts
+                    {format_count(item.post_count)} posts
                   </p>
                 </div>
               </.link>
@@ -131,14 +131,17 @@ defmodule InstagrainWeb.SearchComponent do
                     loading="lazy"
                     class="w-full h-full object-cover"
                   />
-                  <div :if={!item.avatar_storage_key} class="w-full h-full flex items-center justify-center">
+                  <div
+                    :if={!item.avatar_storage_key}
+                    class="w-full h-full flex items-center justify-center"
+                  >
                     <.icon name="hero-user" class="w-6 h-6 text-neutral-400" />
                   </div>
                 </div>
                 <div class="min-w-0">
-                  <p class="font-semibold text-sm truncate"><%= item.username %></p>
+                  <p class="font-semibold text-sm truncate">{item.username}</p>
                   <p :if={item.full_name} class="text-sm text-neutral-500 truncate">
-                    <%= item.full_name %>
+                    {item.full_name}
                   </p>
                 </div>
               </.link>
@@ -159,8 +162,8 @@ defmodule InstagrainWeb.SearchComponent do
                   <% end %>
                 </div>
                 <div class="min-w-0">
-                  <p class="font-semibold text-sm truncate"><%= item.user.username %></p>
-                  <p class="text-sm text-neutral-500 truncate"><%= item.caption %></p>
+                  <p class="font-semibold text-sm truncate">{item.user.username}</p>
+                  <p class="text-sm text-neutral-500 truncate">{item.caption}</p>
                 </div>
               </.link>
             <% end %>
@@ -170,7 +173,6 @@ defmodule InstagrainWeb.SearchComponent do
         <div :if={@searching? && @search_results == []}>
           <p class="px-6 py-8 text-sm text-neutral-500 text-center">No results found.</p>
         </div>
-
       </div>
     </div>
     """

@@ -17,8 +17,7 @@ defmodule Instagrain.Repo.Migrations.CreateLocations do
     execute "UPDATE posts SET location_id = NULL WHERE location_id IS NOT NULL", ""
 
     alter table(:posts) do
-      modify :location_id, references(:locations, on_delete: :nilify_all),
-        from: :integer
+      modify :location_id, references(:locations, on_delete: :nilify_all), from: :integer
     end
   end
 end

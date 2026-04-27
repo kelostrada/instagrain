@@ -16,14 +16,18 @@ defmodule InstagrainWeb.MessagesLive do
         <.icon name="hero-arrow-left" class="h-6 w-6" />
       </.link>
       <%= if length(@conversation.participants) == 1 do %>
-        <.link navigate={~p"/#{List.first(@conversation.participants).username}"} class="flex items-center gap-3 grow cursor-pointer min-w-0">
+        <.link
+          navigate={~p"/#{List.first(@conversation.participants).username}"}
+          class="flex items-center gap-3 grow cursor-pointer min-w-0"
+        >
           <.avatar size={:sm} user={List.first(@conversation.participants)} />
           <div class="min-w-0">
             <p class="font-bold text-sm truncate">
-              <%= List.first(@conversation.participants).full_name || List.first(@conversation.participants).username %>
+              {List.first(@conversation.participants).full_name ||
+                List.first(@conversation.participants).username}
             </p>
             <p class="text-xs text-neutral-500 truncate">
-              <%= List.first(@conversation.participants).username %>
+              {List.first(@conversation.participants).username}
             </p>
           </div>
         </.link>
@@ -35,7 +39,7 @@ defmodule InstagrainWeb.MessagesLive do
             <.avatar size={:xxs} user={user2} class="absolute bottom-0 right-0 border-white border-2" />
           </div>
           <div class="min-w-0">
-            <p class="font-bold text-sm truncate"><%= @conversation.name %></p>
+            <p class="font-bold text-sm truncate">{@conversation.name}</p>
           </div>
         </div>
       <% end %>
@@ -175,7 +179,8 @@ defmodule InstagrainWeb.MessagesLive do
       if query == "" do
         []
       else
-        participant_ids = participant_ids_of(socket.assigns.conversations, socket.assigns.current_user.id)
+        participant_ids =
+          participant_ids_of(socket.assigns.conversations, socket.assigns.current_user.id)
 
         Accounts.search_users(query, 20)
         |> Enum.reject(&(&1.id == socket.assigns.current_user.id or &1.id in participant_ids))
@@ -485,7 +490,8 @@ defmodule InstagrainWeb.MessagesLive do
   def matches_conversation_search?(conversation, query) do
     needle = String.downcase(query)
 
-    name_match? = conversation.name && String.contains?(String.downcase(conversation.name), needle)
+    name_match? =
+      conversation.name && String.contains?(String.downcase(conversation.name), needle)
 
     participant_match? =
       Enum.any?(conversation.participants, fn user ->

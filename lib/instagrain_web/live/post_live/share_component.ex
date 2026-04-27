@@ -104,153 +104,158 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
     </div>
 
     <%= if @post_id do %>
-    <%!-- Search --%>
-    <div class="flex items-center gap-2 px-4 py-2 border-b flex-shrink-0">
-      <.icon name="hero-magnifying-glass" class="h-4 w-4 text-neutral-400 flex-shrink-0" />
-      <form phx-change="share-search" phx-target={@myself} class="grow">
-        <input
-          type="text"
-          name="query"
-          value={@search_query}
-          placeholder="Search..."
-          autocomplete="off"
-          phx-debounce="300"
-          class="w-full border-0 focus:ring-0 text-sm placeholder:text-neutral-400 p-1"
-        />
-      </form>
-    </div>
+      <%!-- Search --%>
+      <div class="flex items-center gap-2 px-4 py-2 border-b flex-shrink-0">
+        <.icon name="hero-magnifying-glass" class="h-4 w-4 text-neutral-400 flex-shrink-0" />
+        <form phx-change="share-search" phx-target={@myself} class="grow">
+          <input
+            type="text"
+            name="query"
+            value={@search_query}
+            placeholder="Search..."
+            autocomplete="off"
+            phx-debounce="300"
+            class="w-full border-0 focus:ring-0 text-sm placeholder:text-neutral-400 p-1"
+          />
+        </form>
+      </div>
 
-    <%!-- Scrollable user list --%>
-    <div class="overflow-y-auto grow min-h-0">
-      <%= if @search_query == "" do %>
-        <div class="grid max-sm:grid-cols-3 sm:grid-cols-4 gap-2 p-4">
+      <%!-- Scrollable user list --%>
+      <div class="overflow-y-auto grow min-h-0">
+        <%= if @search_query == "" do %>
+          <div class="grid max-sm:grid-cols-3 sm:grid-cols-4 gap-2 p-4">
+            <div
+              :for={user <- @suggested_users}
+              class="flex flex-col items-center gap-1 cursor-pointer relative"
+              phx-click="toggle-share-user"
+              phx-value-id={user.id}
+              phx-target={@myself}
+            >
+              <div class="relative">
+                <.avatar size={:lg} user={user} />
+                <%= if Enum.any?(@selected_users, & &1.id == user.id) do %>
+                  <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-2 border-white">
+                    <.icon name="hero-check" class="h-3 w-3 text-white" />
+                  </div>
+                <% end %>
+              </div>
+              <p class="text-xs text-center truncate w-full">
+                {user.full_name || user.username}
+              </p>
+            </div>
+          </div>
+        <% else %>
           <div
-            :for={user <- @suggested_users}
-            class="flex flex-col items-center gap-1 cursor-pointer relative"
+            :for={user <- @search_results}
+            class="flex items-center gap-3 px-4 py-2 hover:bg-neutral-50 cursor-pointer"
             phx-click="toggle-share-user"
             phx-value-id={user.id}
             phx-target={@myself}
           >
-            <div class="relative">
-              <.avatar size={:lg} user={user} />
+            <.avatar size={:md} user={user} />
+            <div class="grow min-w-0">
+              <p class="font-semibold text-sm truncate">{user.full_name || user.username}</p>
+              <p class="text-sm text-neutral-500 truncate">{user.username}</p>
+            </div>
+            <div class="flex-shrink-0">
               <%= if Enum.any?(@selected_users, & &1.id == user.id) do %>
-                <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-2 border-white">
-                  <.icon name="hero-check" class="h-3 w-3 text-white" />
+                <div class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                  <.icon name="hero-check" class="h-4 w-4 text-white" />
                 </div>
+              <% else %>
+                <div class="w-6 h-6 rounded-full border-2 border-neutral-300"></div>
               <% end %>
             </div>
-            <p class="text-xs text-center truncate w-full">
-              <%= user.full_name || user.username %>
-            </p>
           </div>
-        </div>
-      <% else %>
-        <div
-          :for={user <- @search_results}
-          class="flex items-center gap-3 px-4 py-2 hover:bg-neutral-50 cursor-pointer"
-          phx-click="toggle-share-user"
-          phx-value-id={user.id}
-          phx-target={@myself}
-        >
-          <.avatar size={:md} user={user} />
-          <div class="grow min-w-0">
-            <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
-            <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
-          </div>
-          <div class="flex-shrink-0">
-            <%= if Enum.any?(@selected_users, & &1.id == user.id) do %>
-              <div class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
-                <.icon name="hero-check" class="h-4 w-4 text-white" />
-              </div>
-            <% else %>
-              <div class="w-6 h-6 rounded-full border-2 border-neutral-300"></div>
-            <% end %>
-          </div>
-        </div>
-        <p :if={@search_results == []} class="px-4 py-8 text-sm text-neutral-500 text-center">
-          No results found.
-        </p>
-      <% end %>
-    </div>
+          <p :if={@search_results == []} class="px-4 py-8 text-sm text-neutral-500 text-center">
+            No results found.
+          </p>
+        <% end %>
+      </div>
 
-    <%!-- Bottom section: message+send OR external links --%>
-    <div class="flex-shrink-0">
-      <%= if @selected_users != [] do %>
-        <%!-- Message input + Send (covers external links) --%>
-        <div class="border-t px-4 py-3 space-y-3">
-          <form phx-change="share-message-edit" phx-target={@myself}>
-            <input
-              type="text"
-              name="message"
-              value={@message}
-              placeholder="Write a message..."
-              autocomplete="off"
-              class="w-full border-0 focus:ring-0 text-sm placeholder:text-neutral-400 p-0"
-            />
-          </form>
-          <button
-            type="button"
-            phx-click="send-share"
-            phx-target={@myself}
-            class="w-full py-2.5 rounded-lg text-white font-bold text-sm bg-blue-500 hover:bg-blue-600 cursor-pointer"
-          >
-            Send
-          </button>
-        </div>
-      <% else %>
-        <%!-- External share options --%>
-        <div class="border-t px-4 py-3">
-          <div class="flex gap-4 overflow-x-auto">
+      <%!-- Bottom section: message+send OR external links --%>
+      <div class="flex-shrink-0">
+        <%= if @selected_users != [] do %>
+          <%!-- Message input + Send (covers external links) --%>
+          <div class="border-t px-4 py-3 space-y-3">
+            <form phx-change="share-message-edit" phx-target={@myself}>
+              <input
+                type="text"
+                name="message"
+                value={@message}
+                placeholder="Write a message..."
+                autocomplete="off"
+                class="w-full border-0 focus:ring-0 text-sm placeholder:text-neutral-400 p-0"
+              />
+            </form>
             <button
               type="button"
-              id={"#{@id_prefix}-copy-link-#{@post_id}"}
-              phx-hook="CopyToClipboard"
-              data-clipboard-text={@url}
-              class="flex flex-col items-center gap-1 cursor-pointer flex-shrink-0"
+              phx-click="send-share"
+              phx-target={@myself}
+              class="w-full py-2.5 rounded-lg text-white font-bold text-sm bg-blue-500 hover:bg-blue-600 cursor-pointer"
             >
-              <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
-                <.icon name="hero-link" class="h-5 w-5" />
-              </div>
-              <span class="text-xs">Copy Link</span>
-            </button>
-            <a
-              :for={
-                {name, icon_name, href} <- [
-                  {"Facebook", :facebook, "https://www.facebook.com/sharer/sharer.php?u=" <> URI.encode_www_form(@url) <> "&quote=" <> @encoded_text},
-                  {"Messenger", :messenger, "https://www.facebook.com/dialog/send?link=" <> URI.encode_www_form(@url) <> "&redirect_uri=" <> URI.encode_www_form(@url)},
-                  {"WhatsApp", :whatsapp, "https://wa.me/?text=" <> @encoded_text},
-                  {"Email", :email, "mailto:?subject=Check%20this%20out&body=" <> @encoded_text},
-                  {"Threads", :threads, "https://www.threads.net/intent/post?text=" <> @encoded_text},
-                  {"X", :x, "https://x.com/intent/post?text=" <> @encoded_text}
-                ]
-              }
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
-            >
-              <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
-                <.social_icon name={icon_name} />
-              </div>
-              <span class="text-xs"><%= name %></span>
-            </a>
-            <button
-              type="button"
-              id={"#{@id_prefix}-native-share-#{@post_id}"}
-              phx-hook="NativeShare"
-              data-share-url={@url}
-              data-share-title="Check out this post"
-              class="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
-            >
-              <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
-                <.icon name="hero-arrow-up-on-square" class="h-5 w-5" />
-              </div>
-              <span class="text-xs">See All</span>
+              Send
             </button>
           </div>
-        </div>
-      <% end %>
-    </div>
+        <% else %>
+          <%!-- External share options --%>
+          <div class="border-t px-4 py-3">
+            <div class="flex gap-4 overflow-x-auto">
+              <button
+                type="button"
+                id={"#{@id_prefix}-copy-link-#{@post_id}"}
+                phx-hook="CopyToClipboard"
+                data-clipboard-text={@url}
+                class="flex flex-col items-center gap-1 cursor-pointer flex-shrink-0"
+              >
+                <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
+                  <.icon name="hero-link" class="h-5 w-5" />
+                </div>
+                <span class="text-xs">Copy Link</span>
+              </button>
+              <a
+                :for={
+                  {name, icon_name, href} <- [
+                    {"Facebook", :facebook,
+                     "https://www.facebook.com/sharer/sharer.php?u=" <>
+                       URI.encode_www_form(@url) <> "&quote=" <> @encoded_text},
+                    {"Messenger", :messenger,
+                     "https://www.facebook.com/dialog/send?link=" <>
+                       URI.encode_www_form(@url) <> "&redirect_uri=" <> URI.encode_www_form(@url)},
+                    {"WhatsApp", :whatsapp, "https://wa.me/?text=" <> @encoded_text},
+                    {"Email", :email, "mailto:?subject=Check%20this%20out&body=" <> @encoded_text},
+                    {"Threads", :threads,
+                     "https://www.threads.net/intent/post?text=" <> @encoded_text},
+                    {"X", :x, "https://x.com/intent/post?text=" <> @encoded_text}
+                  ]
+                }
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
+              >
+                <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
+                  <.social_icon name={icon_name} />
+                </div>
+                <span class="text-xs">{name}</span>
+              </a>
+              <button
+                type="button"
+                id={"#{@id_prefix}-native-share-#{@post_id}"}
+                phx-hook="NativeShare"
+                data-share-url={@url}
+                data-share-title="Check out this post"
+                class="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
+              >
+                <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
+                  <.icon name="hero-arrow-up-on-square" class="h-5 w-5" />
+                </div>
+                <span class="text-xs">See All</span>
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </div>
     <% end %>
     """
   end
@@ -260,8 +265,20 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
   defp social_icon(%{name: :facebook} = assigns) do
     ~H"""
     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="12" cy="12" fill="none" r="11.25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
-      <path d="M16.671 15.469 17.203 12h-3.328V9.749a1.734 1.734 0 0 1 1.956-1.874h1.513V4.922a18.452 18.452 0 0 0-2.686-.234c-2.741 0-4.533 1.66-4.533 4.668V12H7.078v3.469h3.047v7.885a12.125 12.125 0 0 0 3.75 0V15.47Z" fill-rule="evenodd" />
+      <circle
+        cx="12"
+        cy="12"
+        fill="none"
+        r="11.25"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+      />
+      <path
+        d="M16.671 15.469 17.203 12h-3.328V9.749a1.734 1.734 0 0 1 1.956-1.874h1.513V4.922a18.452 18.452 0 0 0-2.686-.234c-2.741 0-4.533 1.66-4.533 4.668V12H7.078v3.469h3.047v7.885a12.125 12.125 0 0 0 3.75 0V15.47Z"
+        fill-rule="evenodd"
+      />
     </svg>
     """
   end
@@ -269,8 +286,17 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
   defp social_icon(%{name: :messenger} = assigns) do
     ~H"""
     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12.003 2.001a9.705 9.705 0 1 1 0 19.4 10.876 10.876 0 0 1-2.895-.384.798.798 0 0 0-.533.04l-1.984.876a.801.801 0 0 1-1.123-.708l-.054-1.78a.806.806 0 0 0-.27-.569 9.49 9.49 0 0 1-3.14-7.175 9.65 9.65 0 0 1 10-9.7Z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="1.739" />
-      <path d="M17.79 10.132a.659.659 0 0 0-.962-.873l-2.556 2.05a.63.63 0 0 1-.758.002L11.06 9.47a1.576 1.576 0 0 0-2.277.42l-2.567 3.98a.659.659 0 0 0 .961.875l2.556-2.049a.63.63 0 0 1 .759-.002l2.452 1.84a1.576 1.576 0 0 0 2.278-.42Z" fill-rule="evenodd" />
+      <path
+        d="M12.003 2.001a9.705 9.705 0 1 1 0 19.4 10.876 10.876 0 0 1-2.895-.384.798.798 0 0 0-.533.04l-1.984.876a.801.801 0 0 1-1.123-.708l-.054-1.78a.806.806 0 0 0-.27-.569 9.49 9.49 0 0 1-3.14-7.175 9.65 9.65 0 0 1 10-9.7Z"
+        fill="none"
+        stroke="currentColor"
+        stroke-miterlimit="10"
+        stroke-width="1.739"
+      />
+      <path
+        d="M17.79 10.132a.659.659 0 0 0-.962-.873l-2.556 2.05a.63.63 0 0 1-.758.002L11.06 9.47a1.576 1.576 0 0 0-2.277.42l-2.567 3.98a.659.659 0 0 0 .961.875l2.556-2.049a.63.63 0 0 1 .759-.002l2.452 1.84a1.576 1.576 0 0 0 2.278-.42Z"
+        fill-rule="evenodd"
+      />
     </svg>
     """
   end
@@ -286,7 +312,11 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
   defp social_icon(%{name: :email} = assigns) do
     ~H"""
     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+      />
     </svg>
     """
   end
@@ -365,7 +395,8 @@ defmodule InstagrainWeb.PostLive.ShareComponent do
      socket
      |> assign(post_id: nil, selected_users: [], search_query: "", message: "")
      |> push_event("close-share-modal", %{})
-     |> push_event("show-toast", %{message: "Sent to #{count} #{if count == 1, do: "person", else: "people"}"})}
+     |> push_event("show-toast", %{
+       message: "Sent to #{count} #{if count == 1, do: "person", else: "people"}"
+     })}
   end
-
 end

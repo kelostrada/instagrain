@@ -52,7 +52,9 @@ defmodule InstagrainWeb.PostLive.IconsComponent do
         </span>
         <span
           class="sm:hidden"
-          phx-click={JS.show(to: "#share-mobile", display: "flex") |> JS.push("open-share", target: @myself)}
+          phx-click={
+            JS.show(to: "#share-mobile", display: "flex") |> JS.push("open-share", target: @myself)
+          }
         >
           <.icon
             name="hero-paper-airplane"

@@ -22,11 +22,13 @@ defmodule InstagrainWeb.PostLive.FormComponent do
       phx-drop-target={@uploads.file.ref}
       phx-hook="PostModalGuard"
       data-has-content={"#{@step != :create}"}
-      class={cond do
-        @step == :edit -> "wide-modal edit-step"
-        @step == :final -> "wide-modal"
-        true -> "square-modal"
-      end}
+      class={
+        cond do
+          @step == :edit -> "wide-modal edit-step"
+          @step == :final -> "wide-modal"
+          true -> "square-modal"
+        end
+      }
     >
       <.live_file_input id="post-form-upload" upload={@uploads.file} class="hidden" />
 
@@ -38,7 +40,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
             </div>
           <% end %>
           <div class="grow text-center font-bold text-base leading-10 py-px">
-            <%= step_to_title(@step) %>
+            {step_to_title(@step)}
           </div>
           <%= if @step in [:preview, :edit] do %>
             <div
@@ -62,7 +64,10 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
         <div class={[
           "flex-auto flex min-h-0",
-          if(@step == :edit, do: "max-sm:flex-col sm:divide-x sm:divide-solid sm:divide-neutral-300", else: "divide-x divide-solid divide-neutral-300")
+          if(@step == :edit,
+            do: "max-sm:flex-col sm:divide-x sm:divide-solid sm:divide-neutral-300",
+            else: "divide-x divide-solid divide-neutral-300"
+          )
         ]}>
           <%= if @step == :create do %>
             <div class="h-full w-full flex flex-col items-center justify-center">
@@ -97,7 +102,10 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                   <% settings = get_image_settings(@image_filters, entry.ref) %>
                   <div
                     class="w-full h-full"
-                    style={if @step in [:edit, :final], do: ImageFilters.compute_filter_css(settings.filter, settings.adjustments)}
+                    style={
+                      if @step in [:edit, :final],
+                        do: ImageFilters.compute_filter_css(settings.filter, settings.adjustments)
+                    }
                   >
                     <.live_img_preview
                       entry={entry}
@@ -107,7 +115,9 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                   </div>
 
                   <div
-                    :if={@step in [:edit, :final] && ImageFilters.vignette_style(settings.adjustments)}
+                    :if={
+                      @step in [:edit, :final] && ImageFilters.vignette_style(settings.adjustments)
+                    }
                     class="absolute inset-0 pointer-events-none"
                     style={ImageFilters.vignette_style(settings.adjustments)}
                   />
@@ -161,7 +171,8 @@ defmodule InstagrainWeb.PostLive.FormComponent do
 
             <%= if @step == :edit do %>
               <% current_entry = Enum.at(@uploads.file.entries, @selected_item) %>
-              <% current_settings = get_image_settings(@image_filters, current_entry && current_entry.ref) %>
+              <% current_settings =
+                get_image_settings(@image_filters, current_entry && current_entry.ref) %>
 
               <div class="max-sm:min-h-0 max-sm:shrink sm:flex-none sm:w-85 overflow-auto flex flex-col">
                 <%!-- Tab bar --%>
@@ -197,7 +208,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                       class="cursor-pointer text-center flex-shrink-0"
                     >
                       <p class={"text-xs mb-1 #{if current_settings.filter == filter_id, do: "text-sky-500 font-semibold", else: "text-neutral-600"}"}>
-                        <%= filter_name %>
+                        {filter_name}
                       </p>
                       <div
                         class={"w-[5.5rem] h-[5.5rem] overflow-hidden rounded-sm border-2 #{if current_settings.filter == filter_id, do: "border-sky-500", else: "border-transparent"}"}
@@ -234,7 +245,7 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                         />
                       </div>
                       <p class={"text-xs mt-1 #{if current_settings.filter == filter_id, do: "text-sky-500 font-semibold", else: "text-neutral-600"}"}>
-                        <%= filter_name %>
+                        {filter_name}
                       </p>
                     </div>
                   </div>
@@ -247,9 +258,9 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                       class="space-y-1"
                     >
                       <div class="flex justify-between items-center">
-                        <span class="font-semibold text-base"><%= label %></span>
+                        <span class="font-semibold text-base">{label}</span>
                         <span class="text-neutral-500 text-base tabular-nums w-8 text-right">
-                          <%= current_settings.adjustments[key] || 0 %>
+                          {current_settings.adjustments[key] || 0}
                         </span>
                       </div>
                       <input
@@ -286,13 +297,16 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                 </div>
                 <div class="flex items-center justify-between border-b border-neutral-300">
                   <div class="p-2.5">
-                    <InstagrainWeb.EmojiPicker.emoji_picker id="post-emoji-picker" target_id="post_caption" />
+                    <InstagrainWeb.EmojiPicker.emoji_picker
+                      id="post-emoji-picker"
+                      target_id="post_caption"
+                    />
                   </div>
                   <div class="p-2.5">
                     <span class={"text-xs #{if @form[:caption].errors != [], do: "text-rose-600", else: "text-neutral-350"}"}>
-                      <%= (@form[:caption].value || "")
+                      {(@form[:caption].value || "")
                       |> String.length()
-                      |> format_number() %> / 2,200
+                      |> format_number()} / 2,200
                     </span>
                   </div>
                 </div>
@@ -323,7 +337,10 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                             phx-target={@myself}
                             class="cursor-pointer"
                           >
-                            <.icon name="hero-x-mark" class="h-5 w-5 text-neutral-400 hover:text-black" />
+                            <.icon
+                              name="hero-x-mark"
+                              class="h-5 w-5 text-neutral-400 hover:text-black"
+                            />
                           </button>
                         <% else %>
                           <.icon name="hero-map-pin" class="h-5 w-5 text-black" />
@@ -343,8 +360,10 @@ defmodule InstagrainWeb.PostLive.FormComponent do
                           phx-target={@myself}
                           class="px-4 py-3 cursor-pointer hover:bg-neutral-50 border-b border-neutral-100 last:border-b-0"
                         >
-                          <p class="font-semibold text-sm"><%= result.name %></p>
-                          <p :if={result.address} class="text-xs text-neutral-500"><%= result.address %></p>
+                          <p class="font-semibold text-sm">{result.name}</p>
+                          <p :if={result.address} class="text-xs text-neutral-500">
+                            {result.address}
+                          </p>
                         </div>
                       </div>
                     <% end %>
@@ -542,7 +561,10 @@ defmodule InstagrainWeb.PostLive.FormComponent do
         Map.update(
           socket.assigns.image_filters,
           entry.ref,
-          %{filter: "original", adjustments: Map.put(ImageFilters.default_adjustments(), name, value)},
+          %{
+            filter: "original",
+            adjustments: Map.put(ImageFilters.default_adjustments(), name, value)
+          },
           fn settings ->
             %{settings | adjustments: Map.put(settings.adjustments, name, value)}
           end

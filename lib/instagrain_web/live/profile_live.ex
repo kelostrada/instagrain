@@ -17,7 +17,8 @@ defmodule InstagrainWeb.ProfileLive do
     base_url = InstagrainWeb.Endpoint.url()
     {og_image, og_image_type} = InstagrainWeb.Media.avatar_og(profile)
 
-    og_desc = profile.description || "#{profile.full_name || profile.username}'s profile on Instagrain"
+    og_desc =
+      profile.description || "#{profile.full_name || profile.username}'s profile on Instagrain"
 
     {:noreply,
      socket
@@ -146,5 +147,4 @@ defmodule InstagrainWeb.ProfileLive do
     |> assign(profile: profile, current_user: current_user, following_user_ids: following_ids)
     |> stream(:posts, posts, reset: true)
   end
-
 end

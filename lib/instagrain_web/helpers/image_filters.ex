@@ -89,7 +89,10 @@ defmodule InstagrainWeb.ImageFilters do
 
   # Filter presets - CSS filter combinations approximating Instagram filters
   defp preset_to_css("original"), do: ""
-  defp preset_to_css("aden"), do: "hue-rotate(-20deg) contrast(0.9) saturate(0.85) brightness(1.2)"
+
+  defp preset_to_css("aden"),
+    do: "hue-rotate(-20deg) contrast(0.9) saturate(0.85) brightness(1.2)"
+
   defp preset_to_css("clarendon"), do: "contrast(1.2) saturate(1.35)"
   defp preset_to_css("crema"), do: "sepia(0.5) contrast(0.9) brightness(1.1) saturate(0.9)"
   defp preset_to_css("gingham"), do: "brightness(1.05) hue-rotate(-10deg) sepia(0.04)"
@@ -105,18 +108,30 @@ defmodule InstagrainWeb.ImageFilters do
   # Convert adjustments map to CSS filter string
   defp adjustments_to_css(adjustments) do
     []
-    |> maybe_add(get_adj(adjustments, "brightness") != 0,
-      "brightness(#{rv(1 + get_adj(adjustments, "brightness") / 200)})")
-    |> maybe_add(get_adj(adjustments, "contrast") != 0,
-      "contrast(#{rv(1 + get_adj(adjustments, "contrast") / 200)})")
-    |> maybe_add(get_adj(adjustments, "fade") > 0,
-      "contrast(#{rv(1 - get_adj(adjustments, "fade") / 250)}) brightness(#{rv(1 + get_adj(adjustments, "fade") / 400)})")
-    |> maybe_add(get_adj(adjustments, "saturation") != 0,
-      "saturate(#{rv(1 + get_adj(adjustments, "saturation") / 100)})")
-    |> maybe_add(get_adj(adjustments, "temperature") > 0,
-      "sepia(#{rv(get_adj(adjustments, "temperature") / 300)})")
-    |> maybe_add(get_adj(adjustments, "temperature") < 0,
-      "hue-rotate(#{rv(get_adj(adjustments, "temperature") / 3)}deg)")
+    |> maybe_add(
+      get_adj(adjustments, "brightness") != 0,
+      "brightness(#{rv(1 + get_adj(adjustments, "brightness") / 200)})"
+    )
+    |> maybe_add(
+      get_adj(adjustments, "contrast") != 0,
+      "contrast(#{rv(1 + get_adj(adjustments, "contrast") / 200)})"
+    )
+    |> maybe_add(
+      get_adj(adjustments, "fade") > 0,
+      "contrast(#{rv(1 - get_adj(adjustments, "fade") / 250)}) brightness(#{rv(1 + get_adj(adjustments, "fade") / 400)})"
+    )
+    |> maybe_add(
+      get_adj(adjustments, "saturation") != 0,
+      "saturate(#{rv(1 + get_adj(adjustments, "saturation") / 100)})"
+    )
+    |> maybe_add(
+      get_adj(adjustments, "temperature") > 0,
+      "sepia(#{rv(get_adj(adjustments, "temperature") / 300)})"
+    )
+    |> maybe_add(
+      get_adj(adjustments, "temperature") < 0,
+      "hue-rotate(#{rv(get_adj(adjustments, "temperature") / 3)}deg)"
+    )
     |> Enum.reverse()
     |> Enum.join(" ")
   end

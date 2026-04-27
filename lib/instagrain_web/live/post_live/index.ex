@@ -98,5 +98,4 @@ defmodule InstagrainWeb.PostLive.Index do
        |> stream(:posts, posts, at: -1)}
     end
   end
-
 end

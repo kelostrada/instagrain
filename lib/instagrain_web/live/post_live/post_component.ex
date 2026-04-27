@@ -28,12 +28,17 @@ defmodule InstagrainWeb.PostLive.PostComponent do
               <.time prefix="• " datetime={@post.inserted_at} />
             </div>
             <p :if={@post.location} class="text-xs text-neutral-500 leading-tight">
-              <%= @post.location.name %>
+              {@post.location.name}
             </p>
           </div>
         </div>
         <div>
-          <.menu current_user={@current_user} modal_id={"post-menu-#{@post.id}"} post={@post} following_user_ids={@following_user_ids} />
+          <.menu
+            current_user={@current_user}
+            modal_id={"post-menu-#{@post.id}"}
+            post={@post}
+            following_user_ids={@following_user_ids}
+          />
         </div>
       </div>
 

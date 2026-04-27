@@ -23,7 +23,7 @@ defmodule InstagrainWeb.PostLive.HighlightedCommentsComponent do
               <%= if @comments_length == 1 do %>
                 View 1 comment
               <% else %>
-                View all <%= @comments_length %> comments
+                View all {@comments_length} comments
               <% end %>
             </.link>
 
@@ -34,7 +34,7 @@ defmodule InstagrainWeb.PostLive.HighlightedCommentsComponent do
               <%= if @comments_length == 1 do %>
                 View 1 comment
               <% else %>
-                View all <%= @comments_length %> comments
+                View all {@comments_length} comments
               <% end %>
             </.link>
           </div>

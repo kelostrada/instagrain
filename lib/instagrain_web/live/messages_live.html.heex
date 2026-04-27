@@ -16,7 +16,9 @@
         </button>
         <button
           class="sm:hidden cursor-pointer"
-          phx-click={JS.show(to: "#new-message-mobile", display: "flex") |> JS.push("open-new-message")}
+          phx-click={
+            JS.show(to: "#new-message-mobile", display: "flex") |> JS.push("open-new-message")
+          }
         >
           <.icon name="hero-pencil-square" />
         </button>
@@ -77,7 +79,10 @@
         |> Enum.filter(fn {_, c} ->
           InstagrainWeb.MessagesLive.matches_conversation_search?(c, @conversation_search)
         end)
-        |> Enum.sort_by(fn {_, c} -> if c.last_message_at, do: DateTime.to_unix(c.last_message_at), else: 0 end, :desc) %>
+        |> Enum.sort_by(
+          fn {_, c} -> if c.last_message_at, do: DateTime.to_unix(c.last_message_at), else: 0 end,
+          :desc
+        ) %>
 
       <%= if matching_conversations == [] and @conversation_search_users == [] do %>
         <p class="max-sm:px-4 sm:px-6 py-8 text-sm text-neutral-500 text-center">
@@ -101,15 +106,19 @@
           <div class="relative w-[58px] h-[58px] flex-shrink-0">
             <% [user1, user2 | _] = conversation.participants %>
             <.avatar size={:md} user={user1} class="absolute top-0 left-0" />
-            <.avatar size={:md} user={user2} class="absolute bottom-0 right-0 border-white border-2" />
+            <.avatar
+              size={:md}
+              user={user2}
+              class="absolute bottom-0 right-0 border-white border-2"
+            />
           </div>
         <% end %>
         <div class="grow flex flex-col justify-center min-w-0">
-          <div class="text-sm font-semibold truncate"><%= conversation.name %></div>
+          <div class="text-sm font-semibold truncate">{conversation.name}</div>
           <div class="text-xs text-neutral-500 truncate">
-            <%= conversation.participants
-                |> Enum.map(&(&1.username))
-                |> Enum.join(", ") %>
+            {conversation.participants
+            |> Enum.map(& &1.username)
+            |> Enum.join(", ")}
           </div>
         </div>
       </div>
@@ -127,67 +136,87 @@
           </div>
           <div class="grow flex flex-col justify-center min-w-0">
             <div class="text-sm font-semibold truncate">
-              <%= user.full_name || user.username %>
+              {user.full_name || user.username}
             </div>
             <div class="text-xs text-neutral-500 truncate">
-              <%= user.username %>
-              <%= if user.full_name && user.description, do: " · #{user.description}" %>
+              {user.username}
+              {if user.full_name && user.description, do: " · #{user.description}"}
             </div>
           </div>
         </div>
       <% end %>
     <% else %>
-
-    <div
-      :for={{id, conversation} <- Enum.sort_by(@conversations, fn {_, c} -> if c.last_message_at, do: DateTime.to_unix(c.last_message_at), else: 0 end, :desc)}
-      class={[
-        "max-sm:px-4 sm:px-6 py-2 flex gap-3 hover:bg-neutral-100/50 cursor-pointer",
-        @conversation_id == conversation.id && "bg-neutral-100"
-      ]}
-      phx-click={JS.patch(~p"/messages/#{id}")}
-      phx-value-id={conversation.id}
-    >
-      <%= if length(conversation.participants) == 1 do %>
-        <div class="flex-shrink-0">
-          <.avatar size={:lg} user={List.first(conversation.participants)} />
-        </div>
-      <% else %>
-        <div class="relative w-[58px] h-[58px] flex-shrink-0">
-          <% [user1, user2 | _] = conversation.participants %>
-
-          <.avatar size={:md} user={user1} class="absolute top-0 left-0" />
-          <.avatar
-            size={:md}
-            user={user2}
-            class="absolute bottom-0 right-0 border-white border-2"
-          />
-        </div>
-      <% end %>
-      <% unread? = MapSet.member?(@unread_conversation_ids, conversation.id) %>
-      <div class="grow flex flex-col justify-center sm:max-md:hidden min-w-0">
-        <div class={["text-sm", if(unread?, do: "font-bold", else: "font-medium")]}>
-          <%= conversation.name %>
-        </div>
-        <div class="flex items-center min-w-0">
-          <span class={[
-            "text-xs truncate",
-            if(unread?, do: "text-black font-semibold", else: "text-neutral-500")
-          ]}>
-            <%= conversation.last_message %>
-          </span>
-          <span :if={conversation.last_message_at} class={[
-            "text-xs flex-shrink-0",
-            if(unread?, do: "text-black font-semibold", else: "text-neutral-500")
-          ]}>
-            &nbsp;· <.time datetime={conversation.last_message_at} class={if(unread?, do: "text-xs text-black font-semibold", else: "text-xs text-neutral-500")} />
-          </span>
-        </div>
-      </div>
       <div
-        :if={unread?}
-        class="self-center w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0 sm:max-md:hidden"
-      />
-    </div>
+        :for={
+          {id, conversation} <-
+            Enum.sort_by(
+              @conversations,
+              fn {_, c} ->
+                if c.last_message_at, do: DateTime.to_unix(c.last_message_at), else: 0
+              end,
+              :desc
+            )
+        }
+        class={[
+          "max-sm:px-4 sm:px-6 py-2 flex gap-3 hover:bg-neutral-100/50 cursor-pointer",
+          @conversation_id == conversation.id && "bg-neutral-100"
+        ]}
+        phx-click={JS.patch(~p"/messages/#{id}")}
+        phx-value-id={conversation.id}
+      >
+        <%= if length(conversation.participants) == 1 do %>
+          <div class="flex-shrink-0">
+            <.avatar size={:lg} user={List.first(conversation.participants)} />
+          </div>
+        <% else %>
+          <div class="relative w-[58px] h-[58px] flex-shrink-0">
+            <% [user1, user2 | _] = conversation.participants %>
+
+            <.avatar size={:md} user={user1} class="absolute top-0 left-0" />
+            <.avatar
+              size={:md}
+              user={user2}
+              class="absolute bottom-0 right-0 border-white border-2"
+            />
+          </div>
+        <% end %>
+        <% unread? = MapSet.member?(@unread_conversation_ids, conversation.id) %>
+        <div class="grow flex flex-col justify-center sm:max-md:hidden min-w-0">
+          <div class={["text-sm", if(unread?, do: "font-bold", else: "font-medium")]}>
+            {conversation.name}
+          </div>
+          <div class="flex items-center min-w-0">
+            <span class={[
+              "text-xs truncate",
+              if(unread?, do: "text-black font-semibold", else: "text-neutral-500")
+            ]}>
+              {conversation.last_message}
+            </span>
+            <span
+              :if={conversation.last_message_at}
+              class={[
+                "text-xs flex-shrink-0",
+                if(unread?, do: "text-black font-semibold", else: "text-neutral-500")
+              ]}
+            >
+              &nbsp;·
+              <.time
+                datetime={conversation.last_message_at}
+                class={
+                  if(unread?,
+                    do: "text-xs text-black font-semibold",
+                    else: "text-xs text-neutral-500"
+                  )
+                }
+              />
+            </span>
+          </div>
+        </div>
+        <div
+          :if={unread?}
+          class="self-center w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0 sm:max-md:hidden"
+        />
+      </div>
     <% end %>
   </div>
   <%= if @conversation_id do %>
@@ -195,17 +224,23 @@
       <div class={["grow flex flex-col", @show_details && "max-sm:hidden"]}>
         <div class="max-sm:hidden px-4 py-2 border-b flex items-center gap-4">
           <%= if length(@conversations[@conversation_id].participants) == 1 do %>
-            <.link navigate={~p"/#{List.first(@conversations[@conversation_id].participants).username}"} class="flex items-center gap-4 grow cursor-pointer hover:opacity-80">
+            <.link
+              navigate={
+                ~p"/#{List.first(@conversations[@conversation_id].participants).username}"
+              }
+              class="flex items-center gap-4 grow cursor-pointer hover:opacity-80"
+            >
               <.avatar
                 size={:lg}
                 user={List.first(@conversations[@conversation_id].participants)}
               />
               <div>
                 <p class="font-bold text-base">
-                  <%= List.first(@conversations[@conversation_id].participants).full_name || List.first(@conversations[@conversation_id].participants).username %>
+                  {List.first(@conversations[@conversation_id].participants).full_name ||
+                    List.first(@conversations[@conversation_id].participants).username}
                 </p>
                 <p class="text-xs text-neutral-500">
-                  <%= List.first(@conversations[@conversation_id].participants).username %>
+                  {List.first(@conversations[@conversation_id].participants).username}
                 </p>
               </div>
             </.link>
@@ -222,13 +257,18 @@
                 />
               </div>
               <div>
-                <p class="font-bold text-base"><%= @conversations[@conversation_id].name %></p>
+                <p class="font-bold text-base">{@conversations[@conversation_id].name}</p>
               </div>
             </div>
           <% end %>
           <button phx-click="toggle-details" class="cursor-pointer flex-shrink-0">
             <.icon
-              name={if(@show_details, do: "hero-information-circle-solid", else: "hero-information-circle")}
+              name={
+                if(@show_details,
+                  do: "hero-information-circle-solid",
+                  else: "hero-information-circle"
+                )
+              }
               class="h-6 w-6"
             />
           </button>
@@ -247,11 +287,13 @@
             <% total = length(group) %>
             <% prev_group = if(group_idx > 0, do: Enum.at(groups, group_idx - 1)) %>
             <% prev_last_at = if(prev_group, do: List.last(prev_group).inserted_at) %>
-            <% show_time = prev_last_at == nil or DateTime.diff(first_msg.inserted_at, prev_last_at, :second) > 10800 %>
+            <% show_time =
+              prev_last_at == nil or
+                DateTime.diff(first_msg.inserted_at, prev_last_at, :second) > 10800 %>
 
             <%= if show_time do %>
               <div class={["text-center text-xs text-neutral-500 py-2", group_idx > 0 && "mt-2"]}>
-                <%= format_message_datetime(first_msg.inserted_at) %>
+                {format_message_datetime(first_msg.inserted_at)}
               </div>
             <% end %>
 
@@ -277,7 +319,7 @@
               ]}>
                 <%= if is_group_chat do %>
                   <span class="text-xs text-neutral-500 ml-9 mb-0.5">
-                    <%= user.full_name || user.username %>
+                    {user.full_name || user.username}
                   </span>
                 <% end %>
                 <%= for {message, idx} <- Enum.with_index(group) do %>
@@ -368,20 +410,26 @@
                     Add people
                   </button>
                   <button
-                    phx-click={JS.show(to: "#add-member-mobile", display: "flex") |> JS.push("open-add-member")}
+                    phx-click={
+                      JS.show(to: "#add-member-mobile", display: "flex")
+                      |> JS.push("open-add-member")
+                    }
                     class="sm:hidden cursor-pointer text-blue-500 font-semibold text-sm hover:text-blue-700"
                   >
                     Add people
                   </button>
                 </div>
 
-                <div :for={user <- @conversations[@conversation_id].all_participants} class="flex items-center gap-3 py-2">
+                <div
+                  :for={user <- @conversations[@conversation_id].all_participants}
+                  class="flex items-center gap-3 py-2"
+                >
                   <.avatar size={:md} user={user} />
                   <div class="grow min-w-0">
                     <p class="font-semibold text-sm truncate">
-                      <%= user.full_name || user.username %>
+                      {user.full_name || user.username}
                     </p>
-                    <p class="text-xs text-neutral-500 truncate"><%= user.username %></p>
+                    <p class="text-xs text-neutral-500 truncate">{user.username}</p>
                   </div>
                   <%= if user.id != @current_user.id do %>
                     <button
@@ -420,13 +468,16 @@
               <%!-- 1-on-1 conversation: simplified view --%>
               <div class="px-4 py-4">
                 <span class="font-bold text-base">Members</span>
-                <div :for={user <- @conversations[@conversation_id].participants} class="flex items-center gap-3 py-3">
+                <div
+                  :for={user <- @conversations[@conversation_id].participants}
+                  class="flex items-center gap-3 py-3"
+                >
                   <.avatar size={:md} user={user} />
                   <div class="grow min-w-0">
                     <p class="font-semibold text-sm truncate">
-                      <%= user.full_name || user.username %>
+                      {user.full_name || user.username}
                     </p>
-                    <p class="text-xs text-neutral-500 truncate"><%= user.username %></p>
+                    <p class="text-xs text-neutral-500 truncate">{user.username}</p>
                   </div>
                 </div>
               </div>
@@ -479,7 +530,7 @@
         :for={user <- @selected_users}
         class="inline-flex items-center gap-1 bg-blue-100 text-blue-600 rounded-full px-3 py-1 text-sm font-semibold"
       >
-        <%= user.full_name || user.username %>
+        {user.full_name || user.username}
         <button
           type="button"
           phx-click="deselect-user"
@@ -512,8 +563,8 @@
       >
         <.avatar size={:md} user={user} />
         <div class="grow min-w-0">
-          <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
-          <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
+          <p class="font-semibold text-sm truncate">{user.full_name || user.username}</p>
+          <p class="text-sm text-neutral-500 truncate">{user.username}</p>
         </div>
         <div class="flex-shrink-0">
           <%= if Enum.any?(@selected_users, & &1.id == user.id) do %>
@@ -579,7 +630,7 @@
       :for={user <- @selected_users}
       class="inline-flex items-center gap-1 bg-blue-100 text-blue-600 rounded-full px-3 py-1 text-sm font-semibold"
     >
-      <%= user.full_name || user.username %>
+      {user.full_name || user.username}
       <button
         type="button"
         phx-click="deselect-user"
@@ -612,8 +663,8 @@
     >
       <.avatar size={:md} user={user} />
       <div class="grow min-w-0">
-        <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
-        <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
+        <p class="font-semibold text-sm truncate">{user.full_name || user.username}</p>
+        <p class="text-sm text-neutral-500 truncate">{user.username}</p>
       </div>
       <div class="flex-shrink-0">
         <%= if Enum.any?(@selected_users, & &1.id == user.id) do %>
@@ -710,8 +761,8 @@
       >
         <.avatar size={:md} user={user} />
         <div class="grow min-w-0">
-          <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
-          <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
+          <p class="font-semibold text-sm truncate">{user.full_name || user.username}</p>
+          <p class="text-sm text-neutral-500 truncate">{user.username}</p>
         </div>
       </div>
       <p
@@ -761,12 +812,14 @@
     <div
       :for={user <- @add_member_results}
       class="flex items-center gap-3 px-4 py-2 hover:bg-neutral-50 cursor-pointer"
-      phx-click={JS.push("add-member", value: %{id: user.id}) |> JS.hide(to: "#add-member-mobile")}
+      phx-click={
+        JS.push("add-member", value: %{id: user.id}) |> JS.hide(to: "#add-member-mobile")
+      }
     >
       <.avatar size={:md} user={user} />
       <div class="grow min-w-0">
-        <p class="font-semibold text-sm truncate"><%= user.full_name || user.username %></p>
-        <p class="text-sm text-neutral-500 truncate"><%= user.username %></p>
+        <p class="font-semibold text-sm truncate">{user.full_name || user.username}</p>
+        <p class="text-sm text-neutral-500 truncate">{user.username}</p>
       </div>
     </div>
     <p

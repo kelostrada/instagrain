@@ -43,28 +43,38 @@ defmodule InstagrainWeb.PostComponents do
             </div>
             <div
               class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer"
-              phx-click={hide_modal(@modal_id) |> JS.push("menu-toggle-hide-likes", value: %{id: @post.id})}
+              phx-click={
+                hide_modal(@modal_id) |> JS.push("menu-toggle-hide-likes", value: %{id: @post.id})
+              }
             >
-              <%= if @post.hide_likes, do: "Unhide like count to others", else: "Hide like count to others" %>
+              {if @post.hide_likes,
+                do: "Unhide like count to others",
+                else: "Hide like count to others"}
             </div>
             <div
               class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer"
-              phx-click={hide_modal(@modal_id) |> JS.push("menu-toggle-comments", value: %{id: @post.id})}
+              phx-click={
+                hide_modal(@modal_id) |> JS.push("menu-toggle-comments", value: %{id: @post.id})
+              }
             >
-              <%= if @post.disable_comments, do: "Turn on commenting", else: "Turn off commenting" %>
+              {if @post.disable_comments, do: "Turn on commenting", else: "Turn off commenting"}
             </div>
           <% else %>
             <%= if @post.user.id in @following_user_ids do %>
               <div
                 class="flex items-center justify-center text-sm font-medium p-3.5 cursor-pointer"
-                phx-click={JS.push("menu-unfollow", value: %{post_user_id: @post.user.id, post_id: @post.id})}
+                phx-click={
+                  JS.push("menu-unfollow", value: %{post_user_id: @post.user.id, post_id: @post.id})
+                }
               >
                 Unfollow
               </div>
             <% else %>
               <div
                 class="flex items-center justify-center text-sm font-semibold p-3.5 cursor-pointer"
-                phx-click={JS.push("menu-follow", value: %{post_user_id: @post.user.id, post_id: @post.id})}
+                phx-click={
+                  JS.push("menu-follow", value: %{post_user_id: @post.user.id, post_id: @post.id})
+                }
               >
                 Follow
               </div>
@@ -107,7 +117,9 @@ defmodule InstagrainWeb.PostComponents do
           <div class="divide-y">
             <div
               class="py-3.5 text-sm font-bold text-red-500 cursor-pointer"
-              phx-click={hide_modal(@confirm_id) |> JS.push("confirm-delete-post", value: %{id: @post.id})}
+              phx-click={
+                hide_modal(@confirm_id) |> JS.push("confirm-delete-post", value: %{id: @post.id})
+              }
             >
               Delete
             </div>
@@ -134,7 +146,7 @@ defmodule InstagrainWeb.PostComponents do
     ~H"""
     <%= if !@post.hide_likes || @post.user.id == @current_user.id  do %>
       <div class="font-semibold	text-sm">
-        <%= format_number(@post.likes) %> like<%= if @post.likes != 1, do: "s" %>
+        {format_number(@post.likes)} like{if @post.likes != 1, do: "s"}
       </div>
     <% end %>
     """
@@ -146,7 +158,7 @@ defmodule InstagrainWeb.PostComponents do
   def comment_likes(assigns) do
     ~H"""
     <div :if={@comment.likes > 0} class={[!@class && "font-semibold text-sm", @class]}>
-      <%= format_number(@comment.likes) %> like<%= if @comment.likes != 1, do: "s" %>
+      {format_number(@comment.likes)} like{if @comment.likes != 1, do: "s"}
     </div>
     """
   end

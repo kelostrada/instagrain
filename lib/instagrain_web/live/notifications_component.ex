@@ -22,8 +22,7 @@ defmodule InstagrainWeb.NotificationsComponent do
   def update(%{action: :refresh}, socket) do
     current_user = socket.assigns.current_user
 
-    {:ok,
-     assign(socket, notifications: Notifications.list_for_user(current_user.id))}
+    {:ok, assign(socket, notifications: Notifications.list_for_user(current_user.id))}
   end
 
   def update(assigns, socket) do
@@ -218,7 +217,10 @@ defmodule InstagrainWeb.NotificationsComponent do
       </p>
     </div>
 
-    <div :if={@suggestions != [] and @filter == :all} class="px-6 pb-8 border-t border-neutral-100 pt-4">
+    <div
+      :if={@suggestions != [] and @filter == :all}
+      class="px-6 pb-8 border-t border-neutral-100 pt-4"
+    >
       <h3 class="text-base font-bold mb-2">Suggested for you</h3>
 
       <ul class="divide-y divide-neutral-100">
@@ -235,10 +237,10 @@ defmodule InstagrainWeb.NotificationsComponent do
               phx-click={@on_navigate}
               class="block truncate"
             >
-              <span class="text-sm font-semibold"><%= user.username %></span>
+              <span class="text-sm font-semibold">{user.username}</span>
             </.link>
-            <p class="text-xs text-neutral-500 truncate"><%= name %></p>
-            <p class="text-xs text-neutral-500 truncate"><%= reason %></p>
+            <p class="text-xs text-neutral-500 truncate">{name}</p>
+            <p class="text-xs text-neutral-500 truncate">{reason}</p>
           </div>
           <button
             :if={user.id not in @following_user_ids}
@@ -279,9 +281,9 @@ defmodule InstagrainWeb.NotificationsComponent do
     <li class="flex items-center gap-3 py-3">
       <.actor_avatars actors={@group.actors} on_navigate={@on_navigate} />
       <div class="flex-1 min-w-0 text-sm leading-snug">
-        <%= render_notification_text(assigns) %>
+        {render_notification_text(assigns)}
         <span class="text-neutral-400 text-xs ml-1">
-          · <%= relative_time(@group.inserted_at) %>
+          · {relative_time(@group.inserted_at)}
         </span>
       </div>
 
@@ -334,8 +336,8 @@ defmodule InstagrainWeb.NotificationsComponent do
     assigns = assign(assigns, actors: actors, count: count, type: type)
 
     ~H"""
-    <%= actor_names(@actors, @count) %>
-    <span class="text-neutral-500"><%= action_text(@type, @count) %></span>
+    {actor_names(@actors, @count)}
+    <span class="text-neutral-500">{action_text(@type, @count)}</span>
     """
   end
 
@@ -386,7 +388,8 @@ defmodule InstagrainWeb.NotificationsComponent do
     """
   end
 
-  defp actor_names([a], _count), do: Phoenix.HTML.raw("<span class=\"font-semibold\">#{a.username}</span>")
+  defp actor_names([a], 1),
+    do: Phoenix.HTML.raw("<span class=\"font-semibold\">#{a.username}</span>")
 
   defp actor_names([a, b], 2),
     do:
@@ -407,9 +410,7 @@ defmodule InstagrainWeb.NotificationsComponent do
     others = count - 1
     suffix = if others == 1, do: "other", else: "others"
 
-    Phoenix.HTML.raw(
-      "<span class=\"font-semibold\">#{a.username}</span> and #{others} #{suffix}"
-    )
+    Phoenix.HTML.raw("<span class=\"font-semibold\">#{a.username}</span> and #{others} #{suffix}")
   end
 
   defp action_text("follow", _), do: " started following you."
@@ -434,8 +435,7 @@ defmodule InstagrainWeb.NotificationsComponent do
     %Phoenix.LiveView.JS{}
     |> Phoenix.LiveView.JS.hide(
       to: "#notifications-panel",
-      transition:
-        {"transition-transform duration-300", "translate-x-0", "-translate-x-full"}
+      transition: {"transition-transform duration-300", "translate-x-0", "-translate-x-full"}
     )
   end
 end

@@ -29,7 +29,10 @@ defmodule InstagrainWeb.EmojiPicker do
         class="cursor-pointer"
         aria-label="Add emoji"
       >
-        <.icon name="hero-face-smile" class="h-6 w-6 text-neutral-500 hover:text-neutral-700 transition-colors" />
+        <.icon
+          name="hero-face-smile"
+          class="h-6 w-6 text-neutral-500 hover:text-neutral-700 transition-colors"
+        />
       </button>
 
       <%!-- Popup is fixed-positioned by JS to escape overflow containers --%>
@@ -40,7 +43,7 @@ defmodule InstagrainWeb.EmojiPicker do
       >
         <div class="max-h-64 overflow-y-auto bg-white rounded-xl p-3">
           <div :for={{name, emojis} <- @categories}>
-            <p class="font-bold text-sm mb-2"><%= name %></p>
+            <p class="font-bold text-sm mb-2">{name}</p>
             <div class="flex flex-wrap gap-0.5 mb-3">
               <button
                 :for={emoji <- emojis}
@@ -48,7 +51,7 @@ defmodule InstagrainWeb.EmojiPicker do
                 data-emoji={emoji}
                 class="text-2xl w-9 h-9 flex items-center justify-center hover:bg-neutral-100 rounded cursor-pointer"
               >
-                <%= emoji %>
+                {emoji}
               </button>
             </div>
           </div>
@@ -69,24 +72,17 @@ defmodule InstagrainWeb.EmojiPicker do
 
   defp categories do
     [
-      {"Most popular",
-       ~w(😂 😮 😍 🥹 👏 🔥 🎉 💯 ❤️ 🤣 🥰 😘 😭 😊)},
+      {"Most popular", ~w(😂 😮 😍 🥹 👏 🔥 🎉 💯 ❤️ 🤣 🥰 😘 😭 😊)},
       {"Smileys & Emotion",
        ~w(😀 😃 😄 😁 😆 😅 🙂 🙃 😉 😇 🤩 😗 😚 😙 🥲 😋 😛 😜 🤪 😝 🤑 🤗 🤭 🤫 🤔 🤐 🤨 😐 😑 😶 😏 😒 🙄 😬 😌 😔 😪 🤤 😴 😷 🤒 🤕 🤢 🤮 🥵 🥶 🥴 😵 🤯 🤠 🥳 🥸 😎 🤓 🧐 😕 😟 😯 😲 😳 🥺 😦 😧 😨 😰 😥 😢 😱 😖 😣 😞 😓 😩 😫 🥱 😤 😡 😠 🤬 😈 👿 💀 💩 🤡 👻 👽 🤖)},
-      {"Gestures",
-       ~w(👋 🤚 🖐 ✋ 🖖 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 👐 🤲 🤝 🙏 💪)},
-      {"Hearts",
-       ~w(❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝)},
+      {"Gestures", ~w(👋 🤚 🖐 ✋ 🖖 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 👐 🤲 🤝 🙏 💪)},
+      {"Hearts", ~w(❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝)},
       {"Animals & Nature",
        ~w(🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐔 🐧 🐦 🦆 🦅 🦉 🐺 🐴 🦄 🐝 🦋 🐌 🐞 🐢 🐍 🐙 🐬 🐳 🦈 🐘 🦒 🌸 🌹 🌺 🌻 🌼 🌷 🌱 🌲 🌳 🍀 🍁 🍂 🍃)},
-      {"Food & Drink",
-       ~w(🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🍒 🍑 🥭 🍍 🥝 🍅 🥑 🍔 🍟 🍕 🌮 🍣 🍦 🍩 🍪 🎂 🍫 🍿 ☕ 🍵 🍺 🍷 🥤 🧋)},
-      {"Activities",
-       ~w(⚽ 🏀 🏈 ⚾ 🎾 🏐 🎱 🏓 🏆 🥇 🎪 🎨 🎬 🎤 🎧 🎹 🎸 🎲 🎮 🎯)},
-      {"Travel & Places",
-       ~w(🚗 🚕 🏎 🚀 🛸 ✈️ 🚢 🏠 🏰 🗼 🗽 🎡 🎢 🌋 🏔 🏖 🌅 🌄 🌈 🌊)},
-      {"Objects & Symbols",
-       ~w(💡 📱 💻 📷 🔑 💰 💎 📚 ✏️ 🔔 🎁 🎈 🧸 ✨ ⭐ 🌟 💫 ☀️ 🌙 💧 ⚡ 🎵 🎶 💬 💭 🏳️ 🏴 🚩)}
+      {"Food & Drink", ~w(🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🍒 🍑 🥭 🍍 🥝 🍅 🥑 🍔 🍟 🍕 🌮 🍣 🍦 🍩 🍪 🎂 🍫 🍿 ☕ 🍵 🍺 🍷 🥤 🧋)},
+      {"Activities", ~w(⚽ 🏀 🏈 ⚾ 🎾 🏐 🎱 🏓 🏆 🥇 🎪 🎨 🎬 🎤 🎧 🎹 🎸 🎲 🎮 🎯)},
+      {"Travel & Places", ~w(🚗 🚕 🏎 🚀 🛸 ✈️ 🚢 🏠 🏰 🗼 🗽 🎡 🎢 🌋 🏔 🏖 🌅 🌄 🌈 🌊)},
+      {"Objects & Symbols", ~w(💡 📱 💻 📷 🔑 💰 💎 📚 ✏️ 🔔 🎁 🎈 🧸 ✨ ⭐ 🌟 💫 ☀️ 🌙 💧 ⚡ 🎵 🎶 💬 💭 🏳️ 🏴 🚩)}
     ]
   end
 end
