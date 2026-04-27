@@ -71,7 +71,7 @@ jobs:
           echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           cat >> ~/.ssh/config << 'EOF'
-          Host ssh.melinakrzemowa.pl
+          Host airssh.melinakrzemowa.pl
             ProxyCommand cloudflared access ssh --hostname %h
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
@@ -82,22 +82,22 @@ jobs:
           VERSION=${{ steps.previoustag.outputs.tag }}
           VERSION_HASH=${{ steps.get_hash.outputs.HASH }}
 
-          scp docker-compose.yml ${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl:/home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/
+          DEPLOY_DIR=/Users/${{ secrets.SSH_USERNAME }}/services/insta.melinakrzemowa.pl
+          SSH_TARGET=${{ secrets.SSH_USERNAME }}@airssh.melinakrzemowa.pl
 
-          SSH_TARGET=${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl
+          scp docker-compose.yml $SSH_TARGET:$DEPLOY_DIR/docker-compose.yml
 
-          # Pull image, swap compose, recreate containers — single SSH session.
+          # macOS BSD sed needs an explicit empty backup-ext arg ('-i \'\'').
           ssh $SSH_TARGET "
             set -e
-            sudo mv /home/${{ secrets.SSH_USERNAME }}/deploy/instagrain/docker-compose.yml /var/www/insta.melinakrzemowa.pl/docker-compose.yml
-            cd /var/www/insta.melinakrzemowa.pl
-            sudo sed -i 's/^VERSION=.*/VERSION=$VERSION/' .env
-            sudo sed -i 's/^VERSION_HASH=.*/VERSION_HASH=$VERSION_HASH/' .env
+            cd $DEPLOY_DIR
+            sed -i '' 's/^VERSION=.*/VERSION=$VERSION/' .env
+            sed -i '' 's/^VERSION_HASH=.*/VERSION_HASH=$VERSION_HASH/' .env
             docker pull ghcr.io/kelostrada/instagrain:$VERSION-$VERSION_HASH
             docker compose up -d
           "
 
-          # Wait until postgres accepts connections (release startup is slow on the Pi).
+          # Wait until postgres accepts connections (release startup needs a moment).
           for i in $(seq 1 30); do
             if ssh $SSH_TARGET 'docker exec instamelinakrzemowapl-db-1 pg_isready -U postgres -q'; then
               break
