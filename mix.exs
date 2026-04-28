@@ -77,7 +77,7 @@ defmodule Instagrain.MixProject do
       {:opentelemetry_ecto, "~> 1.2"},
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.4"},
-      {:dns_cluster, "~> 0.1.3"},
+      {:dns_cluster, "~> 0.2.0"},
       {:plug_cowboy, "~> 2.7"},
       {:image, "~> 0.62"},
       {:ex_aws, "~> 2.5"},
