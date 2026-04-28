@@ -7,8 +7,12 @@ defmodule Instagrain.Application do
 
   @impl true
   def start(_type, _args) do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+    OpentelemetryEcto.setup([:instagrain, :repo])
+
     children = [
       InstagrainWeb.Telemetry,
+      Instagrain.PromEx,
       Instagrain.Repo,
       {DNSCluster, query: Application.get_env(:instagrain, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Instagrain.PubSub},

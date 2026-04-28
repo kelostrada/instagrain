@@ -21,6 +21,15 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
+  # OpenTelemetry — export traces to the local somsiad Alloy via OTLP/HTTP.
+  # On the Air, OTLP_ENDPOINT defaults to http://host.docker.internal:4318.
+  config :opentelemetry,
+    resource: %{service: %{name: "instagrain", version: System.get_env("VERSION") || "dev"}}
+
+  config :opentelemetry_exporter,
+    otlp_protocol: :http_protobuf,
+    otlp_endpoint: System.get_env("OTLP_ENDPOINT", "http://host.docker.internal:4318")
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
