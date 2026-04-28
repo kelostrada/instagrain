@@ -8,6 +8,17 @@ defmodule InstagrainWeb.UserAuthTest do
 
   @remember_me_cookie "_instagrain_web_user_remember_me"
 
+  # `on_mount` calls `attach_hook` which requires `socket.private.lifecycle`
+  # to be present. The bare `%LiveView.Socket{}` doesn't have it, so we build
+  # one with the minimum private state needed.
+  defp build_socket(extra_assigns \\ %{}) do
+    %LiveView.Socket{
+      endpoint: InstagrainWeb.Endpoint,
+      assigns: Map.merge(%{__changed__: %{}, flash: %{}}, extra_assigns),
+      private: %{live_temp: %{}, lifecycle: %Phoenix.LiveView.Lifecycle{}}
+    }
+  end
+
   setup %{conn: conn} do
     conn =
       conn
@@ -123,7 +134,7 @@ defmodule InstagrainWeb.UserAuthTest do
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_user, %{}, session, %LiveView.Socket{})
+        UserAuth.on_mount(:mount_current_user, %{}, session, build_socket())
 
       assert updated_socket.assigns.current_user.id == user.id
     end
@@ -133,7 +144,7 @@ defmodule InstagrainWeb.UserAuthTest do
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_user, %{}, session, %LiveView.Socket{})
+        UserAuth.on_mount(:mount_current_user, %{}, session, build_socket())
 
       assert updated_socket.assigns.current_user == nil
     end
@@ -142,7 +153,7 @@ defmodule InstagrainWeb.UserAuthTest do
       session = conn |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_user, %{}, session, %LiveView.Socket{})
+        UserAuth.on_mount(:mount_current_user, %{}, session, build_socket())
 
       assert updated_socket.assigns.current_user == nil
     end
@@ -154,7 +165,7 @@ defmodule InstagrainWeb.UserAuthTest do
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:ensure_authenticated, %{}, session, %LiveView.Socket{})
+        UserAuth.on_mount(:ensure_authenticated, %{}, session, build_socket())
 
       assert updated_socket.assigns.current_user.id == user.id
     end
@@ -163,24 +174,18 @@ defmodule InstagrainWeb.UserAuthTest do
       user_token = "invalid_token"
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
-      socket = %LiveView.Socket{
-        endpoint: InstagrainWeb.Endpoint,
-        assigns: %{__changed__: %{}, flash: %{}}
-      }
+      {:halt, updated_socket} =
+        UserAuth.on_mount(:ensure_authenticated, %{}, session, build_socket())
 
-      {:halt, updated_socket} = UserAuth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_user == nil
     end
 
     test "redirects to login page if there isn't a user_token", %{conn: conn} do
       session = conn |> get_session()
 
-      socket = %LiveView.Socket{
-        endpoint: InstagrainWeb.Endpoint,
-        assigns: %{__changed__: %{}, flash: %{}}
-      }
+      {:halt, updated_socket} =
+        UserAuth.on_mount(:ensure_authenticated, %{}, session, build_socket())
 
-      {:halt, updated_socket} = UserAuth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_user == nil
     end
   end
@@ -195,7 +200,7 @@ defmodule InstagrainWeb.UserAuthTest do
                  :redirect_if_user_is_authenticated,
                  %{},
                  session,
-                 %LiveView.Socket{}
+                 build_socket()
                )
     end
 
@@ -207,7 +212,7 @@ defmodule InstagrainWeb.UserAuthTest do
                  :redirect_if_user_is_authenticated,
                  %{},
                  session,
-                 %LiveView.Socket{}
+                 build_socket()
                )
     end
   end
